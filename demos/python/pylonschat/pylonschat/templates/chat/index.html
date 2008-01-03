@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>PylonsChat</title>
+    ${h.stylesheet_link_tag('chat.css')}
+    ${h.javascript_include_tag('chat.js')}
+  </head>
+  <body>
+    <input type="text" id="nickname">
+    <input type="button" value="nickname" name="nickname" onclick="connect();">
+    <div id="box"></div>
+    
+    <input type="text" id="chat">
+    <input type="submit" value="chat" onClick="send_msg();">
+    
+    <iframe id="events"></iframe>
+  </body>
+</html>

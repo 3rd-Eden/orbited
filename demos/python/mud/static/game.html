@@ -1,0 +1,35 @@
+<html>
+ <head>
+  <title>Meekle.com - Media Studies Adventure</title>
+  <link rel="stylesheet" href="game.css">
+  <script type="text/javascript" src="game.js"></script>
+  <script>
+    top_domain = "localhost"
+    app_hostname = "http://localhost:8000"    orbit_hostname = "http://localhost:8000"
+
+    function trychat(event) {
+        if (event && event.which == 13)
+            chat()
+    }
+    function trychatie(e) {
+        e = e || window.event;
+        if (e.keyCode == 13) {
+            chat();
+            return false;
+        }
+    };    
+  </script>
+ </head>
+ <body onload="document.getElementById('input').focus()">
+  <div style="width:90%;height:100%;margin:auto;">
+   <div id=main>
+    <div id=intro_splash>
+     <center><b>Welcome to Max Headroom's Adventure with Max Headroom:<br>The Max Headroom Max Headroom Adventure</b></center>
+     <div style="margin-left:20px;margin-right:20px;">You wake up in the media studies center after hours. You finished your thesis over a week ago, and you don't remember visiting this building since then. How strange. Enter your name, brave adventurer.</div>
+    </div>
+   </div>
+   <input type=input id=input onkeydown="trychatie(event)">
+  </div>
+  <iframe id="events" style="display:none;"></iframe>
+ </body>
+</html>

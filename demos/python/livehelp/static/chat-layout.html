@@ -1,0 +1,212 @@
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>WebIRC Online IRC Client</title>
+  <!-- <link rel="stylesheet" href="chat.css"> -->
+  <script type="text/javascript" src="chat.js"></script>
+  <script type="text/javascript" src="mirc_colorize.js"></script>
+  <script type="text/javascript" src="lconfig.js"></script>
+  <script type="text/javascript">
+    function entsubchat(event) {
+      event = event || window.event;
+      if (event.keyCode == 13) {
+        chat();
+        return false;
+      }
+    }   
+    function entsubjoin(event) {
+      event = event || window.event;
+      if (event.keyCode == 13) {
+        astarta();
+        chatfield = document.getElementById('chat');
+        chatfield.focus();
+        return false;
+      }
+    }
+    function entsubjoinchannel(event) {
+      event = event || window.event;
+      if (event.keyCode == 13) {
+        joinChannel();
+        chatfield = document.getElementById('chat');
+        chatfield.focus();
+        return false;
+      }
+    }
+  </script>
+  <style type="text/css" media="screen">
+    #signin_popup {
+      width:200pt;
+      padding:1em;
+      padding-bottom:2em;
+      text-align:center;
+      background-color: #A4C9D6;
+      color:#0E3541;
+      border: 5pt solid #195263;
+      position:absolute;
+      top:60pt;
+      left:100pt;
+      z-index:2;
+    }
+    #nickname {
+      width:90pt;
+    }
+    #absorb_clicks {
+      position:absolute;
+      top:0;
+      left:0;
+      width:600pt;
+      height:500pt;
+    }
+    
+    .chatbox {
+      width:470pt;
+      font: 100% Verdana, sans-serif;
+      background-color:#24758E;
+      padding:5pt;
+      position:relative;
+    }
+    .chatbox .left_column {
+      width: 360pt;
+    }
+    .chatbox .chathistory {
+      width:100%;
+      height:317pt;
+      overflow: auto;
+      background-color: white;
+    }
+    .chatbox .chathistory div {
+      background-color:#ffffee;
+      padding:.2em;
+      padding-left:1.5em;
+      text-indent: -1em;
+      border-bottom: 1px dotted #ccc;
+    }
+    .chatbox .chathistory .message .user {
+      width:5em;
+      font-weight: bold;
+      color:#DD7200;
+      padding-right:.2em;
+      text-align:right;
+    }
+    .chatbox .chathistory .message.self .user{
+      color: #B42600;
+    }
+    .chatbox .chathistory .message.mentioned{
+      background-color: #d5c5ff;
+    }
+    .chatbox .chathistory .informative {
+      font-size: 85%;
+      font-style: italic;
+      color:#999;
+      text-align:center;
+      padding:.3em;
+    }
+    
+    .chatbox .chatbox_input {
+      width:100%;
+      height:30pt;
+      margin:0;
+      margin-top:3pt;
+      padding:0;
+      border:0;
+      font-family: Verdana, sans-serif;
+    }
+    
+    .chatbox .user_list {
+      float:right;
+      position: absolute;
+      padding:0;
+      margin:0;
+      right:5pt;
+      top:5pt;
+      background-color:white;
+      width:107pt;
+      height:350pt;
+      overflow-x: hidden;
+      overflow-y:auto;
+    }
+    .chatbox .user_list .user_entry{
+      padding:.2em;
+      padding-left:8pt;
+      border-bottom: 1px dotted #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="chatbox">
+    <div id="signin_popup">
+      <h2>Sign in to the #orbited chat room.</h2>
+      <label for="nickname">Nickname:</label>
+  		<input type="text" name="nickname" id="nickname" value="">
+    </div>
+    <!-- <div id="absorb_clicks" onclick=""></div> -->
+    <div class="left_column">
+      <div class="chathistory" id="chathistory">
+        <div class="message mentioned">
+          <span class="user">Joe:</span> Hello Sam.
+        </div>
+        <div class="informative self join">
+          <span class="user">Sam</span> has joined the channel.
+        </div>
+        <div class="message mentioned">
+          <span class="user">Joe:</span> Hello Sam.
+        </div>
+        <div class="message self">
+          <span class="user">Sam:</span> Hello Joe.
+        </div>
+        <div class="message">
+          <span class="user">Joe:</span> Do you like my hat?  I thought it was quite an amazing hat!
+        </div>
+        <div class="message self">
+          <span class="user">Sam:</span> No.  I do not like that hat.  To be honest, it totally bites.
+        </div>
+        <div class="message mentioned">
+          <span class="user">Joe:</span> You know Sam, you can really crush a guy’s dreams..
+        </div>
+        <div class="message self">
+          <span class="user">Sam:</span> I'm sorry.  I can't help it that you are wearing an ugly hat.
+        </div>
+        <div class="message">
+          <span class="user">Joe:</span> I think I'm going home
+        </div>
+        <div class="message self">
+          <span class="user">Sam:</span> That's not a bad idea, Joe.
+        </div>
+      </div>
+      <textarea name="message" class="chatbox_input" id="chatbox_input"></textarea>
+    </div>
+    <div class="user_list" id="user_list">
+      <div class="user_entry" id="userPetey">Petey</div>
+      <div class="user_entry" id="userSam">Sam</div>
+      <div class="user_entry" id="userPaul">Paul</div>
+      <div class="user_entry" is="userJoe">Joe</div>
+    </div>
+  </div>
+
+  
+  <!-- <div id="maintop">
+    <input value='[ENTER NICKNAME]' type="text" id="nickname"
+      onkeypress="entsubjoin(event)"
+      onfocus="document.getElementById('nickname').value=''"
+      onblur="if (document.getElementById('nickname').value=='') {
+                  document.getElementById('nickname').value='[ENTER NICKNAME]'
+      }">
+    <div id="channel">Orbit IRC Client</div>
+  </div>
+  <div id="main">
+    <div id="side"></div>
+    <div id="box"></div>
+  </div>
+  <div id="mainbottom">
+    <input value='[ENTER CHANNEL]' type="text" id="channelfield"
+      onkeypress="entsubjoinchannel(event)"
+      onfocus="document.getElementById('channelfield').value=''"
+      onblur="if (document.getElementById('channelfield').value=='') {
+                  document.getElementById('channelfield').value='[ENTER NICKNAME]'
+      }">
+    <input type="text" id="chat" onkeypress="entsubchat(event)">
+  </div> -->
+
+  <iframe id="events"></iframe>
+</body>
+</html>
