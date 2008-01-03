@@ -1,0 +1,38 @@
+a:link, a:visited {
+    text-decoration:none;
+    color:blue;
+}
+
+a:hover {
+    color:red;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+h1 span{
+    color: #888;
+}
+
+.section {
+    margin: 10px;
+    border: 2px solid #eee;
+}
+
+.section h4 {
+    background-color: #eee;
+    margin: 0px;
+   padding:2px;
+}
+
+.heading td {
+    background-color: #888;
+    color: white;
+    font-weight:bold;
+}
+
+.plugin_info {
+    margin-left:1em;
+    font-size:80%;
+}

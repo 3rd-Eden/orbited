@@ -1,0 +1,73 @@
+﻿<html>
+<head>
+<title>Chart 2D</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "dojotoolkit/dojo/resources/dojo.css";
+	@import "dojotoolkit/dijit/tests/css/dijitTests.css";
+</style>
+
+<script src="/_/orbited.js" type="text/javascript" charset="utf-8"></script>
+
+<!--
+The next line should include Microsoft's Silverligth.js, if you plan to use the silverlight backend
+<script type="text/javascript" src="Silverlight.js"></script>
+-->
+<script type="text/javascript" src="dojotoolkit/dojo/dojo.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/lang/functional.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/charting//Theme.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/charting//scaler.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/charting//plot2d/axes.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/charting/plot2d/renderers.js"></script>
+<script type="text/javascript" src="dojotoolkit/dojox/charting/Chart2D.js"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart2D");
+dojo.require("dojox.charting.themes.PlotKit.cyan");
+
+var chart;
+var data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+makeChart = function(){
+
+	chart = new dojox.charting.Chart2D("chartdiv");
+	chart.addPlot("default", {type: "Areas"});
+  chart.addAxis("x");
+  chart.addAxis("y", {vertical: true});
+	chart.setTheme(dojox.charting.themes.PlotKit.cyan);
+	chart.addSeries("Series A", data);
+	chart.render();
+
+};
+
+updateChart = function(number){
+  number = int(number)
+  data.push(number);
+  data.shift();
+	chart.render();
+}
+
+var connected = 0;
+
+startCharting = function() {
+  if (!connected) {
+    connected = 1;
+    Orbited.connect(updateChart, 'admin', '/_/admin/event', 0);
+  }
+}
+
+// loopUpdates = function() {
+//   setInterval("updateChart(Math.random()*500)", 500)
+// }
+
+dojo.addOnLoad(makeChart);
+
+</script>
+</head>
+<body>
+<h1>Chart 2D</h1>
+<p><button onclick="startCharting()">Chart Traffic</button></p>
+<div id="chartdiv" style="width: 600px; height: 400px;"></div>
+
+</body>
+</html>

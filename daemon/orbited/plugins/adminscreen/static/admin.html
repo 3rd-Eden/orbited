@@ -1,0 +1,51 @@
+<DOCTYPE html>
+<html>
+<head>
+  <script src="/_/orbited.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+    var connected = 0;
+    
+    open_connection = function() {
+      if (!connected) {
+        connected = 1;
+        dump_content('<p>connecting...</p>');
+        Orbited.connect(dump_content, 'admin', '/_/admin/event', 0);
+      }
+      else {
+        dump_content('<p>you already clicked there, silly</p>');
+      }
+    }    
+    dump_content = function(data) {
+      content_div = document.getElementById('admin_content');
+      content_div.innerHTML = data
+      content_div.scrollTop = content_div.scrollHeight;
+    }
+  </script>
+  <style type="text/css" media="screen">
+    body {
+      background:#ccc;
+      margin: 2em 4em 2em 3em;
+      font-family: 'Trebuchet MS', sans-serif;
+    }
+    #admin_content {
+      max-width:40em;
+      min-height:100px;
+      max-height:400px;
+      background:#eee;
+      border: 1px solid #aaa;
+      margin-bottom:.5em;
+      padding:.3em;
+    }
+    #admin_content * {
+      margin:0;
+      padding:0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin</h1>
+  <p>The following box will fill with various admin stuff, when connected:</p>
+  <div id="admin_content"></div>
+  <input type="button" name="connect" value="connect" id="connect" onclick="open_connection();">
+</body>
+</html>
