@@ -1,3 +1,0 @@
-class TransportConnection(object):
-    pass
-    
