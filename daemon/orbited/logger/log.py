@@ -69,10 +69,13 @@ class Logger(object):
         return
     
     def debug(self, *args, **kwargs):
-        
-        now = datetime.now()
-        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
-        output = date + ' ' + 'DEBUG  ' + self.name + "\t" + "".join(args) + '\n'
+        if not self.defaults['debug']:
+            self.debug = self._empty
+            return
+        date = "[]"
+#        now = datetime.now()
+#        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
+        output = date + ' ' + 'DEBUG  ' + self.name + "\t" + "".join([str(i) for i in args]) + '\n'
         
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()
@@ -86,9 +89,13 @@ class Logger(object):
       
     
     def access(self, item, *args, **kwargs):
-        now = datetime.now()
-        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
-        output = date + ' ' + 'ACCESS ' + item + "\t" + "".join(args) + '\n'
+        if not self.defaults['access']:
+            self.access= self._empty
+            return
+        date = "[]"
+#        now = datetime.now()
+#        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
+        output = date + ' ' + 'ACCESS ' + item + "\t" + "".join([str(i) for i in args]) + '\n'
         
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()
@@ -101,8 +108,10 @@ class Logger(object):
       
     def warn(self, *args, **kwargs):
         now = datetime.now()
-        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
-        output = date + ' ' + 'WARN   ' + self.name + "\t" + "".join(args) + '\n'
+        date = "[]"
+#        now = datetime.now()
+#        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
+        output = date + ' ' + 'WARN   ' + self.name + "\t" + "".join([str(i) for i in args]) + '\n'
         
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()
@@ -114,9 +123,14 @@ class Logger(object):
             logger.log(output)
       
     def info(self, *args, **kwargs):
-        now = datetime.now()
-        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
-        output = date + ' ' + 'INFO   ' + self.name + "\t" + "".join(args) + '\n'
+        if not self.defaults['info']:
+            self.info= self._empty
+            return
+      
+        date = "[]"
+#        now = datetime.now()
+#        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
+        output = date + ' ' + 'INFO   ' + self.name + "\t" + "".join([str(i) for i in args]) + '\n'
         
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()
@@ -130,9 +144,10 @@ class Logger(object):
       
       
     def error(self, *args, **kwargs):
-        now = datetime.now()
-        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
-        output = date + ' ' + 'ERROR  ' + self.name + "\t" + "".join(args) + '\n'
+        date = "[]"
+#        now = datetime.now()
+#        date = now.strftime("%m/%d/%y %H:%M:%S:") + str(now.microsecond)[:3]
+        output = date + ' ' + 'ERROR  ' + self.name + "\t" + "".join([str(i) for i in args]) + '\n'
         
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()

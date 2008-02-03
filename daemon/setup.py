@@ -23,12 +23,13 @@ setup(
     description='A libevent/pyevent based comet server',
     long_description='',
     packages=[
+        'dez',
         'orbited', 
         'orbited.http',
         'orbited.logger',         
-        'orbited.op',
-        'orbited.stomp',
-        'orbited.transports',
+#        'orbited.op',
+#        'orbited.stomp',
+#        'orbited.transports',
     ],
     package_data = {
         '': [os.path.join('static', ext) for ext in static_types],
@@ -41,16 +42,19 @@ setup(
     entry_points = '''    
         [console_scripts]
         orbited = orbited.start:main
+        orbited_profile = orbited.start:profile
         orbited_daemonized = orbited.start:daemon
-
-        [orbited.transports]
-        raw = orbited.transports.raw:RawTransport
-        basic = orbited.transports.basic:BasicTransport
-        stream = orbited.transports.stream:StreamTransport
-        iframe = orbited.transports.iframe:IFrameTransport
-        xhr_multipart = orbited.transports.xhr_multipart:XHRMultipartTransport
-        xhr_stream = orbited.transports.xhr_stream:XHRStreamTransport
-        server_sent_events = orbited.transports.sse:ServerSentEventsTransport
+        dez_test = dez.test:main
+        dez_test_profile = dez.test:profile
+          
+#        [orbited.transports]
+#        raw = orbited.transports.raw:RawTransport
+#        basic = orbited.transports.basic:BasicTransport
+#        stream = orbited.transports.stream:StreamTransport
+#        iframe = orbited.transports.iframe:IFrameTransport
+#        xhr_multipart = orbited.transports.xhr_multipart:XHRMultipartTransport
+#        xhr_stream = orbited.transports.xhr_stream:XHRStreamTransport
+#        server_sent_events = orbited.transports.sse:ServerSentEventsTransport
     ''',
     
     classifiers = [

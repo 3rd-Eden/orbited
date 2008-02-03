@@ -8,3 +8,10 @@ def main():
 def daemon():
     print 'daemon'
     
+    
+    
+def profile():
+    import hotshot
+    prof = hotshot.Profile("orbited.profile")
+    prof.runcall(main)
+    prof.close()
