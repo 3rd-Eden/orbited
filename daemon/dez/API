@@ -1,0 +1,120 @@
+class HTTPDaemon
+    
+    __init__(hostname, port, get_logger=None)
+        The constructor for the HTTPDaemon.
+
+    register_prefix(url, cb)
+        routing is done by matching prefixes. The longest prefix that matches
+        the url will have the associated cb called with the request data
+
+    register_catch(cb)
+        if no prefix matches, then the catch cb will be used
+
+    start()
+        starts the server
+
+
+
+class HTTPRequest
+
+    whenever an http request is received, an HTTPRequest object is passed as
+    the only argument to the appropriate callback. It contains various data
+    members and functions for responding to the request.
+
+    write(data, cb=None)
+        write the specified data back to the client, then call cb when finished
+
+    end(cb=None)
+        specify that the current response is finished. cb will be called once
+        the server actually processes the end notification. This won't occur
+        until all cbs from write have completed
+
+    close(cb=None)
+        specify that the current response is finished (end implied) and that
+        this connection should be closed (for instance, as specified by the
+        "Connection: close" header)
+
+    string method ( "get", "post", all methods are lower cased)
+    string url ( "/hello/there?var=val" )
+    string url_scheme ( "http", "https")
+    int version_major ( 1 )
+    int version_minor (1 or 0)
+    int content_length (0 for all but posts)
+    dict headers ( all headers received are lower-cased)
+    
+
+class HTTPResponse
+    This class is used to simplify http responses. It will take care of
+    formatting responses as per the HTTP/1.0 or 1.1 specification. This
+    includes automatically using keepalive for HTTP/1.1 responses, unless
+    the "Connection: close" header is specifically set.
+
+    __init__(request)
+        constructor requires a request object
+
+    set_header(name, value)
+        Saves header information
+
+    write(data)
+        concatenates data to the response body (which starts as "")
+
+    dispatch()
+        sends the full response back.
+
+class RawHTTResponse
+    This class is used to simplify the api exposed by HTTPRequest, but not at
+    the cost of being able to stream parts of the body as necessary.
+
+    write_status(self, code, reason, cb=None)
+        send the status line; call cb once complete
+
+    def write_header(self, key, value, cb=None):
+        write the specified header, then call cb once complete
+       
+    def write_headers_end(self, cb=None):
+        called to signify that the last header has been written and now
+        the body is ready to be written
+        
+    def write(self, data, cb=None):
+        write data to the body. Will call write_headers_end if it hasn't been
+        called yet. 
+        
+    def close(self, cb=None):
+        Wrapper for HTTPRequest.close
+        
+    def end(self, cb=None):
+        Wrapper for HTTPRequest.end
+
+
+
+# example usage
+# =============
+
+def url1(request):
+    res = HTTPResponse(request)
+    res.write("Aloha Des!")
+    res.dispatch()
+
+def url2(request):
+    res = RawHTTPResponse(request)
+    res.write_status(200, "OK")
+    res.write_header("good", "day")
+    res.write_header("Content-length", 10)
+    res.write_headers_end()
+    res.write('Aloha Des!')
+    res.end()
+
+def url3(request):
+    request.write("HTTP/1.0 200 OK\r\nContent-type: text/html\r\nContent-length: 10\r\n\r\nAloha des!", None)
+    request.end()
+
+
+
+server = HTTPDaemon("127.0.0.1", 8000)
+server.register_prefix("/url1", url1)
+server.register_prefix("/url2", url2)
+server.register_prefix("/url3", url3)
+server.start()
+
+# ==============
+# ==============
