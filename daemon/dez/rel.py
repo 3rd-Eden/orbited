@@ -115,9 +115,11 @@ class PollRegistrar(Registrar):
 #        print self.i, 'loop'
         items = self.poll.poll()
         for fd,etype in items:
+#            if contains(etype, POLLERR) and contains(etype, POLLHUP):
             if etype == self.select.POLLERR|self.select.POLLHUP:
                 self.handle_error(fd)
                 break
+#            if contains(etype,POLLIN):
             elif etype == self.select.POLLIN:
                 self.events['read'][fd].ready()
             elif etype == self.select.POLLOUT:
