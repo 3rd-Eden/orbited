@@ -16,9 +16,7 @@ class HTTPDaemon(object):
         self.port = port
         self.log.info("Listening on %s:%s" % (host, port))
         self.sock = io.server_socket(self.port)
-        self.listen = event.event(self.accept_connection, 
-            handle=self.sock, evtype=event.EV_READ | event.EV_PERSIST)
-        self.listen.add()
+        self.listen = event.read(self.sock, self.accept_connection)
         self.router = Router(self.default_cb)
         
     def register_url(self, url, cb):
@@ -45,10 +43,10 @@ class HTTPDaemon(object):
     def default_cb(self, request):
         return self.default_404_cb(request)
 
-    def accept_connection(self, ev, sock, event_type, *arg):
-        sock, addr = sock.accept()
+    def accept_connection(self):
+        opened_sock, addr = self.sock.accept()
 #        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
-        HTTPConnection(sock, addr, self.router, self.get_logger)
+        HTTPConnection(opened_sock, addr, self.router, self.get_logger)
     
 
 

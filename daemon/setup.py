@@ -25,7 +25,7 @@ setup(
     packages=[
         'dez',
         'orbited', 
-        'orbited.http',
+#        'orbited.http',
         'orbited.logger',         
 #        'orbited.op',
 #        'orbited.stomp',
