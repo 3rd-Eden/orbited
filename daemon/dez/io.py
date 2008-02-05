@@ -1,5 +1,5 @@
 import socket
-LQUEUE_SIZE = 11000
+LQUEUE_SIZE = 5
 BUFFER_SIZE = 4096
 
 HTTP_DELIMITER = '\r\n'
@@ -9,6 +9,7 @@ def server_socket(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(('', port))
+    sock.setblocking(0)
     sock.listen(LQUEUE_SIZE)
     return sock
 

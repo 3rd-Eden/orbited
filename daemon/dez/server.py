@@ -10,6 +10,7 @@ from request import HTTPRequest
 class HTTPDaemon(object):
     
     def __init__(self, host, port, get_logger=default_get_logger):
+        
         self.log = get_logger("HTTPDaemon")
         self.get_logger = get_logger
         self.host = host
@@ -21,6 +22,8 @@ class HTTPDaemon(object):
         self.listen = event.read(self.sock, self.accept_connection, None, self.sock, None)
         #self.listen.add()
         self.router = Router(self.default_cb)
+        self.num_open = 0
+        self.max_open = 0
         
     def register_url(self, url, cb):
         pass
@@ -30,6 +33,9 @@ class HTTPDaemon(object):
 
     def register_catch(self, cb):
         self.default_cb = cb
+
+    def closed(self):
+        self.num_open -= 1
 
     def default_404_cb(self, request):
         r = HTTPResponse(request)
@@ -47,21 +53,34 @@ class HTTPDaemon(object):
         return self.default_404_cb(request)
 
     def accept_connection(self, ev, sock, event_type, *arg):
-        sock, addr = sock.accept()
-#        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
-        HTTPConnection(sock, addr, self.router, self.get_logger)
-        return True
-    
+        i = 0
+        while True:
+            try:
+                sock, addr = sock.accept()
+                i += 1
+                self.num_open += 1
+                if self.num_open > self.max_open:
+                    self.max_open = self.num_open
+                    print "New max concurrency:", self.max_open
+        #        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
+                HTTPConnection(sock, addr, self.router, self.get_logger,self.closed)
+                
+            except:
+                if i > 1:
+                    print 'accepted', i, 'connections.'
+                return True
+                
 
 
 class HTTPConnection(object):
     id = 0
-    def __init__(self, sock, addr, router, get_logger):
+    def __init__(self, sock, addr, router, get_logger, closecb):
+        self.closecb = closecb
         self.log = get_logger("HTTPConnection")
         self.get_logger = get_logger
         HTTPConnection.id += 1
         self.id = HTTPConnection.id
-        self.log.info('Incoming HTTP Connection with id %s, fileno %s' % (self.id, sock.fileno()))
+        print 'Incoming HTTP Connection with id %s, fileno %s' % (self.id, sock.fileno())
         self.sock = sock
         self.addr, self.local_port = addr
         self.router = router
@@ -79,6 +98,7 @@ class HTTPConnection(object):
         self.state = "read"
         
     def close(self, reason=""):
+        self.closecb()
         if self.revent:
             self.revent.delete()
             self.revent = None

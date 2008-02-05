@@ -85,34 +85,57 @@ class PollRegistrar(Registrar):
         import select
         self.select = select
         self.poll = self.select.poll()
-        self.events = {}
+        self.events = {'read': {}, 'write': {}}
+        self.i = 0
 
     def add(self, event):
-        etype = self.select.POLLIN
-        if event.ev_type == 'write':
-            etype = self.select.POLLOUT
-        self.events[event.fd] = event
-        self.poll.register(event.fd,etype)
+        self.events[event.ev_type][event.fd] = event
+        self.register(event.fd)
+        
+    def register(self, fd):
+        mode = 0
+        if fd in self.events['read']:
+            mode = mode|self.select.POLLIN
+        if fd in self.events['write']:
+            mode = mode|self.select.POLLOUT
+        if mode == 0:
+            return False
+        self.poll.register(fd, mode)
 
     def remove(self, event):
-        if event.fd in self.events:
-            self.poll.unregister(event.fd)
-            del self.events[event.fd]
+        if event.fd not in self.events[event.ev_type]:
+            return
+#        print 'remove', event.ev_type, event.fd
+        del self.events[event.ev_type][event.fd]
+        self.poll.unregister(event.fd)
+        self.register(event.fd)
 
     def loop(self):
+#        self.i += 1
+#        print self.i, 'loop'
         items = self.poll.poll()
         for fd,etype in items:
-            if etype == self.select.POLLERR:
+            if etype == self.select.POLLERR|self.select.POLLHUP:
                 self.handle_error(fd)
                 break
-            self.events[fd].ready()
+            elif etype == self.select.POLLIN:
+                self.events['read'][fd].ready()
+            elif etype == self.select.POLLOUT:
+                self.events['write'][fd].ready()
 
+    def handle_error(self, fd):
+        if fd in self.events['read']:
+            self.events['read'][fd].ready()
+        elif fd in self.events['write']:
+            self.events['write'][fd].ready()
+            
 class EPollRegistrar(PollRegistrar):
     def __init__(self):
         import epoll as select
         self.select = select
         self.poll = self.select.poll()
-        self.events = {}
+        self.events = {'read': {}, 'write': {}}
+        self.i = 0
 
 mapping = {
     'select': SelectRegistrar,
@@ -128,28 +151,37 @@ def get_registrar(method):
         return mapping[method]()
     raise ImportError
 
+registrar = None
+
 def initialize(methods=['pyevent','select','poll','epoll']):
-    reg = None
+    global registrar
+#    raise Exception, "..."
     for method in methods:
         try:
-            reg = get_registrar(method)
+            registrar = get_registrar(method)
             break
         except ImportError:
             pass
-    if reg is None:
+    if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     print 'Registered Event Listener initialized with method:',method
-    return reg
+#    return reg
 
-registrar = initialize()
+#registrar = initialize()
 
 def read(sock,cb,*args):
+    if not register:
+        raise Exception, "must call initialize before using rel api"
     return registrar.read(sock,cb,*args)
 
 def write(sock,cb,*args):
+    if not register:
+        raise Exception, "must call initialize before using rel api"
     return registrar.write(sock,cb,*args)
 
 def timeout(delay, cb, *args):
+    if not register:
+        raise Exception, "must call initialize before using rel api"
     return registrar.timeout(delay,cb,*args)
 
 def dispatch():
