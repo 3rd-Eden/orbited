@@ -1,5 +1,5 @@
 import socket
-LQUEUE_SIZE = 500
+LQUEUE_SIZE = 11000
 BUFFER_SIZE = 4096
 
 HTTP_DELIMITER = '\r\n'

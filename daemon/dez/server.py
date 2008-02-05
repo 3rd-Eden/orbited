@@ -1,4 +1,4 @@
-import event
+import rel as event
 #from orbited.logger import get_logger
 from dez import io
 from dez.buffer import Buffer
@@ -16,7 +16,10 @@ class HTTPDaemon(object):
         self.port = port
         self.log.info("Listening on %s:%s" % (host, port))
         self.sock = io.server_socket(self.port)
-        self.listen = event.read(self.sock, self.accept_connection)
+#        self.listen = event.event(self.accept_connection, 
+#            handle=self.sock, evtype=event.EV_READ | event.EV_PERSIST)
+        self.listen = event.read(self.sock, self.accept_connection, None, self.sock, None)
+        #self.listen.add()
         self.router = Router(self.default_cb)
         
     def register_url(self, url, cb):
@@ -43,10 +46,11 @@ class HTTPDaemon(object):
     def default_cb(self, request):
         return self.default_404_cb(request)
 
-    def accept_connection(self):
-        opened_sock, addr = self.sock.accept()
+    def accept_connection(self, ev, sock, event_type, *arg):
+        sock, addr = sock.accept()
 #        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
-        HTTPConnection(opened_sock, addr, self.router, self.get_logger)
+        HTTPConnection(sock, addr, self.router, self.get_logger)
+        return True
     
 
 

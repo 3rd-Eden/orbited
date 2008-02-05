@@ -1,5 +1,5 @@
 from dez import HTTPDaemon, HTTPResponse, RawHTTPResponse
-import event
+import rel as event
 
 def test_dispatch(request):
     # Very raw way
