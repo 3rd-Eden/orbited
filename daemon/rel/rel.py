@@ -8,12 +8,18 @@ functions:
     timeout(delay, callback, *args)
     dispatch()
 """
-
-##
-# ask michael how to override init function
 import time
-# to make this only import for Registrar objects
-##
+import select
+try:
+    import epoll
+except ImportError:
+    epoll = None
+try:
+    import event as pyevent
+except:
+    pyevent = None
+
+LISTEN_TIME = .0001
 
 class Event(object):
     def __init__(self, ev_type, sock, cb, *args):
@@ -33,9 +39,31 @@ class Event(object):
 
 class Timer(object):
     def __init__(self, expiration, cb, *args):
-        pass
+        self.cb = cb
+        self.args = args
+        self.add(expiration)
+
+    def add(self, expiration):
+        self.expiration = expiration
+
+    def delete(self):
+        self.expiration = None
+
+    def pending(self):
+        if self.expiration:
+            return 1
+        return 0
+
+    def check(self):
+        if self.expiration and time.time() >= self.expiration:
+            self.delete()
+            self.cb(*self.args)
 
 class Registrar(object):
+    def __init__(self):
+        self.events = {'read':{},'write':{}}
+        self.timers = {}
+
     def read(self,sock,cb,*args):
         tmp = Event('read',sock,cb,*args)
         self.add(tmp)
@@ -49,18 +77,29 @@ class Registrar(object):
     def dispatch(self):
         while True:
             self.loop()
+            self.check_timers()
 
     def timeout(self,delay,cb,*args):
-        return Timer(time.time()+delay,cb,*args)
+        t = time.time()
+        tmp = Timer(t+delay,cb,*args)
+        self.timers[(t,delay,cb)] = tmp
+        return tmp
 
-    def handle_error(self,fd):
-        print 'socket error:',fd
+    def check_timers(self):
+        for timer in self.timers:
+            self.timers[timer].check()
+
+    def handle_error(self, fd):
+        if fd in self.events['read']:
+            self.events['read'][fd].ready()
+        elif fd in self.events['write']:
+            self.events['write'][fd].ready()
+        else:
+            print 'Registered Event Listener error on socket:',fd
 
 class SelectRegistrar(Registrar):
     def __init__(self):
-        import select
-        self.select = select.select
-        self.events = {'read':{},'write':{}}
+        Registrar.__init__(self)
 
     def add(self, event):
         self.events[event.ev_type][event.fd] = event
@@ -72,7 +111,7 @@ class SelectRegistrar(Registrar):
     def loop(self):
         rlist = self.events['read'].keys()
         wlist = self.events['write'].keys()
-        r,w,e = self.select(rlist,wlist,rlist+wlist)
+        r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
         for fd in r:
             self.events['read'][fd].ready()
         for fd in w:
@@ -82,62 +121,47 @@ class SelectRegistrar(Registrar):
 
 class PollRegistrar(Registrar):
     def __init__(self):
-        import select
-        self.select = select
-        self.poll = self.select.poll()
-        self.events = {'read': {}, 'write': {}}
-        self.i = 0
+        Registrar.__init__(self)
+        self.poll = select.poll()
 
     def add(self, event):
         self.events[event.ev_type][event.fd] = event
         self.register(event.fd)
-        
-    def register(self, fd):
-        mode = 0
-        if fd in self.events['read']:
-            mode = mode|self.select.POLLIN
-        if fd in self.events['write']:
-            mode = mode|self.select.POLLOUT
-        if mode == 0:
-            return False
-        self.poll.register(fd, mode)
 
     def remove(self, event):
         if event.fd not in self.events[event.ev_type]:
             return
-#        print 'remove', event.ev_type, event.fd
         del self.events[event.ev_type][event.fd]
         self.poll.unregister(event.fd)
         self.register(event.fd)
 
     def loop(self):
-#        self.i += 1
-#        print self.i, 'loop'
-        items = self.poll.poll()
+        items = self.poll.poll(LISTEN_TIME)
         for fd,etype in items:
-#            if contains(etype, POLLERR) and contains(etype, POLLHUP):
-            if etype == self.select.POLLERR|self.select.POLLHUP:
-                self.handle_error(fd)
-                break
-#            if contains(etype,POLLIN):
-            elif etype == self.select.POLLIN:
+            if self.is_registered(etype,select.POLLIN):
                 self.events['read'][fd].ready()
-            elif etype == self.select.POLLOUT:
+            elif self.is_registered(etype,select.POLLOUT):
                 self.events['write'][fd].ready()
+            elif self.is_registered(etype,select.POLLERR) or self.is_registered(etype,select.POLLHUP):
+                self.handle_error(fd)
 
-    def handle_error(self, fd):
+    def register(self, fd):
+        mode = 0
         if fd in self.events['read']:
-            self.events['read'][fd].ready()
-        elif fd in self.events['write']:
-            self.events['write'][fd].ready()
-            
+            mode = mode|select.POLLIN
+        if fd in self.events['write']:
+            mode = mode|select.POLLOUT
+        if mode == 0:
+            return False
+        self.poll.register(fd, mode)
+
+    def is_registered(self,mode,bit):
+        return mode&bit==bit
+
 class EPollRegistrar(PollRegistrar):
     def __init__(self):
-        import epoll as select
-        self.select = select
-        self.poll = self.select.poll()
-        self.events = {'read': {}, 'write': {}}
-        self.i = 0
+        Registrar.__init__(self)
+        self.poll = epoll.poll()
 
 mapping = {
     'select': SelectRegistrar,
@@ -147,17 +171,17 @@ mapping = {
 
 def get_registrar(method):
     if method == 'pyevent':
-        import event
-        return event
+        if not pyevent:
+            raise ImportError, "could not import event"
+        return pyevent
     if method in mapping:
         return mapping[method]()
     raise ImportError
 
 registrar = None
 
-def initialize(methods=['pyevent','select','poll','epoll']):
+def initialize(methods=['pyevent','epoll','select','poll']):
     global registrar
-#    raise Exception, "..."
     for method in methods:
         try:
             registrar = get_registrar(method)
@@ -167,24 +191,23 @@ def initialize(methods=['pyevent','select','poll','epoll']):
     if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     print 'Registered Event Listener initialized with method:',method
-#    return reg
-
-#registrar = initialize()
 
 def read(sock,cb,*args):
-    if not register:
+    if not registrar:
         raise Exception, "must call initialize before using rel api"
     return registrar.read(sock,cb,*args)
 
 def write(sock,cb,*args):
-    if not register:
+    if not registrar:
         raise Exception, "must call initialize before using rel api"
     return registrar.write(sock,cb,*args)
 
 def timeout(delay, cb, *args):
-    if not register:
+    if not registrar:
         raise Exception, "must call initialize before using rel api"
     return registrar.timeout(delay,cb,*args)
 
 def dispatch():
+    if not registrar:
+        raise Exception, "must call initialize before using rel api"
     registrar.dispatch()
