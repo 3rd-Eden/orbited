@@ -1,0 +1,93 @@
+C: ORBIT/basic\r\n
+C: CONNECT\r\n
+C: id: 0\r\n
+C: login: somename\r\n
+C: password: somepass\r\n
+C: length: 0\r\n
+C: \r\n
+
+
+Modes
+
+    ORBIT/synchronous
+        CALLBACK require url header
+
+    ORBIT/asynchronous
+        CALLBACK may use url header or not
+
+
+
+
+SEND
+id: 1
+response: none
+
+
+ERROR
+id: 1
+
+Invalid something or another^@
+
+
+
+S: 
+
+Server Frames
+
+    RECEIPT
+    CALLBACK
+    ERROR
+
+Client Frames
+    CONNECT
+    SEND
+    
+    CALLBACK
+        signon
+        signoff
+        failure
+        success
+        
+
+    UNWELCOME
+    WELCOME
+
+
+(jon, 465324632, /somewhere)
+
+(identifier, /location)
+SEND
+destination:identifer, /location
+type:message|welcome|unwelcome
+
+paylod here^@
+
+django
+    controller
+        index ( /index)
+        login (/login)
+        
+        orbited
+            signon(conn_id, userkey) (/orbited/signon)
+                if not welcome, orbited_connection.unwelcome(info)
+                but if in WELCOME required mode,
+                orbited_connection.welcome(info)
+
+            signoff(conn_id, userkey) (/orbited/signoff)
+            
+            failures([id, recipients, payload])
+
+Frame
+
+ACTION\r\n
+id: val\r\n
+header1: value1\r\n
+header2: value2\r\n
+header_etc: etc\r\n
+\r\n
+BODY^@
+
+
+\^
+\@
+\\
