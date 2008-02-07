@@ -23,7 +23,8 @@ class Timer(object):
         self.add(delay)
 
     def add(self, delay):
-        self.expiration = time.time()+delay
+        self.delay = delay
+        self.expiration = time.time()+self.delay
 
     def delete(self):
         self.expiration = None
@@ -35,5 +36,7 @@ class Timer(object):
 
     def check(self):
         if self.expiration and time.time() >= self.expiration:
+            value = self.cb(*self.args)
+            if value:
+                return self.add(self.delay)
             self.delete()
-            self.cb(*self.args)

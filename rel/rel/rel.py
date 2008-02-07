@@ -7,6 +7,7 @@ functions:
     write(socket, callback, *args)
     timeout(delay, callback, *args)
     dispatch()
+    abort()
 """
 from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar
 try:
@@ -18,7 +19,7 @@ registrar = None
 
 mapping = {
     'select': SelectRegistrar,
-    'epoll': EPollRegistrar,
+    'epoll': EpollRegistrar,
     'poll': PollRegistrar,
 }
 
@@ -63,3 +64,7 @@ def timeout(delay, cb, *args):
 def dispatch():
     check_init()
     registrar.dispatch()
+
+def abort():
+    check_init()
+    registrar.abort()

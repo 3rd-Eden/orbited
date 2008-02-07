@@ -11,6 +11,7 @@ class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
         self.timers = {}
+        self.run_dispatch = False
 
     def read(self,sock,cb,*args):
         tmp = Event('read',sock,cb,*args)
@@ -23,13 +24,17 @@ class Registrar(object):
         return tmp
 
     def dispatch(self):
-        while True:
+        self.run_dispatch = True
+        while self.run_dispatch:
             self.loop()
             self.check_timers()
 
+    def abort(self):
+        self.run_dispatch = False
+
     def timeout(self,delay,cb,*args):
         tmp = Timer(delay,cb,*args)
-        self.timers[(t,delay,cb)] = tmp
+        self.timers[(delay,cb,args)] = tmp
         return tmp
 
     def check_timers(self):
@@ -105,7 +110,7 @@ class PollRegistrar(Registrar):
     def is_registered(self,mode,bit):
         return mode&bit==bit
 
-class EPollRegistrar(PollRegistrar):
+class EpollRegistrar(PollRegistrar):
     def __init__(self):
         Registrar.__init__(self)
         self.poll = epoll.poll()
