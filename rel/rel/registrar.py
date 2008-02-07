@@ -10,7 +10,7 @@ LISTEN_TIME = .0001
 class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
-        self.timers = {}
+        self.timers = []
         self.run_dispatch = False
 
     def read(self,sock,cb,*args):
@@ -34,12 +34,15 @@ class Registrar(object):
 
     def timeout(self,delay,cb,*args):
         tmp = Timer(delay,cb,*args)
-        self.timers[(delay,cb,args)] = tmp
+        self.timers = [tmp]+self.timers
         return tmp
 
     def check_timers(self):
         for timer in self.timers:
-            self.timers[timer].check()
+            if not timer.check():
+                self.timers.remove(timer)
+                self.timers.append(timer)
+                break
 
     def handle_error(self, fd):
         if fd in self.events['read']:

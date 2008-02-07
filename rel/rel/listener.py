@@ -35,8 +35,11 @@ class Timer(object):
         return 0
 
     def check(self):
-        if self.expiration and time.time() >= self.expiration:
+        if not self.expiration:
+            return False
+        if time.time() >= self.expiration:
             value = self.cb(*self.args)
             if value:
                 return self.add(self.delay)
             self.delete()
+        return True
