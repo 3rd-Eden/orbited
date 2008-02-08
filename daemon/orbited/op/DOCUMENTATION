@@ -1,0 +1,124 @@
+
+Overview
+========
+
+The ORBIT protocol, or OP, is designed as a means of integrating web applications closely with a Comet server. The primary feature of OP is the ability of the client to dispatch a message to a named recipient in real-time. Some applications benefit from additional information on the outcome of the message delivery, such as success or failure, so OP includes asynchronous server->client callbacks. But many popular application frameworks and servers are based on a synchronous model of one-thread-per-request, which makes it difficult to interoperate with an asynchronous client implementation. OP therefore allows asynchronous server->client responses to be sent as HTTP requests to the client, which is also a web server. Asynchronous web servers, on the other hand, can have asynchronous callbacks issued over the main protocol socket itself. 
+
+There are no provisions for publish/subscribe style communication; they are outside the scope of OP and left to alternate protocols such as IRC, XMPP conferencing, and Revolved. The ORBIT protocol is simply a dispatch system for sending a particular payload to one or more specified recipients connected to a Comet server.
+
+
+Client Frames
+=============
+Each client frame consists of the action, a set of headers, and a body. The action is identified as the text directly preceding the first "\r\n". Each header is a key and value seperated by a ":" the key is the text from the beginning of the line to the :, and the value is the text from the ":" to the next "\r\n". The end of the headers is denoted by and empty line with only "\r\n". The body of the request is terminated with the character sequence "^@"
+
+ACTION\r\n
+header1:value1\r\n
+header2:value2\r\n
+\r\n
+BODY^@
+
+
+CONNECT
+-------
+
+The CONNECT frame is used to identify the version of the protocol, and set defaults for headers of all future frames, such as the response header. The default response header is "response: none" which means that no RECEIPT frames are required unless explicity requested. 
+
+The following are the default headers implied in the CONNECT frame (and therefore implied in all subsequent requests.)
+
+response: none (can be also be "response: receipt")
+
+
+Server Frames
+=============
+
+Server frames use format identical to client frames.
+
+RECEIPT
+-------
+
+The RECEIPT frame specifies the receipt of a command. It will only be sent if the command has an explicit or implicit "response: receipt" command. This is useful for synchronous clients, otherwise it would be difficult to read errors from the 
+
+RECEIPT\r\n
+id: 123\r\n
+
+^@
+
+ERROR
+-----
+
+The ERROR frame specifies that there was a critical error with a particular frame. It requires a code header to specify what type of error occured, and an id header to specify which frame encountered an error. If the error was that a particular frame was wholly intelligible, contained no id, or exceeded the frame size limit, then the error will contain the entire contents of the offending request.
+
+codes:
+    1: server raised unknown exception
+    2: no id found
+    3: frame size limit exceeded
+    4: 
+
+ERROR\r\n
+id: 23\r\n
+code: 1\r\n
+\r\n
+^@
+
+or
+
+ERROR\r\\n
+code: 2\r\n 
+\r\n
+CONNECT\r\n
+
+CALLBACK
+--------
+
+The CALLBACK frame signifies that an action on the server triggered a callback set earlier by the client. CALLBACK frames require the function header. Additional headers may be required by the various types of callbacks
+
+* function: failure
+    The failure CALLBACK alerts the client that a message dispatched earlier has failed for one or more recipients. The body may contain the original payload, if specified in the original client CALLBACK frame. Additional headers may be required:
+        id: this required header represents the id of the original SEND frame from the client that dispatched the message
+        recipient: this is the ORBIT key of the recipient for which the message failed. There must be at least one recipient header, but there may be multiple recipient headers.
+        reason: this is an optinal header used to explain why the send failed.
+
+CALLBACK\r\n
+function: failure\r\n
+id: 10\r\n
+recipient: A3E5F,/event\r\n
+reason: One or more of the following recipients were not connected.
+\r\n
+"JSON encoded Hello World!"^@
+
+
+* function: success
+    The success CALLBACK alerts the client that a message dispatched earlier has succeeded for one or more recipients. The body may contain the original payload, if specified in the original client CALLBACK frame. Additional headers my be requred:
+        id: this required header represents the id of the original SEND frame from the client that dispatched the message
+        recipient: this is the ORBIT key of the recipient for which the message succeeded. There must be at least one recipient header, but there may be multiple recipient headers.
+
+CALLBACK\r\n
+function: success\r\n
+id: 11\r\n
+recipient: A3E5F,/event\r\n
+recipient: B8G37,/event\r\n
+\r\n
+^@
+
+    
+* function: signon
+    The singon CALLBACK alerts the client that a user has just initiated a new Comet connection. Note that the signon CALLBACK will only be called when the first unique connection is accepted. The same user will likely need to continually reconnect, depending on their transport. After signon for a particular user key is called, signoff must be called before another signon for that same user key will be sent. The body will be empty, but some additional headers may be required.
+        key: this is a required header representing the connection key of the user
+
+CALLBACK\r\n
+function: signon\r\n
+key: A3E5F,/event\r\n
+\r\n
+^@
+            
+* function: signout
+    The signoff CALLBACK alerts the client that a user has just signed off of the comet server. If the user had an outstanding message queue when they signed off, the body of the signoff CALLBACK will contain a list of message data. The format for that list is Messages seperated by "|". If "|" appears in any part of the message body, it must be escaped with the sequence "\|". If "\" appears in the message body, it must be escaped with "\\". The message body itself consists of an id, followed by a ":", followed by the payload. Addtonal headers may be required:
+        key: this is a required header representing the connection key of the user
+        type: this is a required header representing how the client signed off. Valid values include "timeout" or "clean". 
+
+CALLBACK\r\n
+function: signout\r\n
+key: A3E5F,/event\r\n
+\r\n
+12:"Test json payload"||13:"Another event"||14:[1, "hi", "prototype\\test"]^@
+
