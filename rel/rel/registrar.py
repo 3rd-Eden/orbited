@@ -14,12 +14,12 @@ class Registrar(object):
         self.run_dispatch = False
 
     def read(self,sock,cb,*args):
-        tmp = Event('read',sock,cb,*args)
+        tmp = Event(self,'read',sock,cb,*args)
         self.add(tmp)
         return tmp
 
     def write(self,sock,cb,*args):
-        tmp = Event('write',sock,cb,*args)
+        tmp = Event(self,'write',sock,cb,*args)
         self.add(tmp)
         return tmp
 

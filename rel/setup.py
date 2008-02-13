@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 import os
 
 setup(
-    name='Registered Event Listener',
+    name='rel',
     version='0.1.0',
     author='Mario Balibrera',
     author_email='mario.balibrera@gmail.com',
     license='MIT License',
-    description='Provides standard (pyevent) interface and functionality for systems that support: pyevent,epoll,select,poll. kqueue coming soon.',
-    long_description='Select preferred event notification methods with initialize([methods in order of preference]). If initialize(...) is not called, methods are tried in default order: pyevent,epoll,select,poll.',
+    description='Registered Event Listener. Provides standard (pyevent) interface and functionality for systems that support: pyevent,epoll,kqueue,select,poll.',
+    long_description='Select preferred event notification methods with initialize([methods in order of preference]). If initialize(...) is not called, methods are tried in default order: pyevent,epoll,kqueue,select,poll.',
     packages=[
         'rel',
     ],

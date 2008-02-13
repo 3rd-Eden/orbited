@@ -1,7 +1,8 @@
 import time
 
 class Event(object):
-    def __init__(self, ev_type, sock, cb, *args):
+    def __init__(self, registrar, ev_type, sock, cb, *args):
+        self.registrar = registrar
         self.ev_type = ev_type
         self.sock = sock
         self.fd = self.sock.fileno()
@@ -14,7 +15,7 @@ class Event(object):
             self.delete()
 
     def delete(self):
-        registrar.remove(self)
+        self.registrar.remove(self)
 
 class Timer(object):
     def __init__(self, delay, cb, *args):
