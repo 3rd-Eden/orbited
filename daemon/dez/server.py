@@ -25,9 +25,6 @@ class HTTPDaemon(object):
         self.num_open = 0
         self.max_open = 0
         
-    def register_url(self, url, cb):
-        pass
-    
     def register_prefix(self, prefix, cb):
         self.router.register_prefix(prefix, cb)
 
@@ -86,6 +83,7 @@ class HTTPConnection(object):
         self.router = router
         self.response_queue = []
         self.current_cb = None
+        self.current_args = None
         self.wevent = None
         self.start_request()
         
@@ -134,8 +132,8 @@ class HTTPConnection(object):
         return True
             
             
-    def write(self, data, cb):
-        self.response_queue.append((data, cb))
+    def write(self, data, cb, args):
+        self.response_queue.append((data, cb, args))
         if not self.wevent:
             self.wevent = event.write(self.sock, self.write_ready)
         
@@ -143,15 +141,15 @@ class HTTPConnection(object):
     def write_ready(self):
         if self.write_buffer.empty():
             if self.current_cb:
-                cb = self.current_cb[0]
-                args = self.current_cb[1]
-                cb(args)
+                cb = self.current_cb
+                args = self.current_args
+                cb(*args)
                 self.current_cb = None
             if not self.response_queue:
                 self.current_cb = None
                 self.current_response = None
                 return None
-            data, self.current_cb = self.response_queue.pop(0)            
+            data, self.current_cb, self.current_args = self.response_queue.pop(0)            
             self.write_buffer.reset(data)
             # call conn.write("", cb) to signify request complete
             if data == "":

@@ -101,7 +101,7 @@ class HTTPRequest(object):
             self.write(data, cb)        
         
 
-    def write(self, data, cb):
+    def write(self, data, cb=None, args=None):
         if self.write_ended:
             raise Exception, "end already called"
         if self.state != 'write':
@@ -112,17 +112,19 @@ class HTTPRequest(object):
         if len(data) == 0:
             return cb()
         self.write_queue_size += 1
-        self.conn.write(data, (self.write_cb, cb))
+        self.conn.write(data, self.write_cb (cb, args))
     
-    def write_cb(self, cb):
+    def write_cb(self, *args):
         self.write_queue_size -= 1
         if self.write_ended and self.write_queue_size == 0:
             if self.send_close:
                 self.conn.close()
             else:
                 self.conn.start_request()
-        if cb:
-            cb()
+        if len(args) > 0:
+            cb = args[0]
+            args = args[1:]
+            cb(*args)
             
     def end(self, cb=None):
         if self.write_ended:
