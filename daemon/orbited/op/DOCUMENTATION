@@ -11,9 +11,12 @@ Client Frames
 =============
 Each client frame consists of the action, a set of headers, and a body. The action is identified as the text directly preceding the first "\r\n". Each header is a key and value seperated by a ":" the key is the text from the beginning of the line to the :, and the value is the text from the ":" to the next "\r\n". The end of the headers is denoted by and empty line with only "\r\n". The body of the request is terminated with the character sequence "^@"
 
+Each frame requires an id header that is unique from any previous id headers.
+
 ACTION\r\n
-header1:value1\r\n
-header2:value2\r\n
+id: unique value\r\n 
+header2:value1\r\n
+header3:value2\r\n
 \r\n
 BODY^@
 
@@ -21,13 +24,20 @@ BODY^@
 CONNECT
 -------
 
-The CONNECT frame is used to identify the version of the protocol, and set defaults for headers of all future frames, such as the response header. The default response header is "response: none" which means that no RECEIPT frames are required unless explicity requested. 
+The CONNECT frame is used to identify the version of the protocol, and set defaults for headers of all future frames, such as the response header. The default response header is "response: none" which means that no RECEIPT frames are required unless explicity requested; "response: reciept" is the alternate value. The id and connection_id headers are required. The connection_id header refers to a unique identifier for this connection. If the supplied identifier is not uniuqe, an error will be returned.
 
-The following are the default headers implied in the CONNECT frame (and therefore implied in all subsequent requests.)
+CONNECT\r\n
+id: 1\r\n
+response: receipt\r\n
+\r\n
+^@
 
-response: none (can be also be "response: receipt")
+SEND
+----
+The SEND frame is used to dispatch a message to a set of recipients with identified Comet connection keys. The id header is required. At least one recipient header is required, but multiple headers may be specified. 
 
-
+SEND\r\n
+id:
 Server Frames
 =============
 
