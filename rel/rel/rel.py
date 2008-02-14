@@ -6,10 +6,15 @@ functions:
     read(socket, callback, *args)
     write(socket, callback, *args)
     timeout(delay, callback, *args)
+    signal(sig, callback, *args)
+    event(callback,arg=[],evtype=0,handle=None)
     dispatch()
+    loop()
     abort()
+    init()
 """
-from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar
+import sys
+from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar, EV_PERSIST, EV_READ, EV_SIGNAL, EV_TIMEOUT, EV_WRITE
 try:
     import event as pyevent
 except:
@@ -61,10 +66,25 @@ def timeout(delay, cb, *args):
     check_init()
     return registrar.timeout(delay,cb,*args)
 
+def signal(sig, callback, *args):
+    check_init()
+    return registrar.signal(sig,callback,*args)
+
 def dispatch():
     check_init()
     registrar.dispatch()
 
+def loop():
+    check_init()
+    registrar.loop()
+
 def abort():
     check_init()
     registrar.abort()
+
+def init():
+    check_init()
+
+def event(callback,arg=[],evtype=0,handle=None):
+    check_init()
+    return registrar.event(callback,arg,evtype,handle)
