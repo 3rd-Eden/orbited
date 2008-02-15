@@ -1,15 +1,9 @@
-from listener import SocketIO, Timer, Signal
+from listener import Event, SocketIO, Timer, Signal, contains
 import select
 try:
     import epoll
 except ImportError:
     epoll = None
-
-EV_PERSIST = 16
-EV_READ = 2
-EV_SIGNAL = 8
-EV_TIMEOUT = 1
-EV_WRITE = 4
 
 LISTEN_TIME = .0001
 
@@ -20,15 +14,13 @@ class Registrar(object):
         self.signals = []
         self.run_dispatch = False
 
-    def event(self,callback,args,evtype,handle):
-        if not evtype:
-            return self.timeout(0,callback,*args)
-        if self.is_registered(evtype,EV_SIGNAL):
-            return self.signal(handle,callback,*args)
-        if self.is_registered(evtype,EV_READ):
-            return self.read(handle,callback,*args)
-        if self.is_registered(evtype,EV_WRITE):
-            return self.write(handle,callback,*args)
+    def init(self):
+        for signal in self.signals:
+            signal.delete()
+        self.__init__()
+
+    def event(self,callback,arg,evtype,handle):
+        return Event(self,callback,arg,evtype,handle)
 
     def read(self,sock,cb,*args):
         tmp = SocketIO(self,'read',sock,cb,*args)
@@ -41,14 +33,16 @@ class Registrar(object):
         return tmp
 
     def dispatch(self):
-        if not self.loop():
-            return
         self.run_dispatch = True
         while self.run_dispatch:
-            self.loop()
+            if not self.loop():
+                self.run_dispatch = False
 
     def loop(self):
-        return self.check_timers() or self.check_signals() or self.check_events()
+        t = self.check_timers()
+        s = self.check_signals()
+        e = self.check_events()
+        return t or s or e
 
     def abort(self):
         self.run_dispatch = False
@@ -88,9 +82,6 @@ class Registrar(object):
             self.events['read'][fd].ready()
         if fd in self.events['write']:
             self.events['write'][fd].ready()
-
-    def is_registered(self,mode,bit):
-        return mode&bit==bit
 
 class SelectRegistrar(Registrar):
     def __init__(self):
@@ -138,11 +129,11 @@ class PollRegistrar(Registrar):
             return False
         items = self.poll.poll(LISTEN_TIME)
         for fd,etype in items:
-            if self.is_registered(etype,select.POLLIN):
+            if contains(etype,select.POLLIN):
                 self.events['read'][fd].ready()
-            if self.is_registered(etype,select.POLLOUT):
+            if contains(etype,select.POLLOUT):
                 self.events['write'][fd].ready()
-            if self.is_registered(etype,select.POLLERR) or self.is_registered(etype,select.POLLHUP):
+            if contains(etype,select.POLLERR) or contains(etype,select.POLLHUP):
                 self.handle_error(fd)
         return True
 

@@ -7,14 +7,15 @@ functions:
     write(socket, callback, *args)
     timeout(delay, callback, *args)
     signal(sig, callback, *args)
-    event(callback,arg=[],evtype=0,handle=None)
+    event(callback,arg=None,evtype=0,handle=None)
     dispatch()
     loop()
     abort()
     init()
 """
 import sys
-from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar, EV_PERSIST, EV_READ, EV_SIGNAL, EV_TIMEOUT, EV_WRITE
+from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar
+from listener import EV_PERSIST, EV_READ, EV_SIGNAL, EV_TIMEOUT, EV_WRITE
 try:
     import event as pyevent
 except:
@@ -84,7 +85,8 @@ def abort():
 
 def init():
     check_init()
+    registrar.init()
 
-def event(callback,arg=[],evtype=0,handle=None):
+def event(callback,arg=None,evtype=0,handle=None):
     check_init()
     return registrar.event(callback,arg,evtype,handle)
