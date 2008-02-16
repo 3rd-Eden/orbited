@@ -31,7 +31,7 @@ mapping = {
 
 def check_init():
     if not registrar:
-        print "rel.initialize not called. Trying event notification methods in default order: pyevent,epoll,select,poll"
+        print "rel.initialize not called. Trying event notification methods in default order: pyevent,epoll,poll,select"
         initialize()
 
 def get_registrar(method):
@@ -43,7 +43,7 @@ def get_registrar(method):
         return mapping[method]()
     raise ImportError
 
-def initialize(methods=['pyevent','epoll','select','poll']):
+def initialize(methods=['pyevent','epoll','poll','select']):
     global registrar
     for method in methods:
         try:

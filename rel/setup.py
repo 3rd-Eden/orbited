@@ -1,5 +1,4 @@
-from setuptools import setup, find_packages
-import os
+from setuptools import setup
 
 setup(
     name='rel',
@@ -7,8 +6,9 @@ setup(
     author='Mario Balibrera',
     author_email='mario.balibrera@gmail.com',
     license='MIT License',
-    description='Registered Event Listener. Provides standard (pyevent) interface and functionality for systems that support: pyevent,epoll,kqueue,select,poll.',
-    long_description='Select preferred event notification methods with initialize([methods in order of preference]). If initialize(...) is not called, methods are tried in default order: pyevent,epoll,kqueue,select,poll.',
+    download_url="http://code.google.com/r/rel/downloads/list",
+    description='Registered Event Listener. Provides standard (pyevent) interface and functionality without external dependencies',
+    long_description='Select preferred event notification methods with initialize([methods in order of preference]). If initialize(...) is not called, methods are tried in default order: pyevent,epoll,poll,select.',
     packages=[
         'rel',
     ],

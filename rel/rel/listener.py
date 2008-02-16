@@ -23,14 +23,23 @@ class Event(object):
         self.spawn_children()
 
     def spawn_children(self):
+        persist = False
+        if contains(self.evtype,EV_PERSIST):
+            persist = True
         if contains(self.evtype,EV_TIMEOUT):
             self.children.append(self.registrar.timeout(0,self.callback))
         if contains(self.evtype,EV_SIGNAL):
             self.children.append(self.registrar.signal(self.handle,self.callback))
         if contains(self.evtype,EV_READ):
-            self.children.append(self.registrar.read(self.handle,self.callback))
+            tmp = self.registrar.read(self.handle,self.callback)
+            if persist:
+                tmp.persistent()
+            self.children.append(tmp)
         if contains(self.evtype,EV_WRITE):
-            self.children.append(self.registrar.write(self.handle,self.callback))
+            tmp = self.registrar.write(self.handle,self.callback)
+            if persist:
+                tmp.persistent()
+            self.children.append(tmp)
 
     def add(self, delay=0):
         for child in self.children:
@@ -58,11 +67,15 @@ class SocketIO(object):
         if hasattr(self.fd,'fileno'):
             self.fd = self.fd.fileno()
         self.cb = cb
+        self.persist = False
         self.args = args
+
+    def persistent(self):
+        self.persist = True
 
     def ready(self):
         outcome = self.cb(*self.args)
-        if outcome is None:
+        if not self.persist and outcome is None:
             self.delete()
 
     def pending(self):
