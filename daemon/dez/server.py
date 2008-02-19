@@ -50,22 +50,14 @@ class HTTPDaemon(object):
         return self.default_404_cb(request)
 
     def accept_connection(self, ev, sock, event_type, *arg):
-        i = 0
-        while True:
-            try:
-                sock, addr = sock.accept()
-                i += 1
-                self.num_open += 1
-                if self.num_open > self.max_open:
-                    self.max_open = self.num_open
-                    print "New max concurrency:", self.max_open
-        #        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
-                HTTPConnection(sock, addr, self.router, self.get_logger,self.closed)
-                
-            except:
-                if i > 1:
-                    print 'accepted', i, 'connections.'
-                return True
+#        self.num_open += 1
+#        if self.num_open > self.max_open:
+#            self.max_open = self.num_open
+#            print "New max concurrency:", self.max_open
+#        self.log.info('Accept Connection, ev: %s, sock: %s, event_type: %s, *arg: %s' % (ev, sock.fileno(), event_type, arg))
+        sock, addr = sock.accept()
+        HTTPConnection(sock, addr, self.router, self.get_logger,self.closed)                
+        return True
                 
 
 
@@ -148,6 +140,7 @@ class HTTPConnection(object):
             if not self.response_queue:
                 self.current_cb = None
                 self.current_response = None
+                self.wevent = None
                 return None
             data, self.current_cb, self.current_args = self.response_queue.pop(0)            
             self.write_buffer.reset(data)
