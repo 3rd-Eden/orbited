@@ -130,5 +130,4 @@ CALLBACK\r\n
 function: signout\r\n
 key: A3E5F,/event\r\n
 \r\n
-12:"Test json payload"||13:"Another event"||14:[1, "hi", "prototype\\test"]^@
-
+12:"Test json payload"|13:"Another event"|14:[1, "hi", "prototype\\test"]^@
