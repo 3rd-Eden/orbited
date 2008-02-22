@@ -1,68 +1,49 @@
-from orbited.http.server import HTTPDaemon
-#from orbited.stomp.server import StompDaemon
-#from orbited.op.server import OPDaemon
+from dez.http.server import HTTPApplication
 from orbited.config import map as config
 from transport import TransportConnection
+from orbited.plugin import PluginManager
+from orbited.csp import CSP
+from orbited.revolved import Revolved
+from orbited.system import System
+
 import random
-httpconf = config['[http]']
+
 class Application(object):
   
     def __init__(self):
-        self.http_daemon = HTTPDaemon(httpconf['bind_addr'], int(httpconf['port']))
+        self.http_server = HTTPApplication(httpconf['bind_addr'], int(httpconf['port']))
+        self.plugin_manager = PluginManager()
+        self.transports = TransportHandler()
+        self.csp = CSP()
+        self.revolved = Revolved()
+        self.system = System()
 #        self.stomp_daemon = StompDaemon()
 #        self.orbit_daemon = OrbitDaemon()
+        self.dispatcher = Dispatcher(self)
+
+#        self.http_router = HTTPRouter(
+#            self.http_server, 
+#            self.dispatcher, 
+#            self.plugin_manager,
+#            self.stomp_daemon,
+#            self.orbit_daemon,
+        )
+        
         self.connections = {}
         self.csp_connections = {}
         self.revolved_connections = {}
         
-        
-        
-    def send(self, event):
-        if event.key not in self.connections:
-            event.failed("Destination not found")
-        self.connections[event.key].send(event)
-            
-    def accept_http_connection(self, conn):
-        if conn.key not in self.connections:
-            self.connections[conn.key] = TransportConnection()
-            if conn.url == "/_/session":
-                sessions.accept_transport_connection(self.connections[conn.key])
-        self.connections[conn.key].accept_http_connection(conn)
-
-    def http_connection_closed(self, conn):
-        if conn.key in self.connections:
-            self.connections[conn.key].http_conn_closed(conn)
-
-    def transport_connection_closed(self, tconn):
-        if tconn.url == "/_/session":
-            sessions.close_transport_connection(tconn)
-        del self.connections[tconn.key]
-
-
-    def unique_key(self):
-        k = None
-        while k is None or k in self.connections:
-            k = "".join([random.choice("ABCDEF123456790") for i in range(10) ])
-        return k
-
-    def start(self):
-        print 'starting...'
+#        self.http_daemon = HTTPDaemon(httpconf['bind_addr'], int(httpconf['port']))
+                    
 
     def main(self):
         """ Start the daemons """
-        def collect_toplevel_exceptions():
-            return True
         import event
+        event.signal(2, event.abort)
         event.timeout(1, collect_toplevel_exceptions)
         while True:
             try:
                 event.dispatch()
-            except KeyboardInterrupt, k:
-                event.abort()
-                print 'Received Ctr+c shutdown'
-                sys.stdout.flush()
-                sys.exit(0)
-
             except Exception, e:
                 exception, instance, tb = traceback.sys.exc_info()
                 if 'exceptions must be strings' in str(instance):
@@ -78,4 +59,6 @@ class Application(object):
 
                 logger.critical('%s:%s\t%s' % (exception, instance, relevant_line))
                 print x
-
+            else:
+                break
+            

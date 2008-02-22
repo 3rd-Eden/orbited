@@ -15,16 +15,27 @@ map = {
         'bind_addr': '127.0.0.1',
     },
     '[transport]': {
+        'buffer': '1',
+        'num_retry_limit': '1',
+        'timeout': '30',
         'default': 'stream',
         'xhr.timeout': '30',
     },
     '[admin]': {
         'admin.port': '9001'
     },
-    '[proxy]': [
-        # ('/', ('69.60.117.172', 80)),
-        # ('/', ('ORBITED', None)),
-    ],
+    '[routing]': {
+        '/_/csp/event': ('transport', ()),
+        '/_/csp/': ('csp', ()),
+        '/_/revolved/event': ('transport', ()),
+        '/_/revolved/': ('revolved', ()),
+        '/_/': ('system', ()),
+        '/': ('transport', ()),
+        # '/djangoapp/': ('wsgi', ('djangoapp.application:main',))
+        # '/static/': ('static', ('/somewhere/somewhere',))
+        # '/rubyapp': ('proxy', ('127.0.0.1', 80))
+        # '/event/': ('orbited', (,))
+    }
     '[logging]': {
         'debug': '',
         'info': 'SCREEN',

@@ -9,7 +9,7 @@ There are no provisions for publish/subscribe style communication; they are outs
 
 Client Frames
 =============
-Each client frame consists of the action, a set of headers, and a body. The action is identified as the text directly preceding the first "\r\n". Each header is a key and value seperated by a ":" the key is the text from the beginning of the line to the :, and the value is the text from the ":" to the next "\r\n". The end of the headers is denoted by and empty line with only "\r\n". The body of the request is terminated with the character sequence "^@"
+Each client frame consists of the action, a set of headers, and a body. The action is identified as the text directly preceding the first "\r\n". Each header is a key and value seperated by a ":" the key is the text from the beginning of the line to the :, and the value is the text from the ":" to the next "\r\n". The end of the headers is denoted by and empty line with only "\r\n". The body of the request is terminated with ^@, the  null terminator (0 byte).
 
 Each frame requires an id header that is unique from any previous id headers.
 
