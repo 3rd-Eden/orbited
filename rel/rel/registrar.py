@@ -11,12 +11,9 @@ class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
         self.timers = []
-        self.signals = []
         self.run_dispatch = False
 
     def init(self):
-        for signal in self.signals:
-            signal.delete()
         self.__init__()
 
     def event(self,callback,arg,evtype,handle):
@@ -40,27 +37,14 @@ class Registrar(object):
 
     def loop(self):
         t = self.check_timers()
-        s = self.check_signals()
         e = self.check_events()
-        return t or s or e
+        return t or e
 
     def abort(self):
         self.run_dispatch = False
 
     def signal(self,sig,cb,*args):
-        tmp = Signal(sig,cb,*args)
-        self.signals = [tmp]+self.signals
-        return tmp
-
-    def check_signals(self):
-        active = False
-        for signal in self.signals:
-            if not signal.check():
-                self.signals.remove(signal)
-                self.signals.append(signal)
-                break
-            active = True
-        return active
+        return Signal(self,sig,cb,*args)
 
     def timeout(self,delay,cb,*args):
         tmp = Timer(delay,cb,*args)
@@ -79,20 +63,20 @@ class Registrar(object):
 
     def handle_error(self, fd):
         if fd in self.events['read']:
-            self.events['read'][fd].ready()
+            self.events['read'][fd].callback()
         if fd in self.events['write']:
-            self.events['write'][fd].ready()
+            self.events['write'][fd].callback()
 
 class SelectRegistrar(Registrar):
     def __init__(self):
         Registrar.__init__(self)
 
     def add(self, event):
-        self.events[event.evtype][event.fd] = event
+        self.events[event.evtype][event.sock] = event
 
     def remove(self, event):
-        if event.fd in self.events[event.evtype]:
-            del self.events[event.evtype][event.fd]
+        if event.sock in self.events[event.evtype]:
+            del self.events[event.evtype][event.sock]
 
     def check_events(self):
         if not self.events['read'] and not self.events['write']:
@@ -101,9 +85,9 @@ class SelectRegistrar(Registrar):
         wlist = self.events['write'].keys()
         r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
         for fd in r:
-            self.events['read'][fd].ready()
+            self.events['read'][fd].callback()
         for fd in w:
-            self.events['write'][fd].ready()
+            self.events['write'][fd].callback()
         for fd in e:
             self.handle_error(fd)
         return True
@@ -114,15 +98,15 @@ class PollRegistrar(Registrar):
         self.poll = select.poll()
 
     def add(self, event):
-        self.events[event.evtype][event.fd] = event
-        self.register(event.fd)
+        self.events[event.evtype][event.sock] = event
+        self.register(event.sock)
 
     def remove(self, event):
-        if event.fd not in self.events[event.evtype]:
+        if event.sock not in self.events[event.evtype]:
             return
-        del self.events[event.evtype][event.fd]
-        self.poll.unregister(event.fd)
-        self.register(event.fd)
+        del self.events[event.evtype][event.sock]
+        self.poll.unregister(event.sock)
+        self.register(event.sock)
 
     def check_events(self):
         if not self.events['read'] and not self.events['write']:
@@ -130,9 +114,9 @@ class PollRegistrar(Registrar):
         items = self.poll.poll(LISTEN_TIME)
         for fd,etype in items:
             if contains(etype,select.POLLIN):
-                self.events['read'][fd].ready()
+                self.events['read'][fd].callback()
             if contains(etype,select.POLLOUT):
-                self.events['write'][fd].ready()
+                self.events['write'][fd].callback()
             if contains(etype,select.POLLERR) or contains(etype,select.POLLHUP):
                 self.handle_error(fd)
         return True

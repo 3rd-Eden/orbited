@@ -15,19 +15,14 @@ class Event(object):
         self.registrar = registrar
         self.cb = cb
         self.arg = arg
-        if not evtype:
-            evtype = EV_TIMEOUT
+        self.timeout = self.registrar.timeout(0,self.callback)
         self.evtype = evtype
         self.handle = handle
         self.children = []
         self.spawn_children()
 
     def spawn_children(self):
-        persist = False
-        if contains(self.evtype,EV_PERSIST):
-            persist = True
-        if contains(self.evtype,EV_TIMEOUT):
-            self.children.append(self.registrar.timeout(0,self.callback))
+        persist = contains(self.evtype,EV_PERSIST)
         if contains(self.evtype,EV_SIGNAL):
             self.children.append(self.registrar.signal(self.handle,self.callback))
         if contains(self.evtype,EV_READ):
@@ -42,10 +37,13 @@ class Event(object):
             self.children.append(tmp)
 
     def add(self, delay=0):
+        if delay:
+            self.timeout.add(delay)
         for child in self.children:
-            child.add(delay)
+            child.add()
 
     def delete(self):
+        self.timeout.delete()
         for child in self.children:
             child.delete()
 
@@ -53,7 +51,7 @@ class Event(object):
         for child in self.children:
             if child.pending():
                 return 1
-        return 0
+        return self.timeout.pending()
 
     def callback(self):
         self.cb(self,self.handle,self.evtype,self.arg)
@@ -63,75 +61,71 @@ class SocketIO(object):
         self.registrar = registrar
         self.evtype = evtype
         self.sock = sock
-        self.fd = self.sock
-        if hasattr(self.fd,'fileno'):
-            self.fd = self.fd.fileno()
+        if hasattr(self.sock,'fileno'):
+            self.sock = self.sock.fileno()
         self.cb = cb
-        self.persist = False
         self.args = args
+        self.persist = False
+        self.timeout = self.registrar.timeout(0,self.callback)
+        self.add()
 
     def persistent(self):
         self.persist = True
 
-    def ready(self):
+    def add(self, delay=0):
+        if delay:
+            self.timeout.add(delay)
+        self.registrar.add(self)
+        self.active = 1
+
+    def delete(self):
+        self.registrar.remove(self)
+        self.active = 0
+
+    def pending(self):
+        return self.active
+
+    def callback(self):
         outcome = self.cb(*self.args)
         if not self.persist and outcome is None:
             self.delete()
 
-    def pending(self):
-        return 1
-
-    def add(self, delay=0):
-        pass
-
-    def delete(self):
-        self.registrar.remove(self)
-
 class Signal(object):
-    def __init__(self, sig, cb, *args):
+    def __init__(self, registrar, sig, cb, *args):
+        self.registrar = registrar
         self.sig = sig
         self.default = signal.getsignal(self.sig)
         self.cb = cb
         self.args = args
+        self.timeout = self.registrar.timeout(0,self.callback)
         self.add()
 
     def add(self, delay=0):
-        self.expiration = None
         if delay:
-            self.expiration = time.time()+delay
+            self.timeout.add(delay)
         signal.signal(self.sig,self.callback)
-        self.active = True
+        self.active = 1
 
     def delete(self):
         signal.signal(self.sig,self.default)
-        self.active = False
+        self.active = 0
 
     def pending(self):
-        if self.active:
-            return 1
-        return 0
-
-    def check(self):
-        if not self.pending():
-            return False
-        elif self.expiration and time.time() >= self.expiration:
-            self.callback()
-            self.delete()
-        return True
+        return self.active
 
     def callback(self,*args):
         self.cb(*self.args)
+        self.delete()
 
 class Timer(object):
     def __init__(self, delay, cb, *args):
         self.cb = cb
         self.args = args
+        self.add(delay)
+
+    def add(self, delay=0):
         self.delay = delay
         self.expiration = None
-        self.add()
-
-    def add(self, delay=None):
-        self.delay = delay or self.delay
         if self.delay:
             self.expiration = time.time()+self.delay
 
@@ -150,5 +144,5 @@ class Timer(object):
             value = self.cb(*self.args)
             self.delete()
             if value:
-                self.add()
+                self.add(self.delay)
         return True
