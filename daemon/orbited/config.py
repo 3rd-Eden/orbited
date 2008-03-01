@@ -4,14 +4,14 @@ map = {
         'admin.enabled': '0',
         'proxy.enabled': '1',
         'proxy.keepalive': '1',
-        'proxy.keepalive_default_timeout': 300,
+        'proxy.keepalive_default_timeout': '300',
         'log.enabled': '1',
         'session.default_key': '0', # TODO: change to token.default_key
         'session.timeout': 5,
         'event.retry_limit': 1
     },
     '[http]': {
-        'port': 8000,
+        'port': '8000',
         'bind_addr': '127.0.0.1',
     },
     '[transport]': {
@@ -31,10 +31,18 @@ map = {
         '/_/revolved/': ('revolved', ()),
         '/_/': ('system', ()),
         '/': ('transport', ()),
+        
+        # """/djangoapp/ -> wsgi:djangoapp.application:main"""
         # '/djangoapp/': ('wsgi', ('djangoapp.application:main',))
+
+        # """/static/ -> static:/some/where"""
         # '/static/': ('static', ('/somewhere/somewhere',))
+        
+        # """/rubyapp/ -> proxy:127.0.0.1:80"""        
         # '/rubyapp': ('proxy', ('127.0.0.1', 80))
-        # '/event/': ('orbited', (,))
+        
+        # """/event/ -> transport"""
+        # '/event/': ('transport', (,))
     }
     '[logging]': {
         'debug': '',

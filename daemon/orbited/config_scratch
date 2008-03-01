@@ -1,0 +1,44 @@
+
+[http]
+port = 8000
+bind_addr = 127.0.0.1
+
+[op]
+port = 9000
+bind_addr = 127.0.0.1
+
+[routing]0
+
+/djangoapp/ -> wsgi:djangoapp.application:main
+/static/ -> static:/some/where
+/rubyapp/ -> proxy:127.0.0.1:80
+/event/ -> transport
+
+/_/ -> system #
+/_/csp -> csp #
+/_/csp/event -> transport #
+/_/revolved -> revolved #
+/_/revolved/event -> transport #
+/ -> transport #
+/event/ -> static:/somewhere/else/
+
+from config import map as config
+
+
+
+
+
+#####
+import config
+try:
+    config.load("test1.cfg") # A broken file
+    raise Exception # We should never get here
+except ValueError, e:
+    assert e == "duplicate route on line 9, \"/event/ -> static:/somewhere/else\""
+
+config.load("test_working.cfg")
+assert config.map == {
+    '[global]'
+
+}    
+
