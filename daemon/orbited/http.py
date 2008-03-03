@@ -5,14 +5,33 @@ class HTTPRequest(object):
     def __init__(self, request):
         self.headers = request.headers
         self.conn = request
-        self.form = {}
+        self.url = request.url
+        self.form = request.form
+        self.cookies = request.cookies
         
     def RawHTTPResponse(self):
         return RawHTTPResponse(self.conn)
     
     def HTTPResponse(self):
         return HTTPResponse(self.conn)
-        
+    
+    
+    def error(self, reason, details):
+        r = HTTPResponse(self.conn)
+        r.status = "500 Orbited Error"
+        r.write("""
+        <html>
+          <head>
+            <link rel="stylesheet" type="text/css" href="/_/static/orbited.css">
+            <title>Orbited Error - %s</title>
+          </head>
+          <body>
+            <h1>Orbited Error - %s</title>
+            %s
+          </body>
+        </html>        
+        """ % (reason, reason, details))
+        r.dispatch()
 
 # 946 8306 dr chen
 # 909 946 6959 Susan

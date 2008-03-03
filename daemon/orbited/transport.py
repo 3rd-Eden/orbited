@@ -18,9 +18,9 @@ class TransportHandler(object):
     def __init__(self):
         self.connections = {}
         
-    def http_request(self, req):
+    def http_request(self, conn):
         # TODO: use cookies to get info out            
-        req = HTTPRequest(req)
+        req = HTTPRequest(conn)
         transport_name = req.form.get('transport', None)
         if transport_name is None:
             return req.error("Transport name not specified")

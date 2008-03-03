@@ -23,7 +23,6 @@ setup(
     description='A libevent/pyevent based comet server',
     long_description='',
     packages=[
-        'dez',
         'orbited', 
 #        'orbited.http',
         'orbited.logger',         
