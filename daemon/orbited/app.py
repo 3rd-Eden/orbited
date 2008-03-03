@@ -1,6 +1,14 @@
-from dez.http.server import HTTPApplication
+import traceback
+import sys
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
+    
+from dez.http.application import HTTPApplication
 from orbited.config import map as config
-from transport import TransportConnection
+from orbited.transport import TransportConnection, TransportHandler
+from orbited.dispatcher import Dispatcher
 from orbited.plugin import PluginManager
 from orbited.csp import CSP
 from orbited.revolved import Revolved
@@ -8,6 +16,7 @@ from orbited.system import System
 
 import random
 
+httpconf = config['[http]']
 class Application(object):
   
     def __init__(self):
@@ -27,7 +36,7 @@ class Application(object):
 #            self.plugin_manager,
 #            self.stomp_daemon,
 #            self.orbit_daemon,
-        )
+#        )
         
         self.connections = {}
         self.csp_connections = {}
@@ -36,15 +45,21 @@ class Application(object):
 #        self.http_daemon = HTTPDaemon(httpconf['bind_addr'], int(httpconf['port']))
                     
 
-    def main(self):
+    def start(self):
         """ Start the daemons """
-        import event
+        import event        
         event.signal(2, event.abort)
-        event.timeout(1, collect_toplevel_exceptions)
+        last_exception = None
         while True:
             try:
                 event.dispatch()
             except Exception, e:
+                # TODO: without this ctr+c doesn't get us out after at least one
+                #       exception has previously been raised.                
+                if last_exception is e :
+                    sys.exc_clear()
+                    break
+                last_exception = e
                 exception, instance, tb = traceback.sys.exc_info()
                 if 'exceptions must be strings' in str(instance):
                     print "Error in pyevent 0.3. See http://orbited.org/pyevent.html for details"
@@ -57,8 +72,10 @@ class Application(object):
                 relevant_line = x.split('\n')[-3]
                 # End: Find a better way
 
-                logger.critical('%s:%s\t%s' % (exception, instance, relevant_line))
+#                logger.critical('%s:%s\t%s' % (exception, instance, relevant_line))
                 print x
+#                sys.stdout.flush()
             else:
                 break
+        print "Received Ctr+c shutdown"
             

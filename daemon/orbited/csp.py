@@ -1,4 +1,4 @@
-from orbited.router import router, CSPDestination
+#from orbited.router import router, CSPDestination
 
 
 #router.register(CSPDestination, '/_/csp')

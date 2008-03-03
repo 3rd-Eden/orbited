@@ -1,14 +1,24 @@
+import sys
 from orbited import __version__
 from dez.http.server import HTTPResponse
 
 
 class System(object):
   
+    def http_request(self, req):
+        # remove "/_/" part of url
+        action = req.url[3:]
+        if hasattr(self, action):
+            return getattr(self, action)(req)
+  
     def about(self, req):
+        print __version__
+        print sys.version
         response = HTTPResponse(req)
         response.write("""<!DOCTYPE HTML>
         <html>
           <head>
+            <link rel="stylesheet" type="text/css" href="/_/static/orbited.css">
             <meta charset="utf-8">
             <title>Orbited 0.2.0</title>
           </head>
@@ -19,6 +29,6 @@ class System(object):
             </p>
           </body>
         </html>
-        """) % (__version__, sys.version.replace('\n', '<br>\r\n'), sys.platform)
-        response.render()
+        """ % (__version__, sys.version.replace('\n', '<br>\r\n'), sys.platform))
+        response.dispatch()
       

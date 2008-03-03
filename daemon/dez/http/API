@@ -1,5 +1,13 @@
 
+
 class HTTPApplication(object):
+    """
+        HTTPApplication depends on HTTPDaemon for its prefix ordering behavior.
+        It issues cbs as per add_cb_rule in the same manner that HTTPDaemon
+        does as well -- it simply passes a dez.http.server.request.HTTPRequest
+        instance as the single argument to the callback. Its up to the user to
+        construct the appropriate RawHTTPResponse or HTTPResponse as required.
+    """
 
     def __init__(self, bind_address, port):
         """start listening on the given port (this doesn't include a call to
@@ -46,6 +54,7 @@ class HTTPApplication(object):
             Will provide the app with the appropriate environ and start_response
             function. 
         """
+
 
 
 

@@ -8,7 +8,7 @@ port = 8888
 if len(sys.argv) > 2:
     port = int(sys.argv[2])
 
-from dez import HTTPDaemon, HTTPResponse, RawHTTPResponse
+from dez.http.server import HTTPDaemon, HTTPResponse, RawHTTPResponse
 
 def test_dispatch(request):
     # Very raw way

@@ -1,0 +1,14 @@
+Easy
+----
+orbited: Use templates to provide a uniform look for system content (orbited/system.py). Use either mako or cheetah templates (or something equally fast)
+orbited: integrate system content (orbited/system.py)
+
+Medium
+------
+
+dez: pyinotify based caching
+dez: expose caching api so non-file-system resources can be cached as well
+
+Hard
+----
+

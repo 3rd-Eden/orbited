@@ -1,16 +1,17 @@
 from orbited.config import map as config
-from orbited.http import HTTPRequest
+from orbited.http.server import HTTPRequest
 
-num_retry_limit = int(config['num_retry_limit'])
-timeout = int(config['timeout'])
+num_retry_limit = int(config['[transport]']['num_retry_limit'])
+timeout = int(config['[transport]']['timeout'])
 
 # Therapy Wellness
 # 323 255 5409
 # 2460 Colorado
 
-transports = {
-    'basic': BasicTransport,        
-}
+transports = { }
+
+def setup():
+    transports['basic'] = BasicTransport
 
 class TransportHandler(object):
     
@@ -115,15 +116,15 @@ class RawTransport(Transport):
             events_copy.append(events.pop(0))
         payload = json.encode([event.payload for event in events_copy])
 
-    def send_event(self
+    def send_event(self, event):
         self.browser_conn.write(payload, self.event_success, [ events_copy ])
 
     def event_success(self, event):
         pass
 
-    def event_
+#    def event_
     
-        return True
+#        return True
 
     def http_request(self, req):
 
@@ -140,3 +141,5 @@ class RawTransport(object):
 
 class BasicTransport(Transport):
     pass
+
+setup()

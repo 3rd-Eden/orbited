@@ -2,10 +2,11 @@ import rel as event
 #from orbited.logger import get_logger
 from dez import io
 from dez.buffer import Buffer
-from logging import default_get_logger
-from router import Router
-from response import RawHTTPResponse, HTTPResponse
-from request import HTTPRequest
+from dez.logging import default_get_logger
+from dez.http.server.router import Router
+from dez.http.server.response import RawHTTPResponse, HTTPResponse
+from dez.http.server.request import HTTPRequest
+
 
 class HTTPDaemon(object):
     

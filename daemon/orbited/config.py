@@ -1,3 +1,4 @@
+import os
 map = {
     '[global]': {
         'op.port': '9000',
@@ -26,11 +27,14 @@ map = {
     },
     '[routing]': {
         '/_/csp/event': ('transport', ()),
+        '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),
         '/_/csp/': ('csp', ()),
         '/_/revolved/event': ('transport', ()),
         '/_/revolved/': ('revolved', ()),
         '/_/': ('system', ()),
-        '/': ('transport', ()),
+        '/music/': ('proxy', ('www.brbx.com', 80)),
+        '/icons/': ('proxy', ('www.brbx.com', 80)),
+#        '/': ('transport', ()),
         
         # """/djangoapp/ -> wsgi:djangoapp.application:main"""
         # '/djangoapp/': ('wsgi', ('djangoapp.application:main',))
@@ -43,7 +47,7 @@ map = {
         
         # """/event/ -> transport"""
         # '/event/': ('transport', (,))
-    }
+    },
     '[logging]': {
         'debug': '',
         'info': 'SCREEN',
@@ -57,7 +61,7 @@ map = {
     },
     'default_config': 1, # set to 0 later if we load a config file
 }
-
+del os
 def update(**kwargs):
     map.update(kwargs)
     return True
@@ -118,3 +122,4 @@ def load(filename):
     print 'CONFIG'
     print map
     return True
+

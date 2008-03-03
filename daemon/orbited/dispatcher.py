@@ -1,13 +1,11 @@
-#from orbited.router import * # router, CSPDestination, StaticDestination, etc.
 from orbited.system import System
-#from orbited.op.message import O
 from orbited.config import map as config
 
 class Dispatcher(object):
   
     def __init__(self, app):
         self.app = app
-        self.setup()
+        self.setup_routing()
         
 #    /_/plugin/
 
@@ -33,19 +31,27 @@ class Dispatcher(object):
     def setup_routing(self):
         for prefix, (rule, params) in config['[routing]'].items():
             if rule == "transport":
-                self.app.http_server.add_cb(prefix, self.transport_http_request)
+                print prefix, '-> transport'
+                self.app.http_server.add_cb_rule(prefix, self.transport_http_request)
             elif rule == "csp":
-                self.app.http_server.add_cb(prefix, self.csp_http_request)
+                self.app.http_server.add_cb_rule(prefix, self.csp_http_request)
+                print prefix, '-> csp'
             elif rule == "revolved":
-                self.app.http_server.add_cb(prefix, self.revolved_http_request)            
+                self.app.http_server.add_cb_rule(prefix, self.revolved_http_request)
+                print prefix, '-> revolved'
+       
             elif rule == "system":
-                self.app.http_server.add_cb(prefix, self.app.system.http_request)
+                self.app.http_server.add_cb_rule(prefix, self.app.system.http_request)
+                print prefix, '-> system'
+
             elif rule == "static":
                 local_source = params[0]
-                http_server.add_static_rule(prefix, local_source)
+                self.app.http_server.add_static_rule(prefix, local_source)
+                print prefix, '-> static'
             elif rule == "proxy":
                 host, port = params
-                http_server.add_proxy_rule(prefix, host, port)
+                self.app.http_server.add_proxy_rule(prefix, host, port)
+                print prefix, '-> proxy'
 #            elif rule == "plugin":
 #                plugin_name = params[0]
 #                cb = self.app.plugin_manager.get_http_cb(
