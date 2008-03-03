@@ -38,8 +38,22 @@ The SEND frame is used to dispatch a message to a set of recipients with identif
 
 SEND\r\n
 id:
+
+
+CALLBACK
+--------
+
+
+CALLBACK\r\n
+id: 55\r\n
+function: signon\r\n
+location: http://somewhere.com/orbited/signon_cb\r\n # Optional header, specifies http style callback
+\r\n
+^@
+
 Server Frames
 =============
+
 
 Server frames use format identical to client frames.
 
