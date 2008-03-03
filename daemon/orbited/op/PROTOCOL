@@ -1,5 +1,6 @@
-C: ORBIT/basic\r\n
 C: CONNECT\r\n
+C: connection_type: synchronous\r\n
+C: connection_id: telnet1\r\n
 C: id: 0\r\n
 C: login: somename\r\n
 C: password: somepass\r\n
@@ -47,13 +48,6 @@ Client Frames
         signoff
         failure
         success
-        
-
-    UNWELCOME
-    WELCOME
-
-
-(jon, 465324632, /somewhere)
 
 (identifier, /location)
 SEND

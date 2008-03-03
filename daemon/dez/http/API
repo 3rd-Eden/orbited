@@ -4,6 +4,7 @@ class HTTPApplication(object):
     def __init__(self, bind_address, port):
         """start listening on the given port (this doesn't include a call to
            event.dispatch)"""
+        
 
     def start(self):
         """calls event.dispatch"""
@@ -76,7 +77,7 @@ class HTTPRequest
 
     end(cb=None)
         specify that the current response is finished. cb will be called once
-        the server actually processes the end notification. This won't occur
+        the server actually processes the end notification. This won''t occur
         until all cbs from write have completed
 
     close(cb=None)
@@ -126,7 +127,7 @@ class RawHTTResponse
         the body is ready to be written
         
     def write(self, data, cb=None):
-        write data to the body. Will call write_headers_end if it hasn't been
+        write data to the body. Will call write_headers_end if it hasn''t been
         called yet. 
         
     def close(self, cb=None):

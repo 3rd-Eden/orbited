@@ -99,8 +99,10 @@ class EventTest(unittest.TestCase):
         event.dispatch()
 
 if __name__ == '__main__':
-    event.initialize(['pyevent'])
-#    event.initialize(['epoll'])
-#    event.initialize(['select'])
-#    event.initialize(['poll'])
+    # pyevent alternatives: epoll, poll, select
+    method = "pyevent"
+    if len(sys.argv) > 1:
+        method = sys.argv[1]
+        sys.argv.remove(sys.argv[1])
+    event.initialize([method])
     unittest.main()

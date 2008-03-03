@@ -7,11 +7,11 @@ class SocketClient(object):
         self.cb = cb
         self.started = False
 
-    def connect(self,hostname,port):
+    def connect(self,hostname,port,path='/'):
         s = io.client_socket(hostname,port)
         conn = Connection((hostname,port), s)
         print 'calling cb'
-        self.cb(conn)
+        self.cb(conn,path)
         print 'starting'
         if not self.started:
             self.start()

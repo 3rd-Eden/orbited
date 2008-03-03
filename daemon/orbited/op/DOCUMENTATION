@@ -59,7 +59,7 @@ ERROR
 The ERROR frame specifies that there was a critical error with a particular frame. It requires a code header to specify what type of error occured, and an id header to specify which frame encountered an error. If the error was that a particular frame was wholly intelligible, contained no id, or exceeded the frame size limit, then the error will contain the entire contents of the offending request.
 
 codes:
-    1: server raised unknown exception
+    1: server raised exception
     2: no id found
     3: frame size limit exceeded
     4: 
