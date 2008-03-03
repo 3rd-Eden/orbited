@@ -13,7 +13,7 @@ except ImportError:
         json.encode = simplejson.dumps
         json.decode = simplejson.loads
     except ImportError:
-        import json as pyjson
-        print "json handler: python-json"
-        json.encode = pyjson.write
-        json.decode = pyjson.read
+        import demjson
+        print "json handler: demjson"
+        json.encode = demjson.encode
+        json.decode = demjson.decode
