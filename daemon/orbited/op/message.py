@@ -1,5 +1,8 @@
 class OrbitMessage(object):
 
+    def __str__(self):
+        return "<OrbitMessage \"%s\", %s>" % (self.payload, self.recipients)
+
     def __init__(self, recipients, payload, cb, args):
         self.recipients = recipients
         self.payload = payload

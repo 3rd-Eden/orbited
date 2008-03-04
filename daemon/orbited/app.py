@@ -6,28 +6,35 @@ except:
     import StringIO
     
 from dez.http.application import HTTPApplication
+from orbited import __version__
 from orbited.config import map as config
-from orbited.transport import TransportConnection, TransportHandler
-from orbited.dispatcher import Dispatcher
+from orbited.op.daemon import OPDaemon
 from orbited.plugin import PluginManager
+from orbited.transport import TransportConnection, TransportHandler
 from orbited.csp import CSP
 from orbited.revolved import Revolved
 from orbited.system import System
+from orbited.dispatcher import Dispatcher
 
 import random
 
 httpconf = config['[http]']
+orbitconf = config['[op]']
+
 class Application(object):
   
     def __init__(self):
-        self.http_server = HTTPApplication(httpconf['bind_addr'], int(httpconf['port']))
+        self.http_server = HTTPApplication(
+            httpconf['bind_addr'], 
+            int(httpconf['port']), 
+            server_name="Orbited %s" % __version__)
+        self.orbit_daemon = OPDaemon(orbitconf['bind_addr'], int(orbitconf['port']))
         self.plugin_manager = PluginManager()
         self.transports = TransportHandler()
         self.csp = CSP()
         self.revolved = Revolved()
         self.system = System()
 #        self.stomp_daemon = StompDaemon()
-#        self.orbit_daemon = OrbitDaemon()
         self.dispatcher = Dispatcher(self)
 
 #        self.http_router = HTTPRouter(

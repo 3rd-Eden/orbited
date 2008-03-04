@@ -15,6 +15,10 @@ map = {
         'port': '8000',
         'bind_addr': '127.0.0.1',
     },
+    '[op]': {
+        'port': '9000',
+        'bind_addr': '127.0.0.1',
+    },
     '[transport]': {
         'buffer': '1',
         'num_retry_limit': '1',

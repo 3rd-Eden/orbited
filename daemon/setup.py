@@ -26,7 +26,7 @@ setup(
         'orbited', 
 #        'orbited.http',
         'orbited.logger',         
-#        'orbited.op',
+        'orbited.op',
 #        'orbited.stomp',
 #        'orbited.transports',
     ],

@@ -6,11 +6,13 @@ class Dispatcher(object):
     def __init__(self, app):
         self.app = app
         self.setup_routing()
+        self.app.orbit_daemon.set_send_cb(self.dispatch_orbit)
         
 #    /_/plugin/
 
     def dispatch_orbit(self, message):
-            
+        print 'dispatch orbit:', message
+#        return
         for recipient in message.recipients:
             if self.csp.contains(recipient):
                 self.csp.dispatch(message.single_recipient_message(recipient))
