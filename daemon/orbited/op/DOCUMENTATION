@@ -43,6 +43,7 @@ id:
 CALLBACK
 --------
 
+The location header is optional, and if specified will send any callback results as an http request to the given location.
 
 CALLBACK\r\n
 id: 55\r\n

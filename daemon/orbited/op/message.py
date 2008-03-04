@@ -1,13 +1,14 @@
 class OrbitMessage(object):
 
-    def __init__(self, recipients, payload, complete_cb):
+    def __init__(self, recipients, payload, cb, args):
         self.recipients = recipients
         self.payload = payload
-        self.complete_cb = complete_cb
+        self.cb = cb
+        self.args = args
         self.failed = []
         self.succeed_count = 0
 
-    def single_recipient_event(self, recipient):
+    def single_recipient_message(self, recipient):
         return SingleRecipientMessage(
             self.payload, self.recipient, self.success, self.failure)
 
@@ -21,7 +22,7 @@ class OrbitMessage(object):
 
     def check_complete(self):
         if len(self.failed) + self.succeed_count == len(self.recipients):
-            self.complete_cb(self.failed)
+            self.cb(self.failed, *self.args)
 
 class SingleRecipientMessage(object):
     

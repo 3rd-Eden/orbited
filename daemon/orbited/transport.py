@@ -1,6 +1,7 @@
+from orbited import __version__
 from orbited.config import map as config
-from orbited.http.server import HTTPRequest
-
+from orbited.http import HTTPRequest
+import event
 num_retry_limit = int(config['[transport]']['num_retry_limit'])
 timeout = int(config['[transport]']['timeout'])
 
@@ -29,25 +30,25 @@ class TransportHandler(object):
         identifier = req.form.get('identifier', None)
         if identifier is None:
             return req.error("Identifier not specified.")
-        key = req.identifier, req.url
+        key = identifier, req.url
         if key not in self.connections:
-            self.connections[key] = TransportConnection(key)
+            self.connections[key] = TransportConnection(key, self.__timed_out)
         self.connections[key].http_request(req)
         
         
-    def timed_out(self, conn):
+    def __timed_out(self, conn):
         del self.connections[conn.key]
         conn.close()
         
 class TransportConnection(object):
   
-    def __init__(self, key, timed_out):
+    def __init__(self, key, timed_out_cb):
         self.transport = None
         self.event_callback = None
         self.events = []
         self.key = key
-        self.timed_out = timed_out
-        self.timer = event.timeout(timeout, self.timed_out)
+        self.__timed_out_cb = timed_out_cb
+        self.timer = event.timeout(timeout, self.__timed_out_cb)
         
     def close(self):
         self.end_transport()
@@ -63,7 +64,7 @@ class TransportConnection(object):
         
     def http_request(self, request):
         transport_name = request.form['transport']
-        if transport_name  != self.transport.name:
+        if self.transport is not None and transport_name != self.transport.name:
             self.end_transport()
         self.transport = transports[transport_name](self.set_event_cb)
         self.transport.http_request(request)
@@ -115,7 +116,7 @@ class RawTransport(Transport):
         while events:
             events_copy.append(events.pop(0))
         payload = json.encode([event.payload for event in events_copy])
-
+    
     def send_event(self, event):
         self.browser_conn.write(payload, self.event_success, [ events_copy ])
 
@@ -130,7 +131,7 @@ class RawTransport(Transport):
 
         self.browser_conn = RawHTTPResponse(req)
         self.browser_conn.write_status('200', 'OK')
-        self.browser_conn.write_header('Server', 'Orbited')
+        self.browser_conn.write_header('Server', 'Orbited __version__')
         self.browser_conn.end_headers()
 
 

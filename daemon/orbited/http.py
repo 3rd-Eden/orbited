@@ -16,17 +16,17 @@ class HTTPRequest(object):
         return HTTPResponse(self.conn)
     
     
-    def error(self, reason, details):
+    def error(self, reason="Unknown", details=""):
         r = HTTPResponse(self.conn)
         r.status = "500 Orbited Error"
         r.write("""
         <html>
           <head>
             <link rel="stylesheet" type="text/css" href="/_/static/orbited.css">
-            <title>Orbited Error - %s</title>
+            <title>500 Orbited Error - %s</title>
           </head>
           <body>
-            <h1>Orbited Error - %s</title>
+            <h1>500 Orbited Error - %s</title>
             %s
           </body>
         </html>        

@@ -1,3 +1,6 @@
+import rel
+rel.override()
+#rel.initialize(["poll"])
 from orbited.app import Application
 
 def main():

@@ -9,24 +9,24 @@ class Dispatcher(object):
         
 #    /_/plugin/
 
-    def dispatch_orbit(self, event):
+    def dispatch_orbit(self, message):
             
-        for recipient in event.recipients:
+        for recipient in message.recipients:
             if self.csp.contains(recipient):
-                self.csp.dispatch(event.single_recipient_event(recipient))
+                self.csp.dispatch(message.single_recipient_message(recipient))
             elif self.transports.contains(recipient):
-                self.transports.event(event.single_recipient_event(recipient))
+                self.transports.message(message.single_recipient_message(recipient))
             else:
-                event.failure(recipient, "not connected")
+                message.failure(recipient, "not connected")
     
     def transport_http_request(self, req):
-        self.transports.http_request(req)
+        self.app.transports.http_request(req)
         
     def revolved_http_request(self, req):
-        self.revolved.http_request(req)
+        self.app.revolved.http_request(req)
         
     def csp_http_request(self, req):
-        self.csp.http_request(req)
+        self.app.csp.http_request(req)
                 
     def setup_routing(self):
         for prefix, (rule, params) in config['[routing]'].items():
