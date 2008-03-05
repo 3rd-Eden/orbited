@@ -11,7 +11,15 @@ class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
         self.timers = []
+        self.signals = set()
         self.run_dispatch = False
+
+    def signal_add(self, sig):
+        self.signals.add(sig)
+
+    def signal_remove(self, sig):
+        if sig in self.signals:
+            self.signals.remove(sig)
 
     def init(self):
         self.__init__()
@@ -36,9 +44,9 @@ class Registrar(object):
                 self.run_dispatch = False
 
     def loop(self):
-        t = self.check_timers()
         e = self.check_events()
-        return t or e
+        t = self.check_timers()
+        return e or t or self.signals
 
     def abort(self):
         self.run_dispatch = False
@@ -72,25 +80,25 @@ class SelectRegistrar(Registrar):
         Registrar.__init__(self)
 
     def add(self, event):
-        self.events[event.evtype][event.sock] = event
+        self.events[event.evtype][event.fd] = event
 
     def remove(self, event):
-        if event.sock in self.events[event.evtype]:
-            del self.events[event.evtype][event.sock]
+        if event.fd in self.events[event.evtype]:
+            del self.events[event.evtype][event.fd]
 
     def check_events(self):
-        if not self.events['read'] and not self.events['write']:
-            return False
-        rlist = self.events['read'].keys()
-        wlist = self.events['write'].keys()
-        r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
-        for fd in r:
-            self.events['read'][fd].callback()
-        for fd in w:
-            self.events['write'][fd].callback()
-        for fd in e:
-            self.handle_error(fd)
-        return True
+        if self.events['read'] or self.events['write']:
+            rlist = self.events['read'].keys()
+            wlist = self.events['write'].keys()
+            r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
+            for fd in r:
+                self.events['read'][fd].callback()
+            for fd in w:
+                self.events['write'][fd].callback()
+            for fd in e:
+                self.handle_error(fd)
+            return True
+        return False
 
 class PollRegistrar(Registrar):
     def __init__(self):
@@ -98,28 +106,27 @@ class PollRegistrar(Registrar):
         self.poll = select.poll()
 
     def add(self, event):
-        self.events[event.evtype][event.sock] = event
-        self.register(event.sock)
+        self.events[event.evtype][event.fd] = event
+        self.register(event.fd)
 
     def remove(self, event):
-        if event.sock not in self.events[event.evtype]:
-            return
-        del self.events[event.evtype][event.sock]
-        self.poll.unregister(event.sock)
-        self.register(event.sock)
+        if event.fd in self.events[event.evtype]:
+            del self.events[event.evtype][event.fd]
+            self.poll.unregister(event.fd)
+            self.register(event.fd)
 
     def check_events(self):
-        if not self.events['read'] and not self.events['write']:
-            return False
-        items = self.poll.poll(LISTEN_TIME)
-        for fd,etype in items:
-            if contains(etype,select.POLLIN):
-                self.events['read'][fd].callback()
-            if contains(etype,select.POLLOUT):
-                self.events['write'][fd].callback()
-            if contains(etype,select.POLLERR) or contains(etype,select.POLLHUP):
-                self.handle_error(fd)
-        return True
+        if self.events['read'] or self.events['write']:
+            items = self.poll.poll(LISTEN_TIME)
+            for fd,etype in items:
+                if contains(etype,select.POLLIN):
+                    self.events['read'][fd].callback()
+                if contains(etype,select.POLLOUT):
+                    self.events['write'][fd].callback()
+                if contains(etype,select.POLLERR) or contains(etype,select.POLLHUP):
+                    self.handle_error(fd)
+            return True
+        return False
 
     def register(self, fd):
         mode = 0
@@ -127,9 +134,8 @@ class PollRegistrar(Registrar):
             mode = mode|select.POLLIN
         if fd in self.events['write']:
             mode = mode|select.POLLOUT
-        if mode == 0:
-            return False
-        self.poll.register(fd, mode)
+        if mode:
+            self.poll.register(fd, mode)
 
 class EpollRegistrar(PollRegistrar):
     def __init__(self):
