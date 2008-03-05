@@ -78,6 +78,7 @@ class SocketIO(object):
         self.persist = True
 
     def add(self, delay=0):
+        print 'add %s event:%s!'%(self.evtype,self)
         if delay:
             self.timeout.add(delay)
         self.registrar.add(self)
@@ -91,8 +92,9 @@ class SocketIO(object):
         return self.active
 
     def callback(self):
+        print 'calling callback'
         outcome = self.cb(*self.args)
-        if not self.persist and outcome is None:
+        if not self.persist and outcome is None and self.active:
             self.delete()
 
 class Signal(object):
