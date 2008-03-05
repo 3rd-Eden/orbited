@@ -78,7 +78,6 @@ class SocketIO(object):
         self.persist = True
 
     def add(self, delay=0):
-        print 'add %s event:%s!'%(self.evtype,self)
         if delay:
             self.timeout.add(delay)
         self.registrar.add(self)
@@ -92,13 +91,13 @@ class SocketIO(object):
         return self.active
 
     def callback(self):
-        print 'calling callback'
         outcome = self.cb(*self.args)
         if not self.persist and outcome is None and self.active:
             self.delete()
 
 class Signal(object):
     def __init__(self, registrar, sig, cb, *args):
+        print 'init!'
         self.registrar = registrar
         self.sig = sig
         self.default = signal.getsignal(self.sig)
@@ -111,6 +110,7 @@ class Signal(object):
         self.add()
 
     def add(self, delay=0):
+        print 'add called!'
         if delay:
             self.timeout.add(delay)
         signal.signal(self.sig,self.callback)
@@ -118,6 +118,7 @@ class Signal(object):
         self.registrar.signal_add(self)
 
     def delete(self):
+        print 'delete called!'
         signal.signal(self.sig,self.default)
         self.active = 0
         self.registrar.signal_remove(self)
@@ -126,7 +127,9 @@ class Signal(object):
         return self.active
 
     def callback(self,*args):
+        print 'cb called!'
         self.cb(*self.args)
+        self.registrar.error_check = True
 
 class Timer(object):
     def __init__(self, delay, cb, *args):

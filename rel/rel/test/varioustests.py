@@ -14,7 +14,12 @@ def timeout_cb(msg):
 def test_timeout():
     rel.timeout(5, timeout_cb, 'yo')
 
+sig_index = 0
 def signal_cb(msg):
+    global sig_index
+    sig_index += 1
+    if sig_index == 5:
+        rel.abort()
     print 'signal test:',msg
 
 def test_signal():

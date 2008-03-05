@@ -1,5 +1,5 @@
 from listener import Event, SocketIO, Timer, Signal, contains
-import select
+import select, signal
 try:
     import epoll
 except ImportError:
@@ -13,11 +13,14 @@ class Registrar(object):
         self.timers = []
         self.signals = set()
         self.run_dispatch = False
+        self.error_check = False
 
     def signal_add(self, sig):
+        print 'signal_add'
         self.signals.add(sig)
 
     def signal_remove(self, sig):
+        print 'signal_remove'
         if sig in self.signals:
             self.signals.remove(sig)
 
@@ -90,7 +93,13 @@ class SelectRegistrar(Registrar):
         if self.events['read'] or self.events['write']:
             rlist = self.events['read'].keys()
             wlist = self.events['write'].keys()
-            r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
+            try:
+                r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
+            except select.error:
+                for sig in self.signals:
+                    if sig.sig == signal.SIGINT:
+                        return True
+                raise
             for fd in r:
                 self.events['read'][fd].callback()
             for fd in w:
