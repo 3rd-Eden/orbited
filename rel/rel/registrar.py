@@ -11,20 +11,20 @@ class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
         self.timers = []
-        self.signals = set()
+        self.signals = {}
         self.run_dispatch = False
         self.error_check = False
 
     def signal_add(self, sig):
-        print 'signal_add'
-        self.signals.add(sig)
+        self.signals[sig.sig] = sig
 
     def signal_remove(self, sig):
-        print 'signal_remove'
         if sig in self.signals:
-            self.signals.remove(sig)
+            del self.signals[sig]
 
     def init(self):
+        for sig in self.signals:
+            self.signals[sig].reset()
         self.__init__()
 
     def event(self,callback,arg,evtype,handle):
@@ -96,10 +96,9 @@ class SelectRegistrar(Registrar):
             try:
                 r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
             except select.error:
-                for sig in self.signals:
-                    if sig.sig == signal.SIGINT:
-                        return True
-                raise
+                if signal.SIGINT in self.signals:
+                    return True
+                raise KeyboardInterrupt
             for fd in r:
                 self.events['read'][fd].callback()
             for fd in w:
@@ -126,7 +125,12 @@ class PollRegistrar(Registrar):
 
     def check_events(self):
         if self.events['read'] or self.events['write']:
-            items = self.poll.poll(LISTEN_TIME)
+            try:
+                items = self.poll.poll(LISTEN_TIME)
+            except select.error:
+                if signal.SIGINT in self.signals:
+                    return True
+                raise KeyboardInterrupt
             for fd,etype in items:
                 if contains(etype,select.POLLIN):
                     self.events['read'][fd].callback()
