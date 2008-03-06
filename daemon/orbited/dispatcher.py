@@ -5,8 +5,8 @@ class Dispatcher(object):
   
     def __init__(self, app):
         self.app = app
-        self.setup_routing()
-        self.app.orbit_daemon.set_send_cb(self.dispatch_orbit)
+#        self.app.orbit_daemon.set_send_cb(self.dispatch_orbit)
+#        self.app.
         
 #    /_/plugin/
 
@@ -14,10 +14,10 @@ class Dispatcher(object):
         print 'dispatch orbit:', message
 #        return
         for recipient in message.recipients:
-            if self.csp.contains(recipient):
-                self.csp.dispatch(message.single_recipient_message(recipient))
-            elif self.transports.contains(recipient):
-                self.transports.message(message.single_recipient_message(recipient))
+            if self.app.csp.contains(recipient):
+                self.app.csp.dispatch(message.single_recipient_message(recipient))
+            elif self.app.transports.contains(recipient):
+                self.app.transports.dispatch(message.single_recipient_message(recipient))
             else:
                 message.failure(recipient, "not connected")
     
@@ -30,13 +30,13 @@ class Dispatcher(object):
     def csp_http_request(self, req):
         self.app.csp.http_request(req)
                 
-    def setup_routing(self):
+    def setup(self):
         for prefix, (rule, params) in config['[routing]'].items():
             if rule == "transport":
                 print prefix, '-> transport'
                 self.app.http_server.add_cb_rule(prefix, self.transport_http_request)
             elif rule == "csp":
-                self.app.http_server.add_cb_rule(prefix, self.csp_http_request)
+                self.app.http_server.add_cb_rule(prefix, self.app.csp.http_request)
                 print prefix, '-> csp'
             elif rule == "revolved":
                 self.app.http_server.add_cb_rule(prefix, self.revolved_http_request)

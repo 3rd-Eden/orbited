@@ -24,33 +24,19 @@ orbitconf = config['[op]']
 class Application(object):
   
     def __init__(self):
+        self.dispatcher = Dispatcher(self)
         self.http_server = HTTPApplication(
             httpconf['bind_addr'], 
             int(httpconf['port']), 
             server_name="Orbited %s" % __version__)
-        self.orbit_daemon = OPDaemon(orbitconf['bind_addr'], int(orbitconf['port']))
-        self.plugin_manager = PluginManager()
-        self.transports = TransportHandler()
-        self.csp = CSP()
-        self.revolved = Revolved()
+        self.orbit_daemon = OPDaemon(orbitconf['bind_addr'], int(orbitconf['port']), self.dispatcher)
+        self.plugin_manager = PluginManager(self.dispatcher)
+        self.transports = TransportHandler(self.dispatcher)
+        self.csp = CSP(self.dispatcher)
+        self.revolved = Revolved(self.dispatcher)
         self.system = System()
-#        self.stomp_daemon = StompDaemon()
-        self.dispatcher = Dispatcher(self)
-
-#        self.http_router = HTTPRouter(
-#            self.http_server, 
-#            self.dispatcher, 
-#            self.plugin_manager,
-#            self.stomp_daemon,
-#            self.orbit_daemon,
-#        )
+        self.dispatcher.setup()
         
-        self.connections = {}
-        self.csp_connections = {}
-        self.revolved_connections = {}
-        
-#        self.http_daemon = HTTPDaemon(httpconf['bind_addr'], int(httpconf['port']))
-                    
 
     def start(self):
         """ Start the daemons """

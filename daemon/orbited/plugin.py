@@ -2,9 +2,10 @@ from orbited.config import map
 
 class PluginManager(object):
   
-    def __init__(self):
+    def __init__(self, dispatcher):
         self.plugins = {}
         self.setup()
+        self.dispatcher = dispatcher
         
         
     def setup(self):

@@ -1,5 +1,5 @@
 
 
 class Revolved(object):
-    pass
-
+    def __init__(self, dispatcher):
+        self.dispatcher = dispatcher

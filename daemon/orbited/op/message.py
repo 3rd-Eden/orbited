@@ -1,35 +1,39 @@
 class OrbitMessage(object):
 
     def __str__(self):
-        return "<OrbitMessage \"%s\", %s>" % (self.payload, self.recipients)
+        return "<OrbitMessage \"%s\", %s ((%s))>" % (self.payload, self.recipients, self.args)
 
     def __init__(self, recipients, payload, cb, args):
         self.recipients = recipients
         self.payload = payload
         self.cb = cb
         self.args = args
-        self.failed = []
+        self.failure_recipients = []
+        self.success_recipients = []
         self.succeed_count = 0
 
     def single_recipient_message(self, recipient):
+        if recipient not in self.recipients:
+            raise ValueError, "invalid recipient value: %s", (recipient,)
         return SingleRecipientMessage(
-            self.payload, self.recipient, self.success, self.failure)
+            self.payload, recipient, self.success, self.failure)
 
     def failure(self, recipient, reason):
-        self.failed.append((recipient, reason))
+        self.failure_recipients.append((recipient, reason))
         self.check_complete()
 
     def success(self, recipient):
-        self.succeed_count += 1
+        self.success_recipients.append(recipient)
         self.check_complete()
 
     def check_complete(self):
-        if len(self.failed) + self.succeed_count == len(self.recipients):
-            self.cb(self.failed, *self.args)
+        if len(self.success_recipients) + len(self.failure_recipients) == len(self.recipients):
+            print self, "completed,", self.failure_recipients, self.success_recipients, len(self.args)
+            self.cb(self, *self.args)
 
 class SingleRecipientMessage(object):
     
-    def __init__(self, payload, recipient, success, failure):
+    def __init__(self, payload, recipient, success_cb, failure_cb):
         self.payload = payload
         self.recipient = recipient
         self.success_cb = success_cb

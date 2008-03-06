@@ -22,7 +22,7 @@ map = {
     '[transport]': {
         'buffer': '1',
         'num_retry_limit': '1',
-        'timeout': '30',
+        'timeout': '5',
         'default': 'stream',
         'xhr.timeout': '30',
     },
@@ -38,7 +38,7 @@ map = {
         '/_/': ('system', ()),
         '/music/': ('proxy', ('www.brbx.com', 80)),
         '/icons/': ('proxy', ('www.brbx.com', 80)),
-#        '/': ('transport', ()),
+        '/': ('transport', ()),
         
         # """/djangoapp/ -> wsgi:djangoapp.application:main"""
         # '/djangoapp/': ('wsgi', ('djangoapp.application:main',))
