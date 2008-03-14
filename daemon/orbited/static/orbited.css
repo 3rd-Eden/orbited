@@ -1,0 +1,12 @@
+body {
+    margin: 0px;
+    padding: 5px;
+    
+    border: 1px solid black;
+}
+h1 {
+    border-bottom: 1px solid black;
+    background: #2266CC;
+    margin: -5px;
+    padding: 20px;
+}
