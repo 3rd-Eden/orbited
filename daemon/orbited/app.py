@@ -7,7 +7,6 @@ except:
     
 from dez.http.application import HTTPApplication
 from orbited import __version__
-from orbited.config import map as config
 from orbited.op.daemon import OPDaemon
 from orbited.plugin import PluginManager
 from orbited.transport import TransportConnection, TransportHandler
@@ -18,12 +17,12 @@ from orbited.dispatcher import Dispatcher
 
 import random
 
-httpconf = config['[http]']
-orbitconf = config['[op]']
-
 class Application(object):
   
-    def __init__(self):
+    def __init__(self, config):
+        httpconf = config['[http]']
+        orbitconf = config['[op]']
+
         self.dispatcher = Dispatcher(self)
         self.http_server = HTTPApplication(
             httpconf['bind_addr'], 

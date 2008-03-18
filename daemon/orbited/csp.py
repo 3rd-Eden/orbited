@@ -4,9 +4,9 @@ from orbited.http import HTTPRequest
 
 import random
 import event
-from orbited.dynamic import DynamicHTTPResponse
+#from orbited.dynamic import DynamicHTTPResponse
 from orbited.json import json
-from orbited.orbit import InternalOPRequest
+#from orbited.orbit import InternalOPRequest
 #from orbited.config import map as config
 from orbited.transport import transports as supported_transports
 
@@ -17,7 +17,7 @@ from orbited.transport import transports as supported_transports
 class CSP(object):
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
-"""        self.sessions = {}
+    """        self.sessions = {}
         self.identifiers = {}
         self.connection_timers = {}
         self.registered = {}
@@ -30,7 +30,7 @@ class CSP(object):
         if recipient not in self.identifiers:
             raise Exception("RecipientNotFound")
         self.sessions[
-"""    
+    """    
     def http_request(self, request):
         request = HTTPRequest(request)
         junk, method = request.url.rsplit('/', 1)
