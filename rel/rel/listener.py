@@ -68,6 +68,7 @@ class SocketIO(object):
         self.cb = cb
         self.args = args
         self.persist = False
+        self.active = 0
         if noadd in self.args:
             self.args = ()
             return
@@ -91,8 +92,7 @@ class SocketIO(object):
         return self.active
 
     def callback(self):
-        outcome = self.cb(*self.args)
-        if not self.persist and outcome is None and self.active:
+        if not self.cb(*self.args) and not self.persist and self.active:
             self.delete()
 
 class Signal(object):
@@ -131,7 +131,8 @@ class Signal(object):
         self.registrar.error_check = True
 
 class Timer(object):
-    def __init__(self, delay, cb, *args):
+    def __init__(self, registrar, delay, cb, *args):
+        self.registrar = registrar
         self.cb = cb
         self.args = args
         if noadd in self.args:
@@ -144,9 +145,11 @@ class Timer(object):
         self.expiration = None
         if self.delay:
             self.expiration = time.time()+self.delay
+            self.registrar.add_timer(self)
 
     def delete(self):
         self.expiration = None
+        self.registrar.remove_timer(self)
 
     def pending(self):
         if self.expiration:
@@ -157,8 +160,8 @@ class Timer(object):
         if not self.pending():
             return False
         if time.time() >= self.expiration:
-            value = self.cb(*self.args)
-            self.delete()
-            if value:
+            if self.cb(*self.args):
                 self.add(self.delay)
+                return True
+            return False
         return True

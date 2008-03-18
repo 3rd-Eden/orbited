@@ -5,12 +5,18 @@ try:
 except ImportError:
     epoll = None
 
-LISTEN_TIME = .0001
+LISTEN_SELECT = .001
+LISTEN_POLL = 10
+
+def kbint(signals):
+    if signal.SIGINT in signals:
+        return True
+    raise KeyboardInterrupt
 
 class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
-        self.timers = []
+        self.timers = set()
         self.signals = {}
         self.run_dispatch = False
         self.error_check = False
@@ -58,19 +64,23 @@ class Registrar(object):
         return Signal(self,sig,cb,*args)
 
     def timeout(self,delay,cb,*args):
-        tmp = Timer(delay,cb,*args)
-        self.timers = [tmp]+self.timers
-        return tmp
+        return Timer(self,delay,cb,*args)
+
+    def add_timer(self, timer):
+        self.timers.add(timer)
+
+    def remove_timer(self, timer):
+        if timer in self.timers:
+            self.timers.remove(timer)
 
     def check_timers(self):
-        active = False
+        rmlist = []
         for timer in self.timers:
             if not timer.check():
-                self.timers.remove(timer)
-                self.timers.append(timer)
-                break
-            active = True
-        return active
+                rmlist.append(timer)
+        for timer in rmlist:
+            timer.delete()
+        return bool(self.timers)
 
     def handle_error(self, fd):
         if fd in self.events['read']:
@@ -94,11 +104,9 @@ class SelectRegistrar(Registrar):
             rlist = self.events['read'].keys()
             wlist = self.events['write'].keys()
             try:
-                r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_TIME)
+                r,w,e = select.select(rlist,wlist,rlist+wlist,LISTEN_SELECT)
             except select.error:
-                if signal.SIGINT in self.signals:
-                    return True
-                raise KeyboardInterrupt
+                return kbint(self.signals)
             for fd in r:
                 self.events['read'][fd].callback()
             for fd in w:
@@ -126,15 +134,15 @@ class PollRegistrar(Registrar):
     def check_events(self):
         if self.events['read'] or self.events['write']:
             try:
-                items = self.poll.poll(LISTEN_TIME)
+                items = self.poll.poll(LISTEN_POLL)
             except select.error:
-                if signal.SIGINT in self.signals:
-                    return True
-                raise KeyboardInterrupt
+                return kbint(self.signals)
+            except epoll.error:
+                return kbint(self.signals)
             for fd,etype in items:
-                if contains(etype,select.POLLIN):
+                if contains(etype,select.POLLIN) and fd in self.events['read']:
                     self.events['read'][fd].callback()
-                if contains(etype,select.POLLOUT):
+                if contains(etype,select.POLLOUT) and fd in self.events['write']:
                     self.events['write'][fd].callback()
                 if contains(etype,select.POLLERR) or contains(etype,select.POLLHUP):
                     self.handle_error(fd)

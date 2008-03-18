@@ -13,7 +13,7 @@ functions:
     abort()
     init()
 """
-import sys
+import sys, threading, time
 from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar
 from listener import EV_PERSIST, EV_READ, EV_SIGNAL, EV_TIMEOUT, EV_WRITE
 try:
@@ -22,12 +22,42 @@ except:
     pyevent = None
 
 registrar = None
+threader = None
 
 mapping = {
     'select': SelectRegistrar,
     'epoll': EpollRegistrar,
     'poll': PollRegistrar,
 }
+
+class Thread_Checker(object):
+    def __init__(self):
+        self.go()
+
+    def go(self):
+        return
+        if registrar != pyevent:
+            return
+        self.checker = timeout(1,self.check)
+        self.sleeper = event(self.release)
+
+    def stop(self):
+        return
+        if registrar != pyevent:
+            return
+        self.checker.delete()
+        self.sleeper.delete()
+
+    def release(self, *args):
+        time.sleep(.001)
+        return True
+
+    def check(self):
+        if threading.activeCount() > 1:
+            self.sleeper.add(.01)
+        else:
+            self.sleeper.delete()
+        return True
 
 def check_init():
     if not registrar:
@@ -45,14 +75,16 @@ def get_registrar(method):
 
 def initialize(methods=['pyevent','epoll','poll','select']):
     global registrar
+    global threader
     for method in methods:
         try:
             registrar = get_registrar(method)
             break
-        except ImportError:
+        except:
             pass
     if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
+    threader = Thread_Checker()
     print 'Registered Event Listener initialized with method:',method
 
 def read(sock,cb,*args):
@@ -85,7 +117,9 @@ def abort():
 
 def init():
     check_init()
+    threader.stop()
     registrar.init()
+    threader.go()
 
 def event(callback,arg=None,evtype=0,handle=None):
     check_init()
