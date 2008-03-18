@@ -156,7 +156,10 @@ class PollRegistrar(Registrar):
         if fd in self.events['write']:
             mode = mode|select.POLLOUT
         if mode:
-            self.poll.register(fd, mode)
+            try:
+                self.poll.register(fd, mode)
+            except epoll.error:
+                pass
 
 class EpollRegistrar(PollRegistrar):
     def __init__(self):

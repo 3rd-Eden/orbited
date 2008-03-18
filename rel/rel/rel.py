@@ -35,26 +35,22 @@ class Thread_Checker(object):
         self.go()
 
     def go(self):
-        return
-        if registrar != pyevent:
-            return
-        self.checker = timeout(1,self.check)
-        self.sleeper = event(self.release)
+        if registrar == pyevent:
+            self.checker = timeout(1,self.check)
+            self.sleeper = event(self.release)
 
     def stop(self):
-        return
-        if registrar != pyevent:
-            return
-        self.checker.delete()
-        self.sleeper.delete()
+        if registrar == pyevent:
+            self.checker.delete()
+            self.sleeper.delete()
 
     def release(self, *args):
-        time.sleep(.001)
+        time.sleep(.0001)
         return True
 
     def check(self):
         if threading.activeCount() > 1:
-            self.sleeper.add(.01)
+            self.sleeper.add(.001)
         else:
             self.sleeper.delete()
         return True
@@ -73,7 +69,7 @@ def get_registrar(method):
         return mapping[method]()
     raise ImportError
 
-def initialize(methods=['pyevent','epoll','poll','select']):
+def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
     global registrar
     global threader
     for method in methods:
@@ -86,6 +82,18 @@ def initialize(methods=['pyevent','epoll','poll','select']):
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     threader = Thread_Checker()
     print 'Registered Event Listener initialized with method:',method
+    if "report" in options and registrar != pyevent:
+        timeout(5,__report)
+
+def __report():
+    print "=========="
+    print "rel status report"
+    print "----------"
+    print "events",registrar.events
+    print "signals",registrar.signals
+    print "timers",registrar.timers
+    print "=========="
+    return True
 
 def read(sock,cb,*args):
     check_init()
