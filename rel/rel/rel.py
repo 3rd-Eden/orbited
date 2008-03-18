@@ -37,7 +37,8 @@ class Thread_Checker(object):
     def go(self):
         if registrar == pyevent:
             self.checker = timeout(1,self.check)
-            self.sleeper = event(self.release)
+            self.sleeper = timeout(0.01, self.release)
+            self.sleeper.delete()
 
     def stop(self):
         if registrar == pyevent:
@@ -45,14 +46,18 @@ class Thread_Checker(object):
             self.sleeper.delete()
 
     def release(self, *args):
-        time.sleep(.0001)
+        time.sleep(.005)
         return True
 
     def check(self):
         if threading.activeCount() > 1:
-            self.sleeper.add(.001)
+            if not self.sleeper.pending():
+                print 'Enabling GIL hack'
+                self.sleeper.add(.01)
         else:
-            self.sleeper.delete()
+            if self.sleeper.pending():
+                print 'Disabling GIL hack'
+                self.sleeper.delete()
         return True
 
 def check_init():
