@@ -38,6 +38,8 @@ class TransportHandler(object):
             return req.error("Identifier not specified.")
         key = identifier, req.url
         if key not in self.connections:
+            # OP SIGNON
+            conn.signon_cb(headers={'key': key})
             self.connections[key] = TransportConnection(key, self.__timed_out)
         self.connections[key].http_request(req)
         print "Accepted:", key
@@ -47,6 +49,9 @@ class TransportHandler(object):
         
     def __timed_out(self, conn):
         print 'transport connection timed out', conn.key
+        # OP SIGNOFF
+        # Todo: add missed messages
+        conn.signoff_cb(headers={'key': self.key})
         del self.connections[conn.key]
         conn.close()
         
@@ -60,7 +65,6 @@ class TransportConnection(object):
         self.__timed_out_cb = timed_out_cb
         self.__start_timer()
         
-        
     def __start_timer(self):
         self.timer = event.timeout(timeout, self.__timed_out_cb, self)
                 
@@ -70,7 +74,7 @@ class TransportConnection(object):
             self.timer = None
                 
     def close(self):
-        print 'closing...'        
+        print 'closing...'
         self.end_transport()
         self.__stop_timer()
         
