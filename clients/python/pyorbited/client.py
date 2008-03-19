@@ -1,4 +1,6 @@
 import socket
+from orbited.json import json
+
 
 class OrbitClient(object):
   
@@ -37,12 +39,14 @@ class OrbitClient(object):
         )
         return self.read_frame()
     
-    def send(self, recipients, payload):
-        self.id+=1
+    def send(self, recipients, payload, json_encode=True):
+        self.id += 1
         self.sock.send(
             "SEND\r\n"
             "id: %s\r\n" % (self.id)
         )
+        if json_encode:
+            payload = json.encode(payload)
         for recipient in recipients:
             self.sock.send('recipient: %s\r\n' % (recipient,))
         self.sock.send('\r\n')
