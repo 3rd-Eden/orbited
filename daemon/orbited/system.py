@@ -10,6 +10,9 @@ class System(object):
         action = req.url[3:]
         if hasattr(self, action):
             return getattr(self, action)(req)
+        else:
+            req.error("Not Found", code="404",
+                "Could not find req.url.")
   
     def about(self, req):
         print __version__
@@ -20,7 +23,7 @@ class System(object):
           <head>
             <link rel="stylesheet" type="text/css" href="/_/static/orbited.css">
             <meta charset="utf-8">
-            <title>Orbited 0.2.0</title>
+            <title>Orbited %s</title>
           </head>
           <body>
             <h1>Orbited %s</h1>
@@ -29,6 +32,6 @@ class System(object):
             </p>
           </body>
         </html>
-        """ % (__version__, sys.version.replace('\n', '<br>\r\n'), sys.platform))
+        """ % (__version__, __version__, sys.version.replace('\n', '<br>\r\n'), sys.platform))
         response.dispatch()
       
