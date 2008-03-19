@@ -26,4 +26,4 @@ class CometWire(object):
         return ''.join([random.choice("123456789ABCDEF") for i in range(10)])
         
     def connect_upstream(self, req):
-        
+        pass
