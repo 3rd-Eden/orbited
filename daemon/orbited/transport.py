@@ -6,20 +6,7 @@ import event
 num_retry_limit = int(config['[transport]']['num_retry_limit'])
 timeout = int(config['[transport]']['timeout'])
 
-# Therapy Wellness
-# 323 255 5409
-# 2460 Colorado
-
 transports = { }
-#        [orbited.transports]
-#        raw = orbited.transports.raw:RawTransport
-#        basic = orbited.transports.basic:BasicTransport
-#        stream = orbited.transports.stream:StreamTransport
-#        iframe = orbited.transports.iframe:IFrameTransport
-#        xhr_multipart = orbited.transports.xhr_multipart:XHRMultipartTransport
-#        xhr_stream = orbited.transports.xhr_stream:XHRStreamTransport
-#        server_sent_events = orbited.transports.sse:ServerSentEventsTransport
-    
 
 def setup():
     transports['basic'] = BasicTransport
@@ -153,7 +140,6 @@ class RawTransport(Transport):
         self.close_cb = close_cb
         self.browser_conn = None
         
-
     def __ready(self):
         print 'RawTransport.__ready'
         if self.browser_conn:
@@ -226,7 +212,7 @@ class IFrameTransport(RawTransport):
         self.browser_conn.write_status('200', 'OK')
         self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
         self.browser_conn.write_header('Content-Type', 'text/html')
-        self.browser_conn.write_header('Content-Length', '10000')    
+        self.browser_conn.write_header('Content-Length', '10000000')    
         self.browser_conn.write_header('Cache-Control', 'no-cache')        
         self.browser_conn.write_headers_end()
         self.browser_conn.write(

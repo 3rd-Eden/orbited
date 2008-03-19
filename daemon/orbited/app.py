@@ -69,5 +69,5 @@ class Application(object):
 #                sys.stdout.flush()
             else:
                 break
-        print "Received Ctr+c shutdown"
+        print "Received Ctrl-C; shutting down."
             

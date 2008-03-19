@@ -13,6 +13,8 @@ function reload() {
     if(console !== undefined) {
         console.log("iframe reload");
     }
+    // TODO: This doesn't actually reload, but comet streaming will stop
+    // after the predefined Content-Length has been reached. Fix this.
 }
 
 window.onError = null;
