@@ -17,8 +17,8 @@ class CometWire(object):
         key = self.__generate_key()
         initial_msgs = []
         
-        initial_msgs.append(SingleRecipientMessage(key, (key, COMETWIRE_URL)))
-        
+        initial_msgs.append(SingleRecipientMessage(json.encode(key), (key, COMETWIRE_URL)))
+        print "UPSTREAM -- SET CONNECT CB for COMETWIRE"
         self.dispatcher.app.upstream.set_connect_cb(key, self.__upstream_connected, [key])
         
         return (key, initial_msgs)

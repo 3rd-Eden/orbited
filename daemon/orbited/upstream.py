@@ -16,6 +16,7 @@ class UpstreamHandler(object):
         self.callbacks[identifier] = (cb, args)
         
     def new_connection(self, conn):
+        print 'NEW CONNECTION:', conn.identifier
         self.connections[conn.identifier] = conn
         if conn.identifier in self.callbacks:
             cb, args = self.callbacks[conn.identifier]
@@ -33,6 +34,7 @@ class XHRUpstreamRouter(object):
         
     def http_request(self, req):
         req = HTTPRequest(req)
+        print "REQUEST: ", req.form
         identifier = req.form.get('identifier', None)
         if not identifier:
             response = req.HTTPResponse()

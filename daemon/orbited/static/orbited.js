@@ -15,8 +15,10 @@ Orbited = {
     }
     // the transport for 'htmlfile' from the server side is just 'iframe'
     var connection_transport = (transport === 'htmlfile') ? 'iframe' : transport
-    this.url = location + '?identifier=' + identifier +
-               '&transport=' + connection_transport;
+    this.url = location + '?transport=' + connection_transport;
+    if(identifier !== null) {
+        this.url += '&identifier=' + identifier;
+    }
     this.event_cb = event_cb;
     document.domain = this.extract_xss_domain(document.domain);
 
