@@ -7,6 +7,7 @@ COMETWIRE_URL = config['[cometwire]']['url']
 
 
 class CometWire(object):
+    """Maps a downstream connection to an upstream connection."""
     
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher

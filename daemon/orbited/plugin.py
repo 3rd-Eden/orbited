@@ -14,7 +14,7 @@ class PluginManager(object):
             perhaps give the router to each plugin when it loads
             it can then register or unregister routing rules.
         """
-        
+        pass
         
 class PluginMeta(type):
     pass        

@@ -1,9 +1,8 @@
 from orbited.http import HTTPRequest
 from orbited.json import json
 
-
-
 class UpstreamHandler(object):
+    """Handle upstream connections."""
     
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
@@ -22,7 +21,6 @@ class UpstreamHandler(object):
             cb, args = self.callbacks[conn.identifier]
             cb(conn, *args)
         
-
 class XHRUpstreamRouter(object):
     
     def __init__(self, upstream):
