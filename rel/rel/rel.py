@@ -23,12 +23,17 @@ except:
 
 registrar = None
 threader = None
+verbose = False
 
 mapping = {
     'select': SelectRegistrar,
     'epoll': EpollRegistrar,
     'poll': PollRegistrar,
 }
+
+def _display(text):
+    if verbose:
+        print text
 
 class Thread_Checker(object):
     def __init__(self):
@@ -52,11 +57,11 @@ class Thread_Checker(object):
     def check(self):
         if threading.activeCount() > 1:
             if not self.sleeper.pending():
-                print 'Enabling GIL hack'
+                _display('Enabling GIL hack')
                 self.sleeper.add(.01)
         else:
             if self.sleeper.pending():
-                print 'Disabling GIL hack'
+                _display('Disabling GIL hack')
                 self.sleeper.delete()
         return True
 
@@ -75,8 +80,15 @@ def get_registrar(method):
     raise ImportError
 
 def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
+    """
+    initialize(methods=['pyevent','epoll','poll','select'],options=[])
+    possible options:
+        'verbose' - prints out certain events
+        'report' - prints status of non-pyevent registrar every 5 seconds
+    """
     global registrar
     global threader
+    global verbose
     for method in methods:
         try:
             registrar = get_registrar(method)
@@ -86,9 +98,11 @@ def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
     if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     threader = Thread_Checker()
-    print 'Registered Event Listener initialized with method:',method
     if "report" in options and registrar != pyevent:
         timeout(5,__report)
+    if "verbose" in options:
+        verbose = True
+        print 'Registered Event Listener initialized with method:',method
 
 def __report():
     print "=========="
