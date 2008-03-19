@@ -11,10 +11,23 @@ timeout = int(config['[transport]']['timeout'])
 # 2460 Colorado
 
 transports = { }
+#        [orbited.transports]
+#        raw = orbited.transports.raw:RawTransport
+#        basic = orbited.transports.basic:BasicTransport
+#        stream = orbited.transports.stream:StreamTransport
+#        iframe = orbited.transports.iframe:IFrameTransport
+#        xhr_multipart = orbited.transports.xhr_multipart:XHRMultipartTransport
+#        xhr_stream = orbited.transports.xhr_stream:XHRStreamTransport
+#        server_sent_events = orbited.transports.sse:ServerSentEventsTransport
+    
 
 def setup():
     transports['basic'] = BasicTransport
     transports['raw'] = RawTransport
+    transports['iframe'] = IFrameTransport
+    transports['xhr_multipart'] = XHRMultipartTransport
+    transports['xhr_stream'] = XHRStreamTransport
+    transports['sse'] = ServerSentEventsTransport
 
 class TransportHandler(object):
     
@@ -134,6 +147,7 @@ class Transport(object):
                         
 class RawTransport(Transport):
     name = 'raw'
+    
     def __init__(self, ready_cb, close_cb):
         self.ready_cb = ready_cb
         self.close_cb = close_cb
@@ -190,16 +204,109 @@ class RawTransport(Transport):
 
 
 class BasicTransport(RawTransport):
+    name = 'basic'
     
     def initial_response(self):
         self.browser_conn.write_status('200', 'OK')
-        self.browser_conn.write_header('Server', 'Orbited %s' % __version__)
+        self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
         self.browser_conn.write_header('Content-type', 'text/html')
         self.browser_conn.write_header('Content-length', '1000000000')        
         self.browser_conn.write_headers_end()
     
     def encode(self, payload):
         return payload + "<br>"
+        
+    def ping_render(self):
+        return '<i>Ping!</i><br>\r\n'
+        
+class IFrameTransport(RawTransport):
+    name = 'iframe'
+    
+    def initial_response(self):
+        self.browser_conn.write_status('200', 'OK')
+        self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
+        self.browser_conn.write_header('Content-Type', 'text/html')
+        self.browser_conn.write_header('Content-Length', '10000000')    
+        self.browser_conn.write_header('Cache-Control', 'no-cache')        
+        self.browser_conn.write_headers_end()
+        self.browser_conn.write(
+            '<html>'
+            '<head>'
+              '<script src="/_/iframe.js" charset="utf-8"></script>'
+            '</head>'
+            '<body onload="reload();">'
+            + '<span></span>' * 100
+        )
+    
+    def encode(self, payload):
+        return '<script>e(%s);</script>' % (data,)
+    
+    def ping_render(self):
+        return '<script>p();</script>'
+        
 
+class ServerSentEventsTransport(RawTransport):
+    name = 'sse'
+    
+    def initial_response(self):
+        self.browser_conn.write_status('200', 'OK')
+        self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
+        self.browser_conn.write_header('Content-Type', 'application/x-dom-event-stream')      
+        self.browser_conn.write_headers_end()
+    
+    def encode(self, payload):
+        return (
+            'Event: orbited\n' +
+            '\n'.join(['data: %s' % line for line in payload.splitlines()]) +
+            '\n\n'
+        )
+    
+    def ping_render(self):
+        return (
+            'Event: ping\n' +
+            'data: ' +
+            '\n\n'
+        )
+    
+
+class XHRMultipartTransport(RawTransport):
+    BOUNDARY = "orbited--"
+    name = 'xhr_multipart'
+    
+    def initial_response(self):
+        self.browser_conn.write_status('200', 'OK')
+        self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
+        self.browser_conn.write_header('Content-Type', 
+                'multipart/x-mixed-replace;boundary="%s"' % (self.BOUNDARY,))      
+        self.browser_conn.write_headers_end()
+    
+    def encode(self, payload):
+        boundary = "\r\n--%s\r\n" % self.BOUNDARY
+        headers = "\r\n".join([
+            'Content-Type: application/json',
+            'Content-Length: %s' % (len(payload),),
+        ])
+        return ''.join([headers, data, boundary])
+    
+    def ping_render(self):
+        return self.encode("")
+
+class XHRStreamTransport(RawTransport):
+    BOUNDARY = "\r\n|O|\r\n"
+    name = 'xhr_stream'
+    
+    def initial_response(self):
+        self.browser_conn.write_status('200', 'OK')
+        self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
+        self.browser_conn.write_header('Content-Type', 
+                                    'application/x-orbited-event-stream')     
+        self.browser_conn.write_headers_end()
+        self.browser_conn.write("."*256 + '\r\n\r\n')
+    
+    def encode(self, payload):
+        return self.boundary + payload + self.boundary
+    
+    def ping_render(self):
+        return self.boundary + "ping" + self.boundary
 
 setup()
