@@ -15,7 +15,7 @@ class HTTPRequest(object):
     def HTTPResponse(self):
         return HTTPResponse(self.conn)
     
-    def set_close_cb(self, cb, args):
+    def set_close_cb(self, cb, args=[]):
         self.conn.set_close_cb(cb, args)
     
     def error(self, reason="Unknown", details="", code="500"):

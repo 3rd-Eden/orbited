@@ -12,7 +12,7 @@ class OPDaemon(object):
     
     def __connect_cb(self, conn):
         conn.set_request_cb(self.__request_cb)
-        conn.set_close_cb(self.__disconnect_cb)
+        conn.set_close_cb(self.__disconnect_cb, [conn])
         self.connections.append(conn)
             
     def __disconnect_cb(self, conn):
