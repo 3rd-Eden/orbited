@@ -28,7 +28,7 @@ class HTTPRequest(object):
             <title>%s Orbited Error - %s</title>
           </head>
           <body>
-            <h1>%s Orbited Error - %s</title>
+            <h1>%s Orbited Error - %s</h1>
             %s
           </body>
         </html>        

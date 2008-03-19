@@ -1,12 +1,14 @@
 import sys
 from orbited import __version__
 from dez.http.server import HTTPResponse
+from orbited.http import HTTPRequest
 
 
 class System(object):
   
     def http_request(self, req):
         # remove "/_/" part of url
+        req = HTTPRequest(req)
         action = req.url[3:]
         if hasattr(self, action):
             return getattr(self, action)(req)
