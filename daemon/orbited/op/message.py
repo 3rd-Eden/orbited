@@ -10,7 +10,6 @@ class OrbitMessage(object):
         self.args = args
         self.failure_recipients = []
         self.success_recipients = []
-        self.succeed_count = 0
 
     def single_recipient_message(self, recipient):
         if recipient not in self.recipients:
@@ -32,16 +31,15 @@ class OrbitMessage(object):
             self.cb(self, *self.args)
 
 class SingleRecipientMessage(object):
-    
+
     def __init__(self, payload, recipient, success_cb, failure_cb):
         self.payload = payload
         self.recipient = recipient
         self.success_cb = success_cb
         self.failure_cb = failure_cb
-    
+
     def success(self):
         self.success_cb(self.recipient)
-        
+
     def failure(self, reason="unknown"):
         self.failure_cb(self.recipient, reason)
-

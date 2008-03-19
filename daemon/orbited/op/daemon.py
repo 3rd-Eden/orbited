@@ -48,19 +48,10 @@ class OPDaemon(object):
     def __message_cb(self, message, frame):
         if message.failure_recipients:
             print 'MESSAGE failed'
+            frame.failure(message.failure_recipients)
         else:
             print 'MESSAGE success'
-        return
-        if message.failure_recipients:
-            self.server.callback('failure', {
-                'recipients': message.failed_recipients,
-                'id': frame.headers['id'],
-            })
-        if message.succeeded_recipients:                        
-            self.server.callback('failure', {
-                'recipients': message.succeeded_recipients,
-                'id': frame.headers['id']
-            })
+            frame.success(message.success_recipients)
 
     def signon_cb(self, key):
         print "KEY SIGNED ON", key
