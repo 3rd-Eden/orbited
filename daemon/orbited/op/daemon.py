@@ -15,12 +15,15 @@ class OPDaemon(object):
             'signon': [],
             'signoff': [],        
         }
+        self.connections = []
     
     def __connect_cb(self, conn):
-        conn.set_request_cb(self.__request_cb) # **
-    
-#    def __disconnect_cb(self, conn):
-#        pass        
+        conn.set_request_cb(self.__request_cb)
+        self.connections.append(conn)
+            
+    def __disconnect_cb(self, conn):
+        if conn in self.connections:
+            self.connections.remove(conn)
         
     def __request_cb(self, frame):
         print 'FRAME:', frame.action
@@ -59,10 +62,12 @@ class OPDaemon(object):
                 'id': frame.headers['id']
             })
 
-    def signon_cb(self, conn):
-        print 'SIGNON!'
-        return
+    def signon_cb(self, key):
+        print "KEY SIGNED ON", key
+        for conn in self.connections:
+            conn.signon_cb({'key': ",".join(key)})
             
-    def signoff_cb(self, conn):
-        print 'SIGNOFF!'
-        return
+    def signoff_cb(self, key):
+        print "KEY SIGNED OFF", key
+        for conn in self.connections:
+            conn.signoff_cb({'key': key})

@@ -20,7 +20,8 @@ class TransportHandler(object):
     
     def __init__(self, dispatcher):
         self.connections = {}
-        self.dispatcher=dispatcher
+        self.dispatcher = dispatcher
+        self.orbit_daemon = self.dispatcher.app.orbit_daemon
         
     def contains(self, key):
         return key in self.connections
@@ -39,7 +40,7 @@ class TransportHandler(object):
         key = identifier, req.url
         if key not in self.connections:
             # OP SIGNON
-            conn.signon_cb(headers={'key': key})
+            self.orbit_daemon.signon_cb(key)
             self.connections[key] = TransportConnection(key, self.__timed_out)
         self.connections[key].http_request(req)
         print "Accepted:", key
@@ -51,7 +52,7 @@ class TransportHandler(object):
         print 'transport connection timed out', conn.key
         # OP SIGNOFF
         # Todo: add missed messages
-        conn.signoff_cb(headers={'key': self.key})
+        self.orbit_daemon.signoff_cb(conn.key)
         del self.connections[conn.key]
         conn.close()
         
