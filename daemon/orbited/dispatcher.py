@@ -1,6 +1,5 @@
 from orbited.system import System
 from orbited.config import map as config
-from paste.deploy import loadapp
 
 class Dispatcher(object):
   
@@ -64,6 +63,7 @@ class Dispatcher(object):
                 self.app.http_server.add_wsgi_rule(prefix, app)
                 
             elif rule == "pylons":                
+                from paste.deploy import loadapp
                 app_config_file = params[0]
                 app = loadapp(app_config_file,
                               relative_to=".")

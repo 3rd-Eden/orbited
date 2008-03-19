@@ -1,5 +1,6 @@
+import os
 from error import ParseError
-
+print os.path.join(os.path.dirname(__file__), 'static')
 map = {
     '[global]': {
         'admin.enabled': '0',
@@ -31,6 +32,7 @@ map = {
     },
     '[routing]': {
         '/_/csp/event': ('transport', ()),
+        '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),        
         '/_/csp/': ('csp', ()),
         '/_/revolved/event': ('transport', ()),
         '/_/revolved/': ('revolved', ()),
