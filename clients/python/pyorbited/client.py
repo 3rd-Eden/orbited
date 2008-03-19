@@ -24,6 +24,20 @@ class OrbitClient(object):
         except:
             raise
             return False
+
+    def callback(self, function, url=None):
+        self.id+=1
+        self.sock.send(
+            "CALLBACK\r\n"
+            "id: %s\r\n" % (self.id)
+            "function: %s\r\n" % (function)
+        )
+        if url:
+            self.sock.send(
+                "url: %s\r\n" % (url)
+            )
+        self.sock.send("\r\n^@\r\n")
+        return self.read_frame()
     
     def send(self, recipients, payload):
         self.id+=1
