@@ -33,9 +33,9 @@ class OPDaemon(object):
             # saw a CONNECT frame.
             frame.received() # **
             
-#        if frame.action == 'CALLBACK':
-#            self.callbacks[frame.headers['function']] = frame.callback_cb
-#            frame.received() # **
+        if frame.action == 'CALLBACK':
+         #   self.callbacks[frame.headers['function']] = frame.callback_cb
+            frame.received() # **
             
         if frame.action == 'SEND':
             # If we haven't already gotten a CONNECT frame, this won't be relayed.

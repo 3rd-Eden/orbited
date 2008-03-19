@@ -14,6 +14,9 @@ from orbited.csp import CSP
 from orbited.revolved import Revolved
 from orbited.system import System
 from orbited.dispatcher import Dispatcher
+from orbited.logger import get_logger
+
+log = get_logger("app")
 
 import random
 
@@ -54,7 +57,7 @@ class Application(object):
                 last_exception = e
                 exception, instance, tb = traceback.sys.exc_info()
                 if 'exceptions must be strings' in str(instance):
-                    print "Error in pyevent 0.3. See http://orbited.org/pyevent.html for details"
+                    log.error("Error in pyevent 0.3. See http://orbited.org/pyevent.html for details")
                     event.abort()
                     sys.exit(0)
                 # TODO: Start: There is certainly a better way of doing this
