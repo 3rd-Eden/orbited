@@ -27,6 +27,9 @@ map = {
         'default': 'stream',
         'xhr.timeout': '30',
     },
+    '[cometwire]': {
+        'url': '/_/cometwire/',
+    },
     '[admin]': {
         'admin.port': '9001'
     },
@@ -34,6 +37,7 @@ map = {
         '/_/csp/event': ('transport', ()),
         '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),        
         '/_/csp/': ('csp', ()),
+        '/_/cometwire/': ('transport', ()),
         '/_/revolved/event': ('transport', ()),
         '/_/revolved/': ('revolved', ()),
         '/_/': ('system', ()),

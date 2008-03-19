@@ -32,14 +32,16 @@ class OrbitMessage(object):
 
 class SingleRecipientMessage(object):
 
-    def __init__(self, payload, recipient, success_cb, failure_cb):
+    def __init__(self, payload, recipient, success_cb=None, failure_cb=None):
         self.payload = payload
         self.recipient = recipient
         self.success_cb = success_cb
         self.failure_cb = failure_cb
 
     def success(self):
-        self.success_cb(self.recipient)
+        if self.success_cb:
+            self.success_cb(self.recipient)
 
     def failure(self, reason="unknown"):
-        self.failure_cb(self.recipient, reason)
+        if self.failure_cb:
+            self.failure_cb(self.recipient, reason)

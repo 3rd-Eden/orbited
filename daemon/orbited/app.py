@@ -10,6 +10,7 @@ from orbited import __version__
 from orbited.op.daemon import OPDaemon
 from orbited.plugin import PluginManager
 from orbited.transport import TransportConnection, TransportHandler
+from orbited.cometwire import CometWire
 from orbited.csp import CSP
 from orbited.revolved import Revolved
 from orbited.system import System
@@ -34,6 +35,7 @@ class Application(object):
         self.orbit_daemon = OPDaemon(orbitconf['bind_addr'], int(orbitconf['port']), self.dispatcher)
         self.plugin_manager = PluginManager(self.dispatcher)
         self.transports = TransportHandler(self.dispatcher)
+        self.cometwire = CometWire(self.dispatcher)
         self.csp = CSP(self.dispatcher)
         self.revolved = Revolved(self.dispatcher)
         self.system = System()

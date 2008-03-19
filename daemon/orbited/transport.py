@@ -2,13 +2,17 @@ from orbited import __version__
 from orbited.config import map as config
 from orbited.http import HTTPRequest
 from orbited.json import json
+from orbited.logger import get_logger
 import event
+
+log = get_logger("transport")
+
 num_retry_limit = int(config['[transport]']['num_retry_limit'])
 timeout = int(config['[transport]']['timeout'])
 
 transports = { }
 
-def setup():
+def setup_registered_transports():
     transports['basic'] = BasicTransport
     transports['raw'] = RawTransport
     transports['iframe'] = IFrameTransport
@@ -22,9 +26,17 @@ class TransportHandler(object):
         self.connections = {}
         self.dispatcher = dispatcher
         self.orbit_daemon = self.dispatcher.app.orbit_daemon
+        self.url_callbacks = {} # Callbacks for assigning connection identifiers
         
     def contains(self, key):
         return key in self.connections
+        
+    def set_identifier_callback(self, url, cb, args=[]):
+        """Set a callback for when a connection is made and no identifier
+        is specified. The callback should return a tuple of
+        (identifier, [initial_msgs]) which will be used to initialize
+        the connection."""
+        self.url_callbacks[url] = (cb, args)
         
     def http_request(self, conn):
         # TODO: use cookies to get info out            
@@ -34,22 +46,35 @@ class TransportHandler(object):
             return req.error("Transport name not specified")
         if transport_name not in transports:
             return req.error("Invalid Transport Name: %s" % transport_name)
+        
         identifier = req.form.get('identifier', None)
+        # If no identifier is specified, see if the
+        # url callback can provide an identifier.
+        initial_msgs = None
         if identifier is None:
-            return req.error("Identifier not specified.")
+            if req.url in self.url_callbacks:
+                cb, args = self.url_callbacks[req.url]
+                identifier, initial_msgs = cb(*args)
+            else:
+                return req.error("Identifier not specified.")
+            
         key = identifier, req.url
         if key not in self.connections:
             # OP SIGNON
             self.orbit_daemon.signon_cb(key)
             self.connections[key] = TransportConnection(key, self.__timed_out)
         self.connections[key].http_request(req)
-        print "Accepted:", key
+        
+        log.debug("Accepted: %s" % (key,))
+        # Send initial messages
+        if initial_msgs:
+            self.connections[key].send_msgs(initial_msgs)
         
     def dispatch(self, msg):
-        self.connections[msg.recipient].send_events([msg])
+        self.connections[msg.recipient].send_msgs([msg])
         
     def __timed_out(self, conn):
-        print 'transport connection timed out', conn.key
+        log.debug('transport connection timed out', conn.key)
         # OP SIGNOFF
         # Todo: add missed messages
         self.orbit_daemon.signoff_cb(conn.key)
@@ -60,8 +85,8 @@ class TransportConnection(object):
   
     def __init__(self, key, timed_out_cb):
         self.transport = None
-        self.event_callback = None
-        self.events = []
+        self.msg_ready_callback = None
+        self.msgs = []
         self.key = key
         self.__timed_out_cb = timed_out_cb
         self.__start_timer()
@@ -75,7 +100,7 @@ class TransportConnection(object):
             self.timer = None
                 
     def close(self):
-        print 'closing...'
+        """Close this transport and stop the timeout timer."""
         self.end_transport()
         self.__stop_timer()
         
@@ -83,12 +108,12 @@ class TransportConnection(object):
         if transport == self.transport:
             self.end_transport()
         
-        
     def end_transport(self):
+        """Close the network connection for this transport."""
         if self.transport:
             self.transport.end()
             self.transport = None
-            self.event_callback = None
+            self.msg_ready_callback = None
             self.__start_timer()
         
     def http_request(self, request):
@@ -96,48 +121,28 @@ class TransportConnection(object):
         transport_name = request.form['transport']
         if self.transport is not None and transport_name != self.transport.name:
             self.end_transport()
-        self.transport = transports[transport_name](self.set_event_cb, self.__transport_close_cb)
+        self.transport = transports[transport_name](self.set_msg_ready_cb, self.__transport_close_cb)
         self.transport.http_request(request)
         self.__stop_timer()
             
-    def send_events(self, events):
-        self.events.extend(events)
-        self.check_events()
+    def send_msgs(self, msgs):
+        self.msgs.extend(msgs)
+        self.check_msgs()
     
-    def check_events(self):
-        if not self.event_callback:
+    def check_msgs(self):
+        if not self.msg_ready_callback:
             return
-        reschedule = self.event_callback(self.events)
+        reschedule = self.msg_ready_callback(self.msgs)
         if reschedule != True:
-            self.event_callback = None
+            self.msg_ready_callback = None
     
-    def set_event_cb(self, cb):
-        self.event_callback = cb
-        if self.events:
-            self.check_events()
-
-
-class Transport(object):
-      
-    def __init__(self, ready_cb, close_cb):
-        self.ready_cb = ready_cb
-        self.close_cb = close_cb
-    
-    def http_request(self, req):
-        """ new http request has been made for this transport.
-        """
-        raise Exception("NotImplemented"), "http_request has not been implemented"
-        
-    def send_events(self, events):
-        """ dispatch a list of events to the client.
-            all events must be removed from the given list if the callback
-            should be rescheduled.
-            return True to reschedule the send callback, otherwise return anything else.
-        """                    
-        raise Exception("NotImplemented"), "send_events has not been implemented"
+    def set_msg_ready_cb(self, cb):
+        """Callback when the transport is ready to send messages."""
+        self.msg_ready_callback = cb
+        if self.msgs:
+            self.check_msgs()
                         
-                        
-class RawTransport(Transport):
+class RawTransport(object):
     name = 'raw'
     
     def __init__(self, ready_cb, close_cb):
@@ -300,4 +305,4 @@ class XHRStreamTransport(RawTransport):
     def ping_render(self):
         return self.BOUNDARY + "ping" + self.BOUNDARY
 
-setup()
+setup_registered_transports()
