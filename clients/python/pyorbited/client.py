@@ -29,8 +29,8 @@ class OrbitClient(object):
         self.id+=1
         self.sock.send(
             "CALLBACK\r\n"
-            "id: %s\r\n" % (self.id)
-            "function: %s\r\n" % (function)
+            "id: %s\r\n"
+            "function: %s\r\n" % (self.id,function)
         )
         if url:
             self.sock.send(
