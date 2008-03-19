@@ -19,7 +19,7 @@ class System(object):
     def about(self, req):
         print __version__
         print sys.version
-        response = HTTPResponse(req)
+        response = req.HTTPResponse()
         response.write("""<!DOCTYPE HTML>
         <html>
           <head>
