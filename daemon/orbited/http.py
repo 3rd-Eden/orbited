@@ -18,21 +18,21 @@ class HTTPRequest(object):
     def set_close_cb(self, cb, args):
         self.conn.set_close_cb(cb, args)
     
-    def error(self, reason="Unknown", details=""):
+    def error(self, reason="Unknown", details="", code="500"):
         r = HTTPResponse(self.conn)
-        r.status = "500 Orbited Error"
+        r.status = "%s Orbited Error" % (code,)
         r.write("""
         <html>
           <head>
             <link rel="stylesheet" type="text/css" href="/_/static/orbited.css">
-            <title>500 Orbited Error - %s</title>
+            <title>%s Orbited Error - %s</title>
           </head>
           <body>
-            <h1>500 Orbited Error - %s</title>
+            <h1>%s Orbited Error - %s</title>
             %s
           </body>
         </html>        
-        """ % (reason, reason, details))
+        """ % (code, reason, code, reason, details))
         r.dispatch()
 
 # 946 8306 dr chen
