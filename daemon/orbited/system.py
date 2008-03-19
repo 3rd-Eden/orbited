@@ -12,7 +12,7 @@ class System(object):
             return getattr(self, action)(req)
         else:
             req.error("Not Found", code="404",
-                "Could not find req.url.")
+                details="Could not find %s." % (req.url,))
   
     def about(self, req):
         print __version__
