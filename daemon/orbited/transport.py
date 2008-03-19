@@ -10,11 +10,11 @@ log = get_logger("transport")
 num_retry_limit = int(config['[transport]']['num_retry_limit'])
 timeout = int(config['[transport]']['timeout'])
 
-transports = { }
+transports = {}
 
 def setup_registered_transports():
     transports['basic'] = BasicTransport
-    transports['raw'] = RawTransport
+    transports['raw'] = DownstreamTransport
     transports['iframe'] = IFrameTransport
     transports['xhr_multipart'] = XHRMultipartTransport
     transports['xhr_stream'] = XHRStreamTransport
@@ -142,7 +142,7 @@ class TransportConnection(object):
         if self.msgs:
             self.check_msgs()
                         
-class RawTransport(object):
+class DownstreamTransport(object):
     name = 'raw'
     
     def __init__(self, ready_cb, close_cb):
@@ -151,12 +151,12 @@ class RawTransport(object):
         self.browser_conn = None
         
     def __ready(self):
-        print 'RawTransport.__ready'
+        print 'DownstreamTransport.__ready'
         if self.browser_conn:
             self.ready_cb(self.__send_messages)
 
     def __send_messages(self, messages):
-        print 'RawTransport.__send_messages'
+        print 'DownstreamTransport.__send_messages'
         message = messages.pop(0)
         self.browser_conn.write(self.encode(message.payload), self.__msg_success_cb, [message], self.__msg_failure_cb, [message])
         return False
@@ -181,7 +181,7 @@ class RawTransport(object):
             self.close_cb(self)
 
     def http_request(self, req):
-        print 'RawTransport.http_request,', req
+        print 'DownstreamTransport.http_request,', req
         set_ready = False
         if self.browser_conn:
             self.browser_conn.close()
@@ -199,7 +199,7 @@ class RawTransport(object):
         self.browser_conn.write_headers_end()
 
 
-class BasicTransport(RawTransport):
+class BasicTransport(DownstreamTransport):
     name = 'basic'
     
     def initial_response(self):
@@ -215,7 +215,7 @@ class BasicTransport(RawTransport):
     def ping_render(self):
         return '<i>Ping!</i><br>\r\n'
         
-class IFrameTransport(RawTransport):
+class IFrameTransport(DownstreamTransport):
     name = 'iframe'
     
     def initial_response(self):
@@ -241,7 +241,7 @@ class IFrameTransport(RawTransport):
         return '<script>p();</script>'
         
 
-class ServerSentEventsTransport(RawTransport):
+class ServerSentEventsTransport(DownstreamTransport):
     name = 'sse'
     
     def initial_response(self):
@@ -265,7 +265,7 @@ class ServerSentEventsTransport(RawTransport):
         )
     
 
-class XHRMultipartTransport(RawTransport):
+class XHRMultipartTransport(DownstreamTransport):
     BOUNDARY = "orbited--"
     name = 'xhr_multipart'
     
@@ -287,7 +287,7 @@ class XHRMultipartTransport(RawTransport):
     def ping_render(self):
         return self.encode("")
 
-class XHRStreamTransport(RawTransport):
+class XHRStreamTransport(DownstreamTransport):
     BOUNDARY = "\r\n|O|\r\n"
     name = 'xhr_stream'
     

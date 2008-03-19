@@ -11,6 +11,7 @@ from orbited.op.daemon import OPDaemon
 from orbited.plugin import PluginManager
 from orbited.transport import TransportConnection, TransportHandler
 from orbited.cometwire import CometWire
+from orbited.upstream import UpstreamHandler
 from orbited.csp import CSP
 from orbited.revolved import Revolved
 from orbited.system import System
@@ -36,6 +37,7 @@ class Application(object):
         self.plugin_manager = PluginManager(self.dispatcher)
         self.transports = TransportHandler(self.dispatcher)
         self.cometwire = CometWire(self.dispatcher)
+        self.upstream = UpstreamHandler(self.dispatcher)
         self.csp = CSP(self.dispatcher)
         self.revolved = Revolved(self.dispatcher)
         self.system = System()

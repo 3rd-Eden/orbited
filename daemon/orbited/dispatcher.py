@@ -1,18 +1,17 @@
 from orbited.system import System
 from orbited.config import map as config
+from orbited.logger import get_logger
+
+log = get_logger("dispatcher")
 
 class Dispatcher(object):
   
     def __init__(self, app):
         self.app = app
-#        self.app.orbit_daemon.set_send_cb(self.dispatch_orbit)
-#        self.app.
-        
-#    /_/plugin/
 
     def dispatch_orbit(self, message):
-        print 'dispatch orbit:', message
-#        return
+        log.debug("Dispatch:", message)
+
         for recipient in message.recipients:
             if self.app.csp.contains(recipient):
                 self.app.csp.dispatch(message.single_recipient_message(recipient))
@@ -42,11 +41,9 @@ class Dispatcher(object):
                 # TODO: load app
                 app = None
                 self.app.http_server.add_wsgi_rule(prefix, app)
-                
             elif rule == "pylons":                
                 from paste.deploy import loadapp
                 app_config_file = params[0]
-                app = loadapp(app_config_file,
-                              relative_to=".")
+                app = loadapp(app_config_file, relative_to=".")
                 self.app.http_server.add_wsgi_rule(prefix, app)
 
