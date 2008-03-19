@@ -27,6 +27,7 @@ map = {
         'default': 'stream',
         'xhr.timeout': '30',
     },
+    # TODO: in dispatcher, use this url rather than the routing one
     '[cometwire]': {
         'url': '/_/cometwire/',
     },

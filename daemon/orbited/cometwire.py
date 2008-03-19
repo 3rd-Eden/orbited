@@ -1,5 +1,6 @@
 from orbited.config import map as config
 from orbited.op.message import SingleRecipientMessage
+from orbited.json import json
 import random
 
 COMETWIRE_URL = config['[cometwire]']['url']
@@ -24,4 +25,5 @@ class CometWire(object):
     def __generate_key(self):
         return ''.join([random.choice("123456789ABCDEF") for i in range(10)])
         
+    def connect_upstream(self, req):
         
