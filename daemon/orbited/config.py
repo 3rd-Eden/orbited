@@ -1,5 +1,4 @@
 import os
-from error import ParseError
 print os.path.join(os.path.dirname(__file__), 'static')
 map = {
     '[global]': {
@@ -73,6 +72,16 @@ map = {
 def update(**kwargs):
     map.update(kwargs)
     return True
+
+class ParseError(Exception):
+    def __init__(self, reason):
+        self.reason = "\r\n==========\r\n%s\r\n=========="%reason
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        print self.reason
 
 def error(f,s,n,l):
     return "Invalid entry in \"%s\" under \"%s\" on line %s:\r\n-- \"%s\"\r\nConfig parsing aborted."%(f,s,n,l)
