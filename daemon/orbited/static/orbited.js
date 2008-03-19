@@ -7,10 +7,9 @@ Orbited.connect(got_event, "longpoll") // No such transport at the moment
 Orbited = {
 
   connect: function (event_cb, identifier, location, transport) {
-    this.user = user;
+    this.identifier = identifier;
     this.location = location;
     this.transport = transport;
-    this.session = session;
     if (typeof transport === 'undefined') {
       transport = this.find_best_transport();
     }

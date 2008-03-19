@@ -1,9 +1,23 @@
 <html>
- <head>
-  <title>Orbited Static Test</title>
- </head>
- <body>
-  <h1>Orbited Static Test</h1>
-  This has been a test of Orbited's static file serving capabilities
- </body>
+  <head>
+    <title>Test</title>
+    <link rel="stylesheet" href="chat.css">
+    <script src="/_/static/orbited.js"></script>
+    <script>
+    
+    window.onload = function () {
+        
+        var div = document.getElementById('events');
+        var onEvent = function (data) {
+            div.innerHTML += "Event: " + data + "<br />";
+        };
+        Orbited.connect(onEvent, "test", "/", "iframe");
+    
+    };
+    </script>
+  </head>
+  <body>
+    <h1>Test</h1>
+    <div id="events"></div>
+  </body>
 </html>

@@ -226,20 +226,20 @@ class IFrameTransport(RawTransport):
         self.browser_conn.write_status('200', 'OK')
         self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
         self.browser_conn.write_header('Content-Type', 'text/html')
-        self.browser_conn.write_header('Content-Length', '10000000')    
+        self.browser_conn.write_header('Content-Length', '10000')    
         self.browser_conn.write_header('Cache-Control', 'no-cache')        
         self.browser_conn.write_headers_end()
         self.browser_conn.write(
             '<html>'
             '<head>'
-              '<script src="/_/iframe.js" charset="utf-8"></script>'
+              '<script src="/_/static/iframe.js" charset="utf-8"></script>'
             '</head>'
             '<body onload="reload();">'
             + '<span></span>' * 100
         )
     
     def encode(self, payload):
-        return '<script>e(%s);</script>' % (data,)
+        return '<script>e(%s);</script>' % (payload,)
     
     def ping_render(self):
         return '<script>p();</script>'
@@ -286,7 +286,7 @@ class XHRMultipartTransport(RawTransport):
             'Content-Type: application/json',
             'Content-Length: %s' % (len(payload),),
         ])
-        return ''.join([headers, data, boundary])
+        return ''.join([headers, payload, boundary])
     
     def ping_render(self):
         return self.encode("")
@@ -304,9 +304,9 @@ class XHRStreamTransport(RawTransport):
         self.browser_conn.write("."*256 + '\r\n\r\n')
     
     def encode(self, payload):
-        return self.boundary + payload + self.boundary
+        return self.BOUNDARY + payload + self.BOUNDARY
     
     def ping_render(self):
-        return self.boundary + "ping" + self.boundary
+        return self.BOUNDARY + "ping" + self.BOUNDARY
 
 setup()

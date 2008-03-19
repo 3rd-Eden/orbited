@@ -29,7 +29,7 @@ class HTTPRequest(object):
           </head>
           <body>
             <h1>%s Orbited Error - %s</h1>
-            %s
+            <p>%s</p>
           </body>
         </html>        
         """ % (code, reason, code, reason, details))
