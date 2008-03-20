@@ -44,8 +44,8 @@ class TestRevolvedMemoryAuth(object):
                     {'publish': False, 'subscribe': True})
     
     def test_authorize_connect(self):
-        assert self.auth.authorize_connect('michael', 'michaelpass') == True
-        assert self.auth.authorize_connect('mario', 'mariopass') == True
-        assert self.auth.authorize_connect('marcus') == True
-        assert self.auth.authorize_connect('randomuser') == False
-        assert self.auth.authorize_connect(None) == False
+        assert self.auth.authorize_connect('michael', ['michaelpass']) is True
+        assert self.auth.authorize_connect('mario', ['mariopass']) is True
+        assert self.auth.authorize_connect('marcus') is True
+        assert self.auth.authorize_connect('randomuser') is not True
+        assert self.auth.authorize_connect(None) is not True

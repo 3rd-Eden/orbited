@@ -43,8 +43,9 @@ class RevolvedMemoryAuthBackend(object):
         { 'publish': True, 'subscribe': True }
         
         """
-        if user_key not in self.users:
-            user_key = None
+        # Make user_key a valid string, or None.
+        user_key = user_key or None
+        
         try:
             auth_info = self.users[user_key]
         except KeyError:
@@ -58,23 +59,27 @@ class RevolvedMemoryAuthBackend(object):
                             or channel in auth_info['subscribe'])
         }
     
-    def authorize_connect(self, user_key, data=""):
-        """Return True if the user can connect to Revolved, False otherwise.
+    def authorize_connect(self, user_key, data=[]):
+        """Return True if the user can connect to Revolved.
+        
+        Otherwise, return a string with an error message.
         
         If user is None, the user will be treated as anonymous
         and rules will be checked for anonymous users instead.
         """
-        if user_key not in self.users:
-            user_key = None
+        # Make user_key a valid string, or None.
+        user_key = user_key or None
+        
         try:
             auth_info = self.users[user_key]
         except KeyError:
             # No rules defined for anonymous users
-            return False
+            return "Invalid User"
         
         # Interpret data as a password
-        password = data
-        if 'password' in auth_info and auth_info['password'] != password:
-            return False
+        
+        if 'password' in auth_info:
+            if auth_info['password'] != data[0]:
+                return "Invalid Password"
             
-        return auth_info['connect']
+        return auth_info['connect'] or "Not Allowed"

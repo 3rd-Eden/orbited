@@ -5,6 +5,8 @@ class RevolvedDispatcherPlaceholder(object):
     the Orbited server. Tracks mappings of revolved users to orbited keys...
     """
     
+    # TODO: This needs to be implemented by hooking into Orbited!
+    
     def __init__(self):
         self.sent_messages = []
         self.published_messages = {}
