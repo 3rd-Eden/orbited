@@ -1,3 +1,8 @@
+"""
+This tests the SimpleRevolvedBackend, but it /should/ work with any
+properly-constructed Revolved backend.
+"""
+
 from backends.simple import SimpleRevolvedBackend
 
 class RevolvedDispatcherPlaceholder(object):
