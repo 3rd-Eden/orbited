@@ -1,5 +1,5 @@
 import os
-print os.path.join(os.path.dirname(__file__), 'static')
+
 map = {
     '[global]': {
         'admin.enabled': '0',
@@ -75,7 +75,7 @@ def update(**kwargs):
 
 class ParseError(Exception):
     def __init__(self, reason):
-        self.reason = "\r\n==========\r\n%s\r\n=========="%reason
+        self.reason = "\r\n==========\r\n%s\r\n==========" % (reason,)
 
     def __str__(self):
         return self.__repr__()

@@ -1,18 +1,20 @@
 CometWire = function () {
-    var self = this;
+    this.transport = null;
+};
+
+CometWire.prototype = {
     
-    self.transport = null;
+    connect: function (url, connect_cb) {
+        this.url = url;
+        var self = this;
+        Orbited.connect(function(data) { self.connect_callback(data); }, null, "/_/cometwire/", "iframe");
+    },  
     
-    self.connect = function (url, connect_cb) {
-        self.url = url;
-        Orbited.connect(self.connect_callback, null, "/_/cometwire/", "iframe");
-    };
-    
-    self.connect_callback = function (data) {
+    connect_callback: function (data) {
         alert(data);
-        alert(self);
-        self.transport = new UpstreamTransport(self.url, data);
-        self.transport.send("hello");
-    };
+        alert(this);
+        this.transport = new UpstreamTransport(this.url, data);
+        this.transport.send("hello");
+    }
     
 };
