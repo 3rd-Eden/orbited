@@ -17,8 +17,20 @@ function reload() {
     // after the predefined Content-Length has been reached. Fix this.
 }
 
-window.onError = null;
-document.domain = extract_xss_domain(document.domain);
-parent.Orbited.attach_iframe(this);
-// FIXME: Define this in orbited.js
+function e(data) {
+    window.location.e(data)
+}
+/*window.location.crossdomain = function(data) { alert(data); }
+function timeout() {
+    window.location.crossdomain('ahoy!')
+}
+window.setInterval(timeout, 10000)
+*/
 p = function() {}
+window.onError = null;
+//document.domain = extract_xss_domain(document.domain);
+//alert('attaching iframe1');
+//alert(this);
+//alert(this.contentWindow);
+parent.window.location.attach_iframe(window.location);
+// FIXME: Define this in orbited.js

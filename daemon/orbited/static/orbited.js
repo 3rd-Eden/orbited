@@ -5,7 +5,6 @@ Orbited.connect(got_event, "longpoll") // No such transport at the moment
 */
 
 Orbited = {
-
   connect: function (event_cb, identifier, location, transport) {
     this.identifier = identifier;
     this.location = location;
@@ -46,8 +45,10 @@ Orbited = {
   },
 
   connect_iframe: function () {
+    window.location.attach_iframe = this.attach_iframe;
     var ifr = document.createElement('iframe');
     this.hide_iframe(ifr);
+    this.ifr = ifr;
     ifr.setAttribute('id', 'orbited_event_source');
     ifr.setAttribute('src', this.url);
     document.body.appendChild(ifr);
@@ -240,7 +241,15 @@ Orbited = {
   },
 
   attach_iframe: function(ifr) {
-      ifr.e = this.event_cb;
+//      alert('attaching iframe2');
+//      console.log('attach iframe');
+//      console.log('this: ' + this);
+//      console.log('Orbited: ' + Orbited)
+      ifr.e = Orbited.event_cb
+    Orbited.kill_load_bar();
+//      window.setTimeout(function() {
+//        ifr.e = 
+//      ifr.contentWindow.location.e = this.event_cb;
   },
 
   hide_iframe: function (ifr) {
@@ -273,11 +282,15 @@ Orbited = {
   },
 
   kill_load_bar: function () {
+//    return
+//    console.log('kill load bar!')
     if (typeof this.load_kill_ifr === 'undefined') {
       this.load_kill_ifr = document.createElement('iframe');
       this.hide_iframe(this.load_kill_ifr);
+      document.body.appendChild(this.load_kill_ifr);
     }
-    document.body.appendChild(this.load_kill_ifr);
-    document.body.removeChild(this.load_kill_ifr);
+    this.load_kill_ifr.src = "about:blank"
+//    document.body.appendChild(this.load_kill_ifr);
+//    document.body.removeChild(this.load_kill_ifr);
   }
 };

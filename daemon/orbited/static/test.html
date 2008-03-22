@@ -11,7 +11,7 @@
         var onEvent = function (data) {
             div.innerHTML += "Event: " + data + "<br />";
         };
-        Orbited.connect(onEvent, "test", "/", "iframe");
+        Orbited.connect(onEvent, "test", "http://127.0.0.1:8000/", "iframe");
     
     };
     </script>
