@@ -41,8 +41,15 @@ class Dispatcher(object):
                 # TODO: load app
                 app = None
                 self.app.http_server.add_wsgi_rule(prefix, app)
-            elif rule == "pylons":                
-                from paste.deploy import loadapp
+            elif rule == "pylons":
+                try:
+                    from paste.deploy import loadapp
+                except ImportError:
+                    message = "could not import loadapp from paste.deploy.\n"
+                    message += "You must install PasteDeploy before you can"
+                    message += " load a Pylons application.\n"
+                    raise ImportError(message)
+                
                 app_config_file = params[0]
                 app = loadapp(app_config_file, relative_to=".")
                 self.app.http_server.add_wsgi_rule(prefix, app)
