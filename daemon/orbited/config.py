@@ -14,7 +14,7 @@ map = {
     '[op]': {
         'port': '9000',
         'bind_addr': '127.0.0.1',
-    },
+    },    
     '[http]': {
         'port': '8000',
         'bind_addr': '127.0.0.1',
@@ -29,6 +29,10 @@ map = {
     # TODO: in dispatcher, use this url rather than the routing one
     '[cometwire]': {
         'url': '/_/cometwire/',
+        'connect_timeout': '30',
+    },
+    '[csp]': {
+        'upstream_url':'/_/csp/upstream',
     },
     '[admin]': {
         'admin.port': '9001'
@@ -38,8 +42,8 @@ map = {
         '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),        
         '/_/csp/': ('csp', ()),
         '/_/cometwire/': ('transport', ()),
-        '/_/revolved/event': ('transport', ()),
-        '/_/revolved/': ('revolved', ()),
+#        '/_/revolved/event': ('transport', ()),
+#        '/_/revolved/': ('revolved', ()),
         '/_/': ('system', ()),
         '/': ('transport', ()),
 
