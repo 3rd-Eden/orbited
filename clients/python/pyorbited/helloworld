@@ -1,0 +1,12 @@
+CONNECT
+id: 1
+response: receipt
+connection_id: client
+
+^@
+SEND
+id: 2
+recipient: test,/
+
+"Hello World!"^@
+
