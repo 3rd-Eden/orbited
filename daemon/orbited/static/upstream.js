@@ -1,6 +1,10 @@
 UpstreamTransport = function(url, id) {
     var self = this;
 
+    self.connect = function(cb, args) {
+        cb(args)
+    },
+
     self.send = function(s) {
         /* TODO, take multiple arguments?
          *  more robust JSON encode for multiple browsers

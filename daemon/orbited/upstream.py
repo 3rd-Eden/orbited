@@ -57,14 +57,18 @@ class XHRUpstreamConnection(object):
         self.close_cb = close_cb
         self.receive_cb = None
         
-    def set_receive_callback(self, cb, args=[]):
+    def set_receive_cb(self, cb, args=[]):
         self.receive_cb = (cb, args)
     
     def http_request(self, req):
         payload = req.form.get('payload', None)
+        response_data = []
         if self.receive_cb:
             cb, args = self.receive_cb
-            cb(payload, *args)
+            response_data = cb(payload, *args)
+        response = req.HTTPResponse()
+        response.write(json.encode(["OK", response_data]))
+        response.dispatch()
 
     def close(self):
         self.close_cb(self)

@@ -30,6 +30,10 @@ class TransportHandler(object):
         
     def contains(self, key):
         return key in self.connections
+    
+    def get(self, key):
+        print self.connections
+        return self.connections[key]
         
     def set_identifier_callback(self, url, cb, args=[]):
         """Set a callback for when a connection is made and no identifier
@@ -142,6 +146,11 @@ class TransportConnection(object):
         if self.msgs:
             self.check_msgs()
                         
+def mcb(msg):
+    def aha(*args, **kw):
+        print 'msg:', args, kw
+    return aha                        
+                        
 class DownstreamTransport(object):
     name = 'raw'
     
@@ -163,15 +172,17 @@ class DownstreamTransport(object):
     
     def end(self):
         if self.browser_conn:
-            self.browser_conn.close_now()
+                self.browser_conn.close(mcb('close...'))
             
     def encode(self, payload):
         return payload
     
     def __msg_success_cb(self, message):
+        print 'success!', message
         message.success()
         self.__ready()
     def __msg_failure_cb(self, message):
+        print 'failure!', message, message.payload, message.recipient
         message.failure()
         self.__ready()
 
@@ -194,9 +205,9 @@ class DownstreamTransport(object):
             self.__ready()
         
     def initial_response(self):
-        self.browser_conn.write_status('200', 'OK')
-        self.browser_conn.write_header('Server', 'Orbited %s' % __version__)
-        self.browser_conn.write_headers_end()
+        self.browser_conn.write_status('200', 'OK', mcb('write_status'))
+        self.browser_conn.write_header('Server', 'Orbited %s' % __version__, mcb('write_server'))
+        self.browser_conn.write_headers_end(mcb('headers_end'))
 
 
 class BasicTransport(DownstreamTransport):

@@ -287,10 +287,10 @@ Orbited = {
     if (typeof this.load_kill_ifr === 'undefined') {
       this.load_kill_ifr = document.createElement('iframe');
       this.hide_iframe(this.load_kill_ifr);
-      document.body.appendChild(this.load_kill_ifr);
+//      document.body.appendChild(this.load_kill_ifr);
     }
-    this.load_kill_ifr.src = "about:blank"
-//    document.body.appendChild(this.load_kill_ifr);
-//    document.body.removeChild(this.load_kill_ifr);
+//    this.load_kill_ifr.src = "about:blank"
+    document.body.appendChild(this.load_kill_ifr);
+    document.body.removeChild(this.load_kill_ifr);
   }
 };

@@ -29,7 +29,7 @@ map = {
     # TODO: in dispatcher, use this url rather than the routing one
     '[cometwire]': {
         'url': '/_/cometwire/',
-        'connect_timeout': '30',
+        'connect_timeout': '3',
     },
     '[csp]': {
         'upstream_url':'/_/csp/upstream',

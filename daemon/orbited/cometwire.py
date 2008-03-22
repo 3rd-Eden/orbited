@@ -2,6 +2,7 @@ from orbited.config import map as config
 from orbited.op.message import SingleRecipientMessage
 from orbited.json import json
 import random
+import event
 
 COMETWIRE_URL = config['[cometwire]']['url']
 CSP_UPSTREAM_URL = config['[csp]']['upstream_url']
@@ -27,14 +28,15 @@ class CometWire(object):
     def __client_connect_callback(self, url):
         key = self.__generate_key()
         initial_msgs = []
-        initial_msgs.append(SingleRecipientMessage(json.encode(key), (key, COMETWIRE_URL)))
+        initial_msgs.append(SingleRecipientMessage(json.encode(["ID", key]), (key, url)))
         print "UPSTREAM -- SET CONNECT CB for COMETWIRE"
         self.dispatcher.app.upstream.set_connect_cb(key, self.__upstream_connected, [key, url])
-        self.timers[key] = event.timeout(TIMEOUT, self.__upstream_connect_timed_out, key)
+        self.timers[key] = event.timeout(TIMEOUT, self.__upstream_connect_timed_out, key, url)
         return (key, initial_msgs)
         
     def __upstream_connect_timed_out(self, key, url):
-        conn = self.transports.get(key)
+        conn = self.transports.get((key, url))
+        conn.send_msgs([SingleRecipientMessage(json.encode(["TIMEOUT", []]), (key, url))])
         # TODO: send a 'timeout' msg then close on success or failure of that msg?
         conn.close()
         self.timers[key].delete()
@@ -44,7 +46,7 @@ class CometWire(object):
     def __generate_key(self):
         return ''.join([random.choice("123456789ABCDEF") for i in range(10)])
         
-    def __upstream_connected(self, conn, key):
+    def __upstream_connected(self, conn, key, url):
         # Are we waiting on this particular upstream connection?
         if key not in self.timers:
             # TODO: error...?
