@@ -21,6 +21,7 @@ class STOMPDaemon(object):
             self.connections.remove(conn)
 
     def __request_cb(self, frame):
+        frame.received()
         if frame.action == 'BEGIN':
             self.transactions[frame.headers['transaction']] = STOMPTransaction(self,frame.headers['transaction'])
         elif 'transaction' in frame.headers:
@@ -30,7 +31,8 @@ class STOMPDaemon(object):
             payload = frame.body
             m = OrbitMessage(recipients, payload, self.__message_cb, [frame])
             self.dispatcher.dispatch_orbit(m)
-        frame.received()
+        elif frame.action == 'DISCONNECT':
+            frame.close()
 
     def __message_cb(self, message, frame):
         if message.failure_recipients:

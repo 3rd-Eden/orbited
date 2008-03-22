@@ -1,6 +1,7 @@
 import socket
 from orbited.json import json
 
+DELIM = "\x00"
 
 class OrbitClient(object):
   
@@ -20,7 +21,7 @@ class OrbitClient(object):
                 "response: receipt\r\n"
                 "connection_id: client\r\n"
                 "\r\n"
-                "^@\r\n"
+                +DELIM
             )
             return self.read_frame()
         except:
@@ -34,8 +35,7 @@ class OrbitClient(object):
             "id: %s\r\n"
             "function: %s\r\n"
             "url: %s\r\n"
-            "\r\n"
-            "^@\r\n" % (self.id, function, url)
+            "\r\n%s" % (self.id, function, url, DELIM)
         )
         return self.read_frame()
     
@@ -51,12 +51,12 @@ class OrbitClient(object):
             self.sock.send('recipient: %s\r\n' % (recipient,))
         self.sock.send('\r\n')
         self.sock.send(payload)
-        self.sock.send('^@\r\n')
+        self.sock.send(DELIM)
         return self.read_frame()
     
     def read_frame(self):
         frame = ""
-        while '^@\r\n' not in frame:
+        while DELIM not in frame:
             frame += self.sock.recv(1024)
         return Frame(frame)
 
@@ -77,7 +77,7 @@ class Frame(object):
             key, val = segment.split(':', 1)
             self.headers[key] = val
             i = j+2
-        j = data.find('^@\r\n', i)
+        j = data.find(DELIM, i)
         self.body = data[j:i]
         
     def __str__(self):

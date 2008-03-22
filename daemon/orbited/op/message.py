@@ -13,7 +13,7 @@ class OrbitMessage(object):
 
     def single_recipient_message(self, recipient):
         if recipient not in self.recipients:
-            raise ValueError, "invalid recipient value: %s", (recipient,)
+            raise ValueError, 'invalid recipient value: "%s" NOT in "%s"'%(recipient,self.recipients)
         return SingleRecipientMessage(
             self.payload, recipient, self.success, self.failure)
 

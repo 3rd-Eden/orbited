@@ -7,7 +7,6 @@ class STOMPTransaction(object):
     def __call__(self, frame):
         del frame.headers['transaction']
         if 'receipt' in frame.headers:
-            frame.received()
             del frame.headers['receipt']
         if frame.action == "COMMIT":
             for f in self.frames:
