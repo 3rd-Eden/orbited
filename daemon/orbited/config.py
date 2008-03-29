@@ -40,7 +40,7 @@ map = {
     '[routing]': {
         '/_/csp/event': ('transport', ()),
         '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),        
-        '/_/csp/': ('csp', ()),
+        '/_/csp/up': ('upstream', ()),
         '/_/cometwire/': ('transport', ()),
 #        '/_/revolved/event': ('transport', ()),
 #        '/_/revolved/': ('revolved', ()),

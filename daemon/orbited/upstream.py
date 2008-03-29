@@ -27,7 +27,7 @@ class XHRUpstreamRouter(object):
     def __init__(self, upstream):
         self.upstream = upstream
         self.connections = {}
-        self.upstream.dispatcher.app.http_server.add_cb_rule("/test", self.http_request)
+        self.upstream.dispatcher.app.http_server.add_cb_rule("/_/csp/up", self.http_request)
     
     def __close(self, conn):
         pass
@@ -65,7 +65,7 @@ class XHRUpstreamConnection(object):
         response_data = []
         if self.receive_cb:
             cb, args = self.receive_cb
-            response_data = cb(payload, *args)
+            response_data = cb(self.identifier, payload, *args)
         response = req.HTTPResponse()
         response.write(json.encode(["OK", response_data]))
         response.dispatch()

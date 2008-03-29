@@ -64,13 +64,14 @@ CometWire = function () {
 /* Firefox test code */
 start = function() {
     c = new CometWire()
-    c.connect("/test", ccb, c)
+    c.connect("/_/csp/up", ccb, c)
     return c
 }
 ccb = function(conn) {    
     console.log("connected", conn)
     conn.set_receive_cb(rcb, conn)
     conn.set_close_cb(clcb, conn)
+    conn.send('"hello"')
 }
 rcb = function(data, conn) {
     console.log("received", data, "on", conn)

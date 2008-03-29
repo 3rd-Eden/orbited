@@ -56,8 +56,10 @@ Orbited = {
     var self = this;
     var event_cb = this.event_cb;
     this.event_cb = function (data) {
-      event_cb(data);
-      self.kill_load_bar();
+      window.setTimeout(function() {
+        event_cb(data);
+        self.kill_load_bar();
+      }, 0)
     }
   },
 

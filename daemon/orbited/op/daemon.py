@@ -36,7 +36,7 @@ class OPDaemon(object):
 
     def signon_cb(self, key):
         for conn in self.connections:
-            conn.signon_cb({'key': ",".join(key)})
+            conn.signon_cb({'key': key})
             
     def signoff_cb(self, key):
         for conn in self.connections:

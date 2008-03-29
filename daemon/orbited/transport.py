@@ -3,6 +3,7 @@ from orbited.config import map as config
 from orbited.http import HTTPRequest
 from orbited.json import json
 from orbited.logger import get_logger
+from orbited.op.message import SingleRecipientMessage
 import event
 
 log = get_logger("transport")
@@ -62,7 +63,7 @@ class TransportHandler(object):
             else:
                 return req.error("Identifier not specified.")
             
-        key = identifier, req.url
+        key = identifier
         if key not in self.connections:
             # OP SIGNON
             self.orbit_daemon.signon_cb(key)
@@ -128,6 +129,10 @@ class TransportConnection(object):
         self.transport = transports[transport_name](self.set_msg_ready_cb, self.__transport_close_cb)
         self.transport.http_request(request)
         self.__stop_timer()
+            
+    def send(self, data):
+        msg = SingleRecipientMessage(data, self.key)
+        self.send_msgs([msg])
             
     def send_msgs(self, msgs):
         self.msgs.extend(msgs)
