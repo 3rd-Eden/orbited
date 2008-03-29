@@ -64,10 +64,14 @@ CSP = function() {
         else
             var frame = [num_sent, 'PAYLOAD', data]
         
-        frame.timeout = setInterval(function(){self.send(frame)}, 5000)
+        frame.timeout = setInterval(function(){send(frame)}, 5000)
         sent_frames[num_sent] = frame
 
-        self.conn.send(escape(JSON.stringify(frame)))
+        send(frame)
+    }
+    
+    var send = function(data) {
+        self.conn.send(escape(JSON.stringify(data)))
     }
 
     var identify = function() {
@@ -77,7 +81,7 @@ CSP = function() {
     var send_ack = function(tag) {
         shell.print("sending ACK")
         var frame = ["ACK", tag]
-        self.conn.send(JSON.stringify(frame))
+        send(frame)
     }
 
     var process_queue = function() {
@@ -140,10 +144,9 @@ cspccb = function(conn) {
     console.log("CSP: connected", conn)
     conn.receive_cb = [csprcb, conn]
     conn.close_cb = [cspclcb, conn]
-    conn.send('"hello"')
 }
 csprcb = function(data, conn) {
-    console.log("CSP: received", data, "on", conn)
+    shell.print("CSP: received", data, "on", conn)
 }
 cspclcb = function(conn) {
     console.log("CSP: closed", conn)
