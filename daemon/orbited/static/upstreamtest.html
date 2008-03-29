@@ -7,13 +7,18 @@
     <script src="/_/static/upstream.js"></script>
     <script src="/_/static/cometwire.js"></script>
     <script src="/_/static/CSP.js"></script>
+	<script src="/_/static/shell.js"></script>
 
     <script>
-    
+		init = function() {
+			output = document.getElementById('events')
+			shell = new Shell(output)
+    	}
+
     </script>
   </head>
-  <body>
+  <body onLoad="init()">
     <h1>Test</h1>
-    <div id="events"></div>
+    <div id="events" style="height: 200px; overflow-y: scroll"></div>
   </body>
 </html>

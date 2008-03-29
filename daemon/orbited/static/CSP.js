@@ -7,15 +7,15 @@ CSP = function() {
 
     var num_dispatched  = 0
     var num_sent        = 0
-    var up_queue        = []
-    var down_queue      = []
-
+    var sent_frames     = {}
+    var received_frames = {}
 
     self.connect = function(connect_cb, args) {
         self.conn = new CometWire()
         self.connect_cb = [connect_cb, args]
         self.conn.connect("/_/csp/up", connected_cb)
     }
+    
     var closed_cb = function() {
     }
 
@@ -23,23 +23,26 @@ CSP = function() {
         console.log("in CSP connected", self.conn)
         self.conn.set_receive_cb(received_cb)
         self.conn.set_close_cb(closed_cb)
-        console.log('cb', self.connect_cb)
-        var conn_cb = self.connect_cb[0]
-        var args = self.connect_cb[1]
-        console.log(conn_cb, args)
-        delete self.connect_cb
-        return conn_cb(args)
+        identify()
     }
 
     var received_cb = function(data) {
         console.log("RECEIVE", data)
         // TODO: real JSON
         try {
-            frame = eval(data)
-            down_queue.push(frame)
-            // TODO: check for consistency, send back acks?
-            
-            dispatch()
+            var frame = eval(data)
+ 
+            if (frame[0] == "ACK") {
+                var tag = frame[1]
+                clearInterval(sent_frames[tag].timeout)
+                delete sent_frames[tag]                
+            }
+            else {
+                var id = frame[3]
+                if (typeof(received_frames) == "undefined")
+                    received_frames[id] = frame
+            }
+            process_queue()
         }
         catch(e) {
             console.log(e)
@@ -50,35 +53,53 @@ CSP = function() {
         delete self.conn
         /* TODO:
          *  zero the rest of the state
+         *  call close callback
          */
     }
     
     self.send = function(data) {
         num_sent++
-        var frame = [num_sent, 'PAYLOAD', data]
-        up_queue.push(frame)
+        if(arguments[1] == "ID")
+            var frame = [num_sent, 'ID', []]
+        else
+            var frame = [num_sent, 'PAYLOAD', data]
+        
+        frame.timeout = setInterval(function(){self.send(frame)}, 5000)
+        sent_frames[num_sent] = frame
+
         self.conn.send(escape(JSON.stringify(frame)))
     }
 
+    var identify = function() {
+        self.send("", "ID")
+    }
 
-    var dispatch = function() {
-        //make the queue consecutive
-        if (!check_queue())
-            return
-        
-        var frame = down_queue[0]
-        
+    var send_ack = function(tag) {
+        shell.print("sending ACK")
+        var frame = ["ACK", tag]
+        self.conn.send(JSON.stringify(frame))
+    }
+
+    var process_queue = function() {
+        while(received_frames[num_dispatched+1]) {
+            send_ack()
+            num_dispatched++
+            dispatch(received_frames[num_dispatched])
+            delete received_frames[num_dispatched]
+        }
+    }
+
+    var dispatch = function(frame) {
         var tag = frame[0]
         var type = frame[1]
         var data = frame[2]
           
         /*
          *   [x] payload
-         *   [ ] ping
-         *   [ ] pong
-         *   [ ] ack
-         *   [ ] welcome
-         *   [ ] unwelcome
+         *   [x] ping
+         *   [moved] ack
+         *   [x] welcome
+         *   [o] unwelcome
          *   [x] disconnect
          */
         switch (type) {
@@ -86,16 +107,12 @@ CSP = function() {
                 self.receive_cb(data)
                 break
             case "PING":
-                throw "unimplemented"
-                break
-            case "PONG":
-                throw "unimplemented"
-                break
-            case "ACK":
-                throw "unimplemented"
                 break
             case "WELCOME":
-                throw "unimplemented"
+                var conn_cb = self.connect_cb[0]
+                var args = self.connect_cb[1]
+                delete self.connect_cb
+                conn_cb(args)
                 break
             case "UNWELCOME":
                 self.disconnect()
