@@ -4,11 +4,12 @@ CometWire = function () {
     self.state = "waiting";
 
     self.connect = function(url, connect_cb, args) {
+        console.log("connecting cometwire")
         self.state = "connecting"
         self.url = url;
         self.connect_cb = connect_cb
         self.args = args
-        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "iframe");
+        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "leaky_iframe");
     };
     self.set_close_cb = function(cb, args) {
         self.close_cb = [cb, args]
@@ -26,6 +27,7 @@ CometWire = function () {
         return self.transport.send(payload) 
     };
     self.message_cb = function (data) {
+        console.log("COMETWIRE receive down: " + data)
         if (data.length == 2) {
             if (self.state == "connecting") {
                 if (data[0] == "ID") {
@@ -71,7 +73,6 @@ ccb = function(conn) {
     console.log("connected", conn)
     conn.set_receive_cb(rcb, conn)
     conn.set_close_cb(clcb, conn)
-    conn.send('"hello"')
 }
 rcb = function(data, conn) {
     console.log("received", data, "on", conn)

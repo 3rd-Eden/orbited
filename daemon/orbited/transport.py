@@ -1,3 +1,4 @@
+import random
 from orbited import __version__
 from orbited.config import map as config
 from orbited.http import HTTPRequest
@@ -17,6 +18,7 @@ def setup_registered_transports():
     transports['basic'] = BasicTransport
     transports['raw'] = DownstreamTransport
     transports['iframe'] = IFrameTransport
+    transports['leaky_iframe'] = LeakyIFrameTransport
     transports['xhr_multipart'] = XHRMultipartTransport
     transports['xhr_stream'] = XHRStreamTransport
     transports['sse'] = ServerSentEventsTransport
@@ -172,12 +174,15 @@ class DownstreamTransport(object):
     def __send_messages(self, messages):
         print 'DownstreamTransport.__send_messages'
         message = messages.pop(0)
+        return self.send_message(message)
+        
+    def send_message(self, message):
         self.browser_conn.write(self.encode(message.payload), self.__msg_success_cb, [message], self.__msg_failure_cb, [message])
         return False
     
     def end(self):
         if self.browser_conn:
-                self.browser_conn.close(mcb('close...'))
+            self.browser_conn.close(mcb('close...'))
             
     def encode(self, payload):
         return payload
@@ -186,6 +191,7 @@ class DownstreamTransport(object):
         print 'success!', message
         message.success()
         self.__ready()
+        
     def __msg_failure_cb(self, message):
         print 'failure!', message, message.payload, message.recipient
         message.failure()
@@ -255,7 +261,22 @@ class IFrameTransport(DownstreamTransport):
     
     def ping_render(self):
         return '<script>p();</script>'
+
+class LeakyIFrameTransport(IFrameTransport):
+    def __init__(self, *args, **kwargs):
+        self.first = True
+        IFrameTransport.__init__(self, *args, **kwargs)
         
+    name = 'leaky_iframe'
+    def send_message(self, message):
+        print 'ahem'
+        if self.first:
+            self.first = False
+        elif random.random() > 0.4:
+            print "Leaky IFrame, dropping: ", message.payload
+            return True
+        return IFrameTransport.send_message(self, message)
+    
 
 class ServerSentEventsTransport(DownstreamTransport):
     name = 'sse'

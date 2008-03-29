@@ -26,6 +26,7 @@ class CometWire(object):
         self.callbacks[url] = cb, args
     
     def __client_connect_callback(self, url):
+        print "CometWIRE downstream connect, url:", url
         key = self.__generate_key()
         initial_msgs = []
         initial_msgs.append(SingleRecipientMessage(json.encode(["ID", key]), key))
@@ -45,7 +46,7 @@ class CometWire(object):
         print "COMETWIRE -- upstream connect timeout", key
         
     def __generate_key(self):
-        return 'test'
+        # return 'test'
         return ''.join([random.choice("123456789ABCDEF") for i in range(10)])
         
     def __upstream_connected(self, conn, key, url):

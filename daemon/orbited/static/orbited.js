@@ -63,6 +63,27 @@ Orbited = {
     }
   },
 
+  connect_leaky_iframe: function() {
+    window.location.attach_iframe = this.attach_iframe;
+    var ifr = document.createElement('iframe');
+    this.hide_iframe(ifr);
+    this.ifr = ifr;
+    ifr.setAttribute('id', 'orbited_event_source');
+    ifr.setAttribute('src', this.url);
+    document.body.appendChild(ifr);
+    this.kill_load_bar();
+    var self = this;
+    var event_cb = this.event_cb;
+    this.event_cb = function (data) {
+      window.setTimeout(function() {
+        event_cb(data);
+        self.kill_load_bar();
+      }, 0)
+    }
+  },
+
+
+
   connect_htmlfile: function() {  
     var htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
     htmlfile.open();
@@ -255,6 +276,7 @@ Orbited = {
   },
 
   hide_iframe: function (ifr) {
+    return
     ifr.style.display = 'block';
     ifr.style.width = '0';
     ifr.style.height = '0';

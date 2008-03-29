@@ -9,8 +9,9 @@ CSP = function() {
     var num_sent        = 0
     var sent_frames     = {}
     var received_frames = {}
-
-    self.connect = function(connect_cb, args) {
+    self.temp = received_frames
+    self.connect = function(id, connect_cb, args) {
+        self.id = id
         self.conn = new CometWire()
         self.connect_cb = [connect_cb, args]
         self.conn.connect("/_/csp/up", connected_cb)
@@ -27,20 +28,23 @@ CSP = function() {
     }
 
     var received_cb = function(data) {
-        console.log("RECEIVE", data)
         // TODO: real JSON
+//        shell.print("RECEIVED: " + JSON.stringify(data))
         try {
             var frame = eval(data)
  
             if (frame[0] == "ACK") {
+//                shell.print("got an ACK back")
                 var tag = frame[1]
                 clearInterval(sent_frames[tag].timeout)
                 delete sent_frames[tag]                
             }
             else {
-                var id = frame[3]
-                if (typeof(received_frames) == "undefined")
-                    received_frames[id] = frame
+                var id = frame[0]
+                //if (typeof(received_frames[id]) == "undefined")
+                received_frames[id] = frame
+                
+//                console.log("FRAME", frame)
             }
             process_queue()
         }
@@ -60,7 +64,7 @@ CSP = function() {
     self.send = function(data) {
         num_sent++
         if(arguments[1] == "ID")
-            var frame = [num_sent, 'ID', []]
+            var frame = [num_sent, 'ID', [self.id]]
         else
             var frame = [num_sent, 'PAYLOAD', data]
         
@@ -85,10 +89,13 @@ CSP = function() {
     }
 
     var process_queue = function() {
+        console.log(received_frames)
         while(received_frames[num_dispatched+1]) {
-            send_ack()
+            shell.print("doing dispatch")
             num_dispatched++
-            dispatch(received_frames[num_dispatched])
+            var frame = received_frames[num_dispatched]
+            send_ack(num_dispatched)
+            dispatch(frame)
             delete received_frames[num_dispatched]
         }
     }
@@ -108,7 +115,9 @@ CSP = function() {
          */
         switch (type) {
             case "PAYLOAD":
-                self.receive_cb(data)
+                var cb = self.receive_cb[0]
+                var args = self.receive_cb[1]
+                cb(data, args)
                 break
             case "PING":
                 break
@@ -137,7 +146,7 @@ CSP = function() {
 /* Firefox test code */
 cspstart = function() {
     c = new CSP()
-    c.connect(cspccb, c)
+    c.connect("max", cspccb, c)
     return c
 }
 cspccb = function(conn) {    
@@ -146,7 +155,8 @@ cspccb = function(conn) {
     conn.close_cb = [cspclcb, conn]
 }
 csprcb = function(data, conn) {
-    shell.print("CSP: received", data, "on", conn)
+    
+    shell.print("CSP: received: " +  JSON.stringify(data) +  "on" + conn)
 }
 cspclcb = function(conn) {
     console.log("CSP: closed", conn)
