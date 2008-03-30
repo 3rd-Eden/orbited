@@ -9,7 +9,11 @@ CSP = function() {
     var num_sent        = 0
     var sent_frames     = {}
     var received_frames = {}
-    self.temp = received_frames
+    
+    var RESEND_TIMEOUT = 2000
+    var total_roundtrip_ms = 0
+    var num_ack_back    = 0
+
     self.connect = function(id, connect_cb, args) {
         self.id = id
         self.conn = new CometWire()
@@ -29,22 +33,24 @@ CSP = function() {
 
     var received_cb = function(data) {
         // TODO: real JSON
-//        shell.print("RECEIVED: " + JSON.stringify(data))
         try {
             var frame = eval(data)
  
             if (frame[0] == "ACK") {
-//                shell.print("got an ACK back")
                 var tag = frame[1]
                 clearInterval(sent_frames[tag].timeout)
-                delete sent_frames[tag]                
+                
+                var now = new Date().getTime()
+                num_ack_back++
+                total_roundtrip_ms += now-sent_frames[tag].time_sent
+                ROUNDTRIP_TIME = Math.round(total_roundtrip_ms/num_ack_back)
+                shell.print(ROUNDTRIP_TIME + " roundtrip")
+                delete sent_frames[tag]
             }
             else {
                 var id = frame[0]
-                //if (typeof(received_frames[id]) == "undefined")
-                received_frames[id] = frame
-                
-//                console.log("FRAME", frame)
+                if (typeof(received_frames[id]) == "undefined")
+                    received_frames[id] = frame
             }
             process_queue()
         }
@@ -68,7 +74,8 @@ CSP = function() {
         else
             var frame = [num_sent, 'PAYLOAD', data]
         
-        frame.timeout = setInterval(function(){send(frame)}, 5000)
+        frame.timeout = setInterval(function(){send(frame)}, RESEND_TIMEOUT)
+        frame.time_sent = new Date().getTime()
         sent_frames[num_sent] = frame
 
         send(frame)

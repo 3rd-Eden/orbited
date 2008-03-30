@@ -7,11 +7,10 @@ from orbited.json import json
 #from orbited.orbit import InternalOPRequest
 #from orbited.config import map as config
 from orbited.transport import transports as supported_transports
+from time import time
 
 #router.register(CSPDestination, '/_/csp')
 #router.register(StaticDestination, '/_/csp/static', '[orbited-static]')
-
-RESEND_TIMEOUT = 1.0
 
 class DuplicateConnection(Exception):
     pass
@@ -101,6 +100,11 @@ class Stream(object):
         self.received_frames = {}
         self.next_received_id = 1
         self.last_sent_id = 0
+
+        self.sent_times = {}
+        self.RESEND_TIMEOUT = 1.0
+        self.total_roundtrip_s = 0
+        self.num_ack_back = 0
         
     def __receive(self, data):
         print "STREAM __receive", data
@@ -115,6 +119,12 @@ class Stream(object):
                 ack_id = int(frame[1])
                 if ack_id in self.sent_frames:
                     del self.sent_frames[ack_id]
+                    
+                    delta = time() - self.sent_times.pop(ack_id)
+                    self.total_roundtrip_s += delta
+                    self.num_ack_back += 1
+                    self.RESEND_TIMEOUT = self.total_roundtrip_s / self.num_ack_back
+
                     self.resend_timers[ack_id].delete()
                     del self.resend_timers[ack_id]
             
@@ -147,7 +157,9 @@ class Stream(object):
             frame = [ id, type, payload ]
             self.sent_frames[id] = frame
             # Setup Frame timer
-            self.resend_timers[id] = event.timeout(RESEND_TIMEOUT, self.__resend_timeout, id)
+            print "RESEND TIMEOUT\n\n", self.RESEND_TIMEOUT
+            self.resend_timers[id] = event.timeout(self.RESEND_TIMEOUT, self.__resend_timeout, id)
+            self.sent_times[id] = time()
         elif id in self.sent_frames:
             frame = self.sent_frames[id]
         else:
