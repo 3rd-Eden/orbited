@@ -13,7 +13,7 @@ UpstreamTransport = function(url, id) {
         var qs = '?payload=' + s + "&identifier=" + id;
         
         var xhr = create_xhr();
-        xhr.open('GET', url+qs, true);
+        xhr.open('GET', url+qs, false);
         xhr.send(null);
         
         var cb = {

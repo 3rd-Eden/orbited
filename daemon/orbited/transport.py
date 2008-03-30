@@ -241,6 +241,7 @@ class IFrameTransport(DownstreamTransport):
     name = 'iframe'
     
     def initial_response(self):
+        js = self.browser_conn.request.form.get('js', 'iframe.js')
         self.browser_conn.write_status('200', 'OK')
         self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
         self.browser_conn.write_header('Content-Type', 'text/html')
@@ -249,18 +250,19 @@ class IFrameTransport(DownstreamTransport):
         self.browser_conn.write_headers_end()
         self.browser_conn.write(
             '<html>'
-            '<head>'
-              '<script src="/_/static/iframe.js" charset="utf-8"></script>'
-            '</head>'
-            '<body onload="reload();">'
+            ' <head>'
+            '  <script src="/_/static/transports/%s" charset="utf-8"></script>' % (js,)
+            + ' </head>'
+            ' <body onload="reload();">'
             + '<span></span>' * 100
+            + '\n'
         )
     
     def encode(self, payload):
-        return '<script>e(%s);</script>' % (payload,)
+        return '<script>e(%s);</script>\n' % (payload,)
     
     def ping_render(self):
-        return '<script>p();</script>'
+        return '<script>p();</script>\n'
 
 class LeakyIFrameTransport(IFrameTransport):
     def __init__(self, *args, **kwargs):

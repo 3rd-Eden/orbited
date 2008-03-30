@@ -1,16 +1,37 @@
 CometWire = function () {
     var self = this;
-    self.transport = null;
+    self.upstream_transport = null;
+    self.downstream_transport = null;
     self.state = "waiting";
-
-    self.connect = function(url, connect_cb, args) {
-        console.log("connecting cometwire")
+    
+    self.connect = function(url, connect_cb, args, preferred_transports) {
+        shell.print("connecting cometwire")
+        /* Cross-browser "transport_name not in CSPTransports */
+        if ((typeof(preferred_transports) == "undefined")) {
+            preferred_transports = []
+        }
         self.state = "connecting"
         self.url = url;
         self.connect_cb = connect_cb
         self.args = args
-        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "leaky_iframe");
+        self.downstream_transport = create_transport(preferred_transports)
+        self.downstream_transport.connect(self.message_cb, null, "localhost", 8000, "/_/cometwire/")
+//        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "leaky_iframe");
     };
+    var choose_best_transport = function() {
+        return 'iframe'
+    }
+    var create_transport = function(preferred_transports) {
+        // TODO: error checking... transport_name in CSPTransports ?
+        for (var i = 0; i < preferred_transports.length; i++) {
+            if (typeof(CSPTransports[preferred_transports[i]]) != "undefined")
+                shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
+                return new CSPTransports[preferred_transports[i]]()
+        }
+        transport_name = choose_best_transport()
+        shell.print("[ CW ] choose downstream transport: " + transport_name)
+        return new CSPTransports[transport_name]()
+    }
     self.set_close_cb = function(cb, args) {
         self.close_cb = [cb, args]
     }
@@ -24,16 +45,22 @@ CometWire = function () {
     }
 
     self.send = function(payload) {
-        return self.transport.send(payload) 
-    };
+        return self.upstream_transport.send(payload) 
+    }
+
     self.message_cb = function (data) {
         console.log("COMETWIRE receive down: " + data)
         if (data.length == 2) {
             if (self.state == "connecting") {
                 if (data[0] == "ID") {
                     self.id = data[1]
-                    self.transport = new UpstreamTransport(self.url, data[1]);
-                    self.transport.connect(function(args) { self.upstream_connect_callback(args) },null)
+                    self.upstream_transport = new UpstreamTransport(self.url, data[1]);
+                    self.upstream_transport.connect(
+                        function(args) {
+                            self.upstream_connect_callback(args) 
+                        },
+                        null
+                    )
                     return
                 }
             }

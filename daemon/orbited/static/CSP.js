@@ -2,6 +2,9 @@
  *
  */
 
+if (typeof(CSPTransports) == "undefined")
+    CSPTransports = { }
+
 CSP = function() {
     var self = this
 

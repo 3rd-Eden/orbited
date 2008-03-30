@@ -1,3 +1,21 @@
+function getURLParam(strParamName){
+  var strReturn = "";
+  var strHref = window.location.href;
+  if ( strHref.indexOf("?") > -1 ){
+    var strQueryString = strHref.substr(strHref.indexOf("?")).toLowerCase();
+    var aQueryString = strQueryString.split("&");
+    for ( var iParam = 0; iParam < aQueryString.length; iParam++ ){
+      if (
+aQueryString[iParam].indexOf(strParamName.toLowerCase() + "=") > -1 ){
+        var aParam = aQueryString[iParam].split("=");
+        strReturn = aParam[1];
+        break;
+      }
+    }
+  }
+  return unescape(strReturn);
+}
+
 function extract_xss_domain(old_domain) {
   domain_pieces = old_domain.split('.');
   if (domain_pieces.length === 4) {
@@ -32,5 +50,9 @@ window.onError = null;
 //alert('attaching iframe1');
 //alert(this);
 //alert(this.contentWindow);
-parent.window.location.attach_iframe(window.location);
+var attach_fname = getURLParam("attach_fname")
+if (attach_fname == "")
+    attach_fname = "attach_iframe"
+f = parent.window.location[attach_fname]
+f(window);
 // FIXME: Define this in orbited.js
