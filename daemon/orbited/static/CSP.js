@@ -43,7 +43,6 @@ CSP = function() {
                 num_ack_back++
                 total_roundtrip_ms += now-sent_frames[tag].time_sent
                 ROUNDTRIP_TIME = Math.round(total_roundtrip_ms/num_ack_back)
-                shell.print(ROUNDTRIP_TIME + " roundtrip")
                 delete sent_frames[tag]
             }
             else {

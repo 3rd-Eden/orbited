@@ -17,10 +17,19 @@
 			shell = new Shell(output)
     	}
 
+		sendMSG = function() {
+			var text = document.getElementById('messagebox').value
+			c.send(text)
+		}
+
     </script>
   </head>
   <body onLoad="init()">
     <h1>Test</h1>
     <div id="events" style="height: 200px; overflow-y: scroll"></div>
+
+	<button onClick="c = cspstart()">start</button><br>
+	<button onClick="sendMSG()">send</button><input type=text value="hello from the browser" id="messagebox">
+	
   </body>
 </html>
