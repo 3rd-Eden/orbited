@@ -27,7 +27,6 @@ CSPTransports['iframe_fxcx'] = function() {
                    '&attach_fname=' + attach_fname
         if (identifier !== null)
             self.url += "&identifier=" + identifier
-        shell.print("URL: " + self.url)
         ifr = document.createElement('iframe');
         hide_iframe(ifr)
         ifr.setAttribute('src', self.url);
@@ -42,7 +41,6 @@ CSPTransports['iframe_fxcx'] = function() {
     }
 
     var attach = function(wnd) {
-        shell.print('attach: ' + wnd)
         wnd.location.e = message_cb
         shell
         kill_load_bar()
@@ -60,7 +58,6 @@ CSPTransports['iframe_fxcx'] = function() {
 
     var kill_load_bar = function () {
         if (load_kill_ifr === null) {
-            shell.print("woot");
             load_kill_ifr = document.createElement('iframe');
             hide_iframe(load_kill_ifr);
     //      document.body.appendChild(load_kill_ifr);

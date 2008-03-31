@@ -59,6 +59,7 @@ class CometWire(object):
         if url in self.callbacks:
             upstream_conn = conn
             downstream_conn = self.transports.get(key)
+            downstream_conn.send(json.encode(["CONNECTED", []]))
             cb, args = self.callbacks[url]
             del self.callbacks[url]
             return cb(key, upstream_conn, downstream_conn, *args)

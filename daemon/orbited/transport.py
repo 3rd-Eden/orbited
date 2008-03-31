@@ -259,7 +259,7 @@ class IFrameTransport(DownstreamTransport):
         )
     
     def encode(self, payload):
-        return '<script>e(%s);</script>\n' % (payload,)
+        return '<script>e(%s);</script>\n' % (json.encode(payload),)
     
     def ping_render(self):
         return '<script>p();</script>\n'

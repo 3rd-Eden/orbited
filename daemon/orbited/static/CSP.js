@@ -28,7 +28,6 @@ CSP = function() {
     }
 
     var connected_cb = function() {
-        console.log("in CSP connected", self.conn)
         self.conn.set_receive_cb(received_cb)
         self.conn.set_close_cb(closed_cb)
         identify()
@@ -38,7 +37,7 @@ CSP = function() {
         // TODO: real JSON
         try {
             var frame = eval(data)
- 
+            
             if (frame[0] == "ACK") {
                 var tag = frame[1]
                 clearInterval(sent_frames[tag].timeout)
@@ -58,7 +57,7 @@ CSP = function() {
             process_queue()
         }
         catch(e) {
-            console.log(e)
+//            console.log(e)
         }
     }
 
@@ -93,15 +92,12 @@ CSP = function() {
     }
 
     var send_ack = function(tag) {
-        shell.print("sending ACK")
         var frame = ["ACK", tag]
         send(frame)
     }
 
     var process_queue = function() {
-        console.log(received_frames)
         while(received_frames[num_dispatched+1]) {
-            shell.print("doing dispatch")
             num_dispatched++
             var frame = received_frames[num_dispatched]
             send_ack(num_dispatched)
@@ -151,8 +147,6 @@ CSP = function() {
     }
 
 }
-
-
 /* Firefox test code */
 cspstart = function() {
     c = new CSP()
@@ -160,15 +154,12 @@ cspstart = function() {
     return c
 }
 cspccb = function(conn) {    
-    console.log("CSP: connected", conn)
     conn.receive_cb = [csprcb, conn]
     conn.close_cb = [cspclcb, conn]
 }
 csprcb = function(data, conn) {
-    
-    shell.print("CSP: received: " +  JSON.stringify(data) +  "on" + conn)
+    shell.print("CSP: received: " +  data +  "on" + conn)
 }
 cspclcb = function(conn) {
-    console.log("CSP: closed", conn)
 }
 /* End test code */

@@ -29,7 +29,6 @@ class CSP(object):
             conn.close()
         
     def __connect(self, transport_id, upstream_conn, downstream_conn):
-        print 'CSP connect', transport_id
         self.unidentified_connections[transport_id] = CSPConnection(
             self.__conn_closed, 
             self.__identify,
@@ -64,8 +63,8 @@ class CSPConnection(object):
         
     def send_msgs(self, msgs):
         for msg in msgs:
-            payload = json.encode(msg.payload)
-            self.stream.send("PAYLOAD", payload)
+#            payload = json.encode(msg.payload)
+            self.stream.send("PAYLOAD", msg.payload)
         
     def __receive_frame(self, type, payload):
         getattr(self, "receive_%s" % self.state)(type, payload)
@@ -81,11 +80,11 @@ class CSPConnection(object):
         if type == "DISCONNECT":
             return self.close()
         elif type == "PAYLOAD":
-            self.stream.send("PAYLOAD", ["ECHO", payload])
-            print "CSP PAYLOAD:", payload
+            self.stream.send("PAYLOAD", json.encode(["ECHO", payload]))
         
         
     def close(self):
+        pass
         print "CSP close", self.csp_id
 
 class Stream(object):
@@ -107,13 +106,11 @@ class Stream(object):
         self.num_ack_back = 0
         
     def __receive(self, data):
-        print "STREAM __receive", data
         try:
             frame = json.decode(data)
         except:
             pass # TODO: do we actually want to ignore bad frames?
         else:
-            print "Frame:", frame
             # Receive ACK from Client
             if len(frame) == 2 and frame[0] == "ACK":
                 ack_id = int(frame[1])
@@ -134,7 +131,6 @@ class Stream(object):
                 
                 if id >= self.next_received_id:
                     self.received_frames[id] = frame
-                print "SENDING ACK", id
                 self.send("ACK", id)
                 self.__check_received()
                 
@@ -157,14 +153,12 @@ class Stream(object):
             frame = [ id, type, payload ]
             self.sent_frames[id] = frame
             # Setup Frame timer
-            print "RESEND TIMEOUT\n\n", self.RESEND_TIMEOUT
             self.resend_timers[id] = event.timeout(self.RESEND_TIMEOUT, self.__resend_timeout, id)
             self.sent_times[id] = time()
         elif id in self.sent_frames:
             frame = self.sent_frames[id]
         else:
             raise Exception("InvalidFrame")
-        print "stream.send(" + str(frame) + ")"
         self.downstream.send(json.encode(frame))
         
     def __resend_timeout(self, id):

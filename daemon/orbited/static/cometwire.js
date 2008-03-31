@@ -2,15 +2,15 @@ CometWire = function () {
     var self = this;
     self.upstream_transport = null;
     self.downstream_transport = null;
-    self.state = "waiting";
+    self.state = 0;
     
     self.connect = function(url, connect_cb, args, preferred_transports) {
-        shell.print("connecting cometwire")
+        shell.print("[CW] connecting")
         /* Cross-browser "transport_name not in CSPTransports */
         if ((typeof(preferred_transports) == "undefined")) {
             preferred_transports = []
         }
-        self.state = "connecting"
+        self.state++;
         self.url = url;
         self.connect_cb = connect_cb
         self.args = args
@@ -37,7 +37,7 @@ CometWire = function () {
     }
     self.close = function() {
         if (typeof(self.close_cb) != "undefined") {
-            self.state = "closed"
+            self.state = 0
             cb = self.close_cb[0]
             args = self.close_cb[1]
             cb(args)
@@ -49,36 +49,47 @@ CometWire = function () {
     }
 
     self.message_cb = function (data) {
-        console.log("COMETWIRE receive down: " + data)
-        if (data.length == 2) {
-            if (self.state == "connecting") {
-                if (data[0] == "ID") {
-                    self.id = data[1]
-                    self.upstream_transport = new UpstreamTransport(self.url, data[1]);
-                    self.upstream_transport.connect(
-                        function(args) {
-                            self.upstream_connect_callback(args) 
-                        },
-                        null
-                    )
-                    return
-                }
+        CWFRAME = data
+        if (self.state == 1) {
+            self.state += 1
+            frame = eval(data)
+            if (frame[0] == "ID")   {
+                self.id = data[1]
+                self.upstream_transport = new UpstreamTransport(self.url, frame[1]);
+                self.upstream_transport.connect(
+                    function(args) {
+                        self.upstream_connect_callback(args) 
+                    },
+                    null
+                )
+                return
             }
-            else if (data[0] == "TIMEOUT") {
+            else {
+                self.close()
+            }
+        }
+        else if (self.state == 2) {
+            frame = eval(data)
+            if (frame[0] == "TIMEOUT") {
                 self.close()
                 return
-                //Orbited.disconnect()
+            }
+            else if (frame[0] == "CONNECTED") {
+                self.state += 1
+                return
             }
         }
-        if (typeof(self.receive_cb) != "undefined") {
-            cb = self.receive_cb[0]
-            args = self.receive_cb[1]
-            cb(data, args)
+        else if (self.state == 3) {
+            if (typeof(self.receive_cb) != "undefined") {
+                cb = self.receive_cb[0]
+                args = self.receive_cb[1]
+                cb(data, args)
+            }
         }
+
     };
 
     self.upstream_connect_callback = function (cbargs) {
-        self.state = "connected"
         if (typeof(self.connect_cb) != "undefined") {
             self.connect_cb(self.args);
         }

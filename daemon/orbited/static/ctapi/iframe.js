@@ -27,7 +27,6 @@ CSPTransports['iframe'] = function() {
                    '&attach_fname=' + attach_fname
         if (identifier !== null)
             self.url += "&identifier=" + identifier
-        shell.print("URL: " + self.url)
         ifr = document.createElement('iframe');
         hide_iframe(ifr)
         ifr.setAttribute('src', self.url);
@@ -36,6 +35,7 @@ CSPTransports['iframe'] = function() {
     }
 
     var message_cb = function(msg) {
+        
         window.setTimeout(function() {        
             self.cb(msg)
             kill_load_bar(ifr)
@@ -43,7 +43,6 @@ CSPTransports['iframe'] = function() {
     }
 
     var attach = function(wnd) {
-        shell.print('attach: ' + wnd)
         wnd.e = message_cb
         kill_load_bar()
     }
@@ -60,7 +59,6 @@ CSPTransports['iframe'] = function() {
 
     var kill_load_bar = function () {
         if (load_kill_ifr === null) {
-            shell.print("woot");
             load_kill_ifr = document.createElement('iframe');
             hide_iframe(load_kill_ifr);
     //      document.body.appendChild(load_kill_ifr);
