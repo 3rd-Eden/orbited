@@ -1,7 +1,9 @@
 if (typeof(CTAPITransports) == "undefined")
-    CTAPITransports = { }
-
-CTAPITransports['iframe_fxcx'] = function() {
+    CTAPITransports = { 
+        downstream: { },
+        upstream: { }
+    }
+CTAPITransports['downstream']['iframe_fxcx'] = function() {
     var self = this;
     self.url = null;
     self.cb = null;

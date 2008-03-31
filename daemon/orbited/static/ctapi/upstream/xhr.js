@@ -1,4 +1,10 @@
-UpstreamTransport = function(url, id) {
+if (typeof(CTAPITransports) == "undefined")
+    CTAPITransports = { 
+        downstream: { },
+        upstream: { }
+    }
+
+CTAPITransports['upstream']['xhr'] = function(url, id) {
     var self = this;
 
     self.connect = function(cb, args) {

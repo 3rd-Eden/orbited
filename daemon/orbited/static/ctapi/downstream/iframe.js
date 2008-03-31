@@ -1,7 +1,10 @@
 if (typeof(CTAPITransports) == "undefined")
-    CTAPITransports = { }
+    CTAPITransports = { 
+        downstream: { },
+        upstream: { }
+    }
 
-CTAPITransports['iframe'] = function() {
+CTAPITransports['downstream']['iframe'] = function() {
     var self = this;
     self.url = null;
     self.cb = null;
@@ -35,7 +38,6 @@ CTAPITransports['iframe'] = function() {
     }
 
     var message_cb = function(msg) {
-        
         window.setTimeout(function() {        
             self.cb(msg)
             kill_load_bar(ifr)
