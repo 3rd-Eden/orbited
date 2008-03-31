@@ -1,3 +1,8 @@
+if (typeof(CTAPITransports) == "undefined")
+    CTAPITransports = { }
+
+
+
 CometWire = function () {
     var self = this;
     self.upstream_transport = null;
@@ -24,13 +29,13 @@ CometWire = function () {
     var create_transport = function(preferred_transports) {
         // TODO: error checking... transport_name in CSPTransports ?
         for (var i = 0; i < preferred_transports.length; i++) {
-            if (typeof(CSPTransports[preferred_transports[i]]) != "undefined")
+            if (typeof(CTAPITransports[preferred_transports[i]]) != "undefined")
                 shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
-                return new CSPTransports[preferred_transports[i]]()
+                return new CTAPITransports[preferred_transports[i]]()
         }
         transport_name = choose_best_transport()
         shell.print("[ CW ] choose downstream transport: " + transport_name)
-        return new CSPTransports[transport_name]()
+        return new CTAPITransports[transport_name]()
     }
     self.set_close_cb = function(cb, args) {
         self.close_cb = [cb, args]

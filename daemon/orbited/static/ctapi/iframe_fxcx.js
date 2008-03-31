@@ -1,7 +1,7 @@
-if (typeof(CSPTransports) == "undefined")
-    CSPTransports = { }
+if (typeof(CTAPITransports) == "undefined")
+    CTAPITransports = { }
 
-CSPTransports['iframe_fxcx'] = function() {
+CTAPITransports['iframe_fxcx'] = function() {
     var self = this;
     self.url = null;
     self.cb = null;
