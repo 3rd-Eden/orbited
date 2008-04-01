@@ -61,14 +61,18 @@ class XHRUpstreamConnection(object):
         self.receive_cb = (cb, args)
     
     def http_request(self, req):
+        
         payload = req.form.get('payload', None)
         response = req.HTTPResponse()
         # TODO: pre-encode for perf gain
         response.write(json.encode(["OK", []]))
         response.dispatch()
         if self.receive_cb:
+            print 'call XHRUpstreamConnection.receive_cb'
             cb, args = self.receive_cb
             cb(payload, *args)
+        else: 
+            print 'no cb!'
             
     def close(self):
         self.close_cb(self)

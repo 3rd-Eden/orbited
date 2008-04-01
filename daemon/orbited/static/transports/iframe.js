@@ -34,6 +34,26 @@ function reload() {
     // TODO: This doesn't actually reload, but comet streaming will stop
     // after the predefined Content-Length has been reached. Fix this.
 }
+var dir = function(obj) {
+    var attributeName;
+    var attributeValue;
+    var str= "";
+    
+    for (attributeName in obj)
+    {
+        attributeValue= obj[attributeName];
+    
+        if (str)
+            str+= ", ";
+    
+            str+= attributeName + " = " + attributeValue + "<br>";
+    }
+    
+    if (str)
+        return "{ " + str + " }";
+    else
+        return "{}";
+}
 
 p = function() {}
 window.onError = null;
@@ -41,5 +61,5 @@ document.domain = extract_xss_domain(document.domain);
 var attach_fname = getURLParam("attach_fname")
 if (attach_fname == "")
     attach_fname = "attach_iframe"
-f = parent.window[attach_fname]
+f = parent[attach_fname]
 f(window);

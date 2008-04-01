@@ -167,12 +167,10 @@ class DownstreamTransport(object):
         self.browser_conn = None
         
     def __ready(self):
-        print 'DownstreamTransport.__ready'
         if self.browser_conn:
             self.ready_cb(self.__send_messages)
 
     def __send_messages(self, messages):
-        print 'DownstreamTransport.__send_messages'
         message = messages.pop(0)
         return self.send_message(message)
         

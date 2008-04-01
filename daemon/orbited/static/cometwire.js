@@ -20,11 +20,11 @@ CometWire = function () {
         self.connect_cb = connect_cb
         self.args = args
         self.downstream_transport = create_transport(preferred_transports)
-        self.downstream_transport.connect(self.message_cb, null, "127.0.0.1", 8000, "/_/cometwire/")
+        self.downstream_transport.connect(self.message_cb, null, document.domain, 8000, "/_/cometwire/")
 //        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "leaky_iframe");
     };
     var choose_best_transport = function() {
-        return 'iframe_fxcx'
+        return 'iframe'
     }
     var create_transport = function(preferred_transports) {
         // TODO: error checking... transport_name in CSPTransports ?
@@ -54,6 +54,7 @@ CometWire = function () {
     }
 
     self.message_cb = function (data) {
+        shell.print("[CW] data:" + data)
         CWFRAME = data
         if (self.state == 1) {
             self.state += 1

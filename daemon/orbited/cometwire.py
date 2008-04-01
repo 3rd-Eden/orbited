@@ -52,18 +52,22 @@ class CometWire(object):
     def __upstream_connected(self, conn, key, url):
         # Are we waiting on this particular upstream connection?
         if key not in self.timers:
+            print 'Key NOT IN TIMERS?'
             # TODO: error...?
             return
         self.timers[key].delete()
         del self.timers[key]
+        
         if url in self.callbacks:
+            print 'url in callbacks'
             upstream_conn = conn
             downstream_conn = self.transports.get(key)
             downstream_conn.send(json.encode(["CONNECTED", []]))
             cb, args = self.callbacks[url]
-            del self.callbacks[url]
+            #self.callbacks[url]
             return cb(key, upstream_conn, downstream_conn, *args)
         else:
+            print 'url not in', self.callbacks
             conn.set_receive_cb(self.__upstream_receive_cb)
 
     def __upstream_receive_cb(self, data):

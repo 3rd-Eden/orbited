@@ -38,7 +38,10 @@ class CSP(object):
     
     def __identify(self, transport_id, id):
         if id in self.connections:
-            raise DuplicateConnection
+            # TODO: best to close previous connection?
+            self.connections[id].close()
+            del self.connections[id]
+#            raise DuplicateConnection
         self.connections[id] = self.unidentified_connections.pop(transport_id)
     
     def contains(self, key):        
@@ -84,8 +87,8 @@ class CSPConnection(object):
         
         
     def close(self):
-        pass
-        print "CSP close", self.csp_id
+        self.stream.send("DISCONNECT")
+        print "CSP close", self.id
 
 class Stream(object):
     

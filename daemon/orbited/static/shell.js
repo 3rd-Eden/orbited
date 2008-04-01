@@ -13,7 +13,7 @@ Shell = function(output){
     
     self.escape = function(s)
     {
-        
+        return s   
         s = s.replace("&", "&amp;", "g")
         s = s.replace("<", "&lt;", "g")
         s = s.replace(">", "&gt;", "g")
