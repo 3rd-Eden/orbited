@@ -3,12 +3,19 @@ Library = function() {
     
     self.modules = {}
     
+    if(typeof(arguments[0]) != "undefined")
+        var baseurl = arguments[0]
+    
     self.require = function(url) {
         if(url in self.modules) {
             return
         }
         else {
             self.modules[url] = true
+            
+            if (url.substring(0,7) != "http://")
+                url = baseurl + url
+            
             var script = get(url)
             eval(script)
         }
@@ -31,3 +38,5 @@ Library = function() {
     }
     
 }
+
+Orbited = new Library("/_/static/")

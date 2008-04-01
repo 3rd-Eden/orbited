@@ -2,35 +2,48 @@
   <head>
     <title>Test</title>
     <link rel="stylesheet" href="chat.css">
-    <script src="/_/static/json.js"></script>
-    <script src="/_/static/orbited.js"></script>
-    <script src="/_/static/ctapi/upstream/xhr.js"></script>   
-    <script src="/_/static/ctapi/downstream/iframe.js"></script>
-    <script src="/_/static/ctapi/downstream/iframe_fxcx.js"></script>
-    <script src="/_/static/ctapi/downstream/sse.js"></script>
-    <script src="/_/static/ctapi/downstream/iframe_ie.js"></script>
-    <script src="/_/static/cometwire.js"></script>
-    <script src="/_/static/CSP.js"></script>
-	<script src="/_/static/shell.js"></script>
+	<script src="/_/static/library.js"></script>
+
 
     <script>
-		init = function() {
+		Orbited.require("socket.js")
+		Orbited.require("shell.js")
+
+		onload = function() {
+
+			
 			output = document.getElementById('events')
 			shell = new Shell(output)
+			
+			c = TCPstart()
     	}
 
+		TCPstart = function() {
+		    var c = new TCPConnection(null, TCPonopen, TCPonread, TCPonclose)
+		    return c
+		}
+		TCPonopen = function() {
+			shell.print("Connected to TCP Socket")
+			c.send("first message")
+		}
+		TCPonread = function(data) {
+		    shell.print("Socket received: " +  data)
+		}
+		TCPonclose = function() {
+		}
+		
 		sendMSG = function() {
 			var text = document.getElementById('messagebox').value
 			c.send(text)
 		}
 
+
     </script>
   </head>
-  <body onLoad="init()">
+  <body>
     <h1>Test</h1>
     <div id="events" style="height: 200px; overflow-y: scroll"></div>
 
-	<button onClick="c = cspstart()">start</button><br>
 	<button onClick="sendMSG()">send</button><input type=text value="hello from the browser" id="messagebox">
 	
   </body>

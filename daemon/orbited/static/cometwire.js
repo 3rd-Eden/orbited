@@ -1,13 +1,19 @@
+Orbited.require("json.js")
+Orbited.require("ctapi/upstream/xhr.js")
+Orbited.require("ctapi/downstream/iframe.js")
+Orbited.require("ctapi/downstream/iframe_fxcx.js")
+Orbited.require("ctapi/downstream/sse.js")
+Orbited.require("ctapi/downstream/iframe_ie.js")
+
 if (typeof(CTAPITransports) == "undefined")
     CTAPITransports = { }
-
-
 
 CometWire = function () {
     var self = this;
     self.upstream_transport = null;
     self.downstream_transport = null;
     self.state = 0;
+    self.id = null
     
     self.connect = function(url, connect_cb, args, preferred_transports) {
         shell.print("[CW] connecting")
@@ -21,8 +27,7 @@ CometWire = function () {
         self.args = args
         self.downstream_transport = create_transport(preferred_transports)
         self.downstream_transport.connect(self.message_cb, null, document.domain, 8000, "/_/cometwire/")
-//        Orbited.connect(function(data) { self.message_cb(data); }, null, "http://127.0.0.1:8000/_/cometwire/", "leaky_iframe");
-    };
+    }
     var choose_best_transport = function() {
         return 'iframe'
     }
@@ -54,13 +59,11 @@ CometWire = function () {
     }
 
     self.message_cb = function (data) {
-        shell.print("[CW] data:" + data)
-        CWFRAME = data
         if (self.state == 1) {
             self.state += 1
             frame = eval(data)
             if (frame[0] == "ID")   {
-                self.id = data[1]
+                self.id = frame[1]
                 self.upstream_transport = new CTAPITransports['upstream']['xhr'](self.url, frame[1]);
                 self.upstream_transport.connect(
                     function(args) {
@@ -103,25 +106,6 @@ CometWire = function () {
 
     self.set_receive_cb = function(cb, args) {
         self.receive_cb = [cb, args];
-    };
+    }
 
-};
-
-/* Firefox test code */
-start = function() {
-    c = new CometWire()
-    c.connect("/_/csp/up", ccb, c)
-    return c
 }
-ccb = function(conn) {    
-    console.log("connected", conn)
-    conn.set_receive_cb(rcb, conn)
-    conn.set_close_cb(clcb, conn)
-}
-rcb = function(data, conn) {
-    console.log("received", data, "on", conn)
-}
-clcb = function(conn) {
-    console.log("closed", conn)
-}
-/* End test code */

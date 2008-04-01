@@ -3,6 +3,7 @@ if (typeof(CTAPITransports) == "undefined")
         downstream: { },
         upstream: { }
     }
+    
 CTAPITransports['downstream']['sse'] = function() {
     var self = this;
     self.url = null;

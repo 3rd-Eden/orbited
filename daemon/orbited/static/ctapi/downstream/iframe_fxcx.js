@@ -3,6 +3,7 @@ if (typeof(CTAPITransports) == "undefined")
         downstream: { },
         upstream: { }
     }
+    
 CTAPITransports['downstream']['iframe_fxcx'] = function() {
     var self = this;
     self.url = null;

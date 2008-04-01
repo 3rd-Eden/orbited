@@ -1,6 +1,8 @@
 /* CSP
  *
  */
+Orbited.require("json.js")
+Orbited.require("cometwire.js")
 
 CSP = function() {
     var self = this
@@ -25,6 +27,9 @@ CSP = function() {
     }
 
     var connected_cb = function() {
+        if(self.id == null)
+            self.id = self.conn.id
+
         self.conn.set_receive_cb(received_cb)
         self.conn.set_close_cb(closed_cb)
         identify()
@@ -106,7 +111,7 @@ CSP = function() {
         var tag = frame[0]
         var type = frame[1]
         var data = frame[2]
-          
+        
         /*
          *   [x] payload
          *   [x] ping
@@ -123,7 +128,7 @@ CSP = function() {
                 break
             case "PING":
                 break
-            case "WELCOME":
+            case "WELCOME":            
                 var conn_cb = self.connect_cb[0]
                 var args = self.connect_cb[1]
                 delete self.connect_cb
@@ -143,19 +148,3 @@ CSP = function() {
     }
 
 }
-/* Firefox test code */
-cspstart = function() {
-    c = new CSP()
-    c.connect("max", cspccb, c)
-    return c
-}
-cspccb = function(conn) {    
-    conn.receive_cb = [csprcb, conn]
-    conn.close_cb = [cspclcb, conn]
-}
-csprcb = function(data, conn) {
-    shell.print("CSP: received: " +  data +  "on" + conn)
-}
-cspclcb = function(conn) {
-}
-/* End test code */
