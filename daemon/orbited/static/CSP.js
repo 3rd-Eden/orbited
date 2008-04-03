@@ -18,9 +18,9 @@ CSP = function() {
 
     self.connect = function(id, domain, port, connect_cb, args) {
         self.id = id
-        if (typeof(domain) == "undefined")
+        if (typeof(domain) == "undefined" || domain == null)
             domain = "internal"
-        if (typeof(port) == "undefined")
+        if (typeof(port) == "undefined" || port == null)
             port = 80
         self.domain = domain
         self.port = 80
@@ -44,7 +44,7 @@ CSP = function() {
     var received_cb = function(data) {
         // TODO: real JSON
         try {
-            var frame = eval(data)
+            var frame = JSON.parse(data)
             
             if (frame[0] == "ACK") {
                 var tag = frame[1]
@@ -53,7 +53,7 @@ CSP = function() {
                 var now = new Date().getTime()
                 num_ack_back++
                 total_roundtrip_ms += now-sent_frames[tag].time_sent
-                ROUNDTRIP_TIME = Math.round(total_roundtrip_ms/num_ack_back)
+                RESEND_TIMEOUT = Math.round(total_roundtrip_ms/num_ack_back)
                 delete sent_frames[tag]
             }
             else {
@@ -150,7 +150,7 @@ CSP = function() {
                 break
             
             default:
-                throw "unknown type"
+                throw "unknown type of CSP message"
         }
     }
 

@@ -30,7 +30,7 @@ CometWire = function () {
     var choose_best_transport = function() {
         //throw out non-XD
         
-        for (t in CTAPITransports.downstream) {
+        for (var t in CTAPITransports.downstream) {
             return t        //actually, just return the first one
         }
     }
@@ -41,7 +41,7 @@ CometWire = function () {
                 shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
                 return new CTAPITransports['downstream'][preferred_transports[i]]()
         }
-        transport_name = choose_best_transport()
+        var transport_name = choose_best_transport()
         shell.print("[ CW ] choose downstream transport: " + transport_name)
         return new CTAPITransports['downstream'][transport_name]()
     }
@@ -64,7 +64,7 @@ CometWire = function () {
     self.message_cb = function (data) {
         if (self.state == 1) {
             self.state += 1
-            frame = eval(data)
+            var frame = eval(data)
             if (frame[0] == "ID")   {
                 self.id = frame[1]
                 // TODO: choose best upstream transport
@@ -95,8 +95,8 @@ CometWire = function () {
         }
         else if (self.state == 3) {
             if (typeof(self.receive_cb) != "undefined") {
-                cb = self.receive_cb[0]
-                args = self.receive_cb[1]
+                var cb = self.receive_cb[0]
+                var args = self.receive_cb[1]
                 cb(data, args)
             }
         }

@@ -1,24 +1,30 @@
 Orbited.require("CSP.js")
 
-TCPConnection = function(location, onopen, onread, onclose) {
+TCPConnection = function(domain, port, secure) {
     var self = this
-    self.network = true                     // we don't use this, htm5? does
+    
+    if (secure)
+        throw "not implemented"
+    
     self.readyState = 0
+    
+    self.onopen = null
+    self.onread = null
+    self.onclose = null
 
     var _onconnect = function() {
         conn.receive_cb = [_onread, null]
-        conn.close_cb = [onclose, null]
+        conn.close_cb = [self.onclose, null]
         self.readyState = 1
-        onopen()
+        self.onopen()
     }
 
-    // TODO: do something with the location parameter
     var conn = new CSP()
-    conn.connect(null, _onconnect, null)
-
+    conn.connect(null, domain, port, _onconnect)
+    
     var _onread = function(s) {
-        if (typeof(onread.handleEvent) == "undefined") {
-            onread(s)
+        if (typeof(self.onread.handleEvent) == "undefined") {
+            self.onread(s)
         }
         else {
             // the distant future!

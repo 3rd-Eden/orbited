@@ -11,14 +11,17 @@
 		onload = function() {
 
 			
-			output = document.getElementById('events')
+			var output = document.getElementById('events')
 			shell = new Shell(output)
 			
 			c = TCPstart()
     	}
 
 		TCPstart = function() {
-		    var c = new TCPConnection(null, TCPonopen, TCPonread, TCPonclose)
+		    var c = new TCPConnection(null, null, false)
+			c.onopen = TCPonopen
+			c.onread = TCPonread
+			c.onclose = TCPonclose
 		    return c
 		}
 		TCPonopen = function() {

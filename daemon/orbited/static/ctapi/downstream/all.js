@@ -12,8 +12,8 @@ Orbited.require("ctapi/downstream/sse.js")
 Orbited.require("ctapi/downstream/iframe_ie.js")
 */
 
-alljs = new function() {
-    var firefox = ['iframe', 'iframe_fxcx', 'iframe']
+new function() {
+    var firefox = ['iframe_fxcx', 'iframe']
     var ie = ['iframe_ie', 'iframe']
     var safari = ['iframe']
     var opera = ['sse']
