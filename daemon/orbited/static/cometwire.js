@@ -1,9 +1,6 @@
 Orbited.require("json.js")
 Orbited.require("ctapi/upstream/xhr.js")
-Orbited.require("ctapi/downstream/iframe.js")
-Orbited.require("ctapi/downstream/iframe_fxcx.js")
-Orbited.require("ctapi/downstream/sse.js")
-Orbited.require("ctapi/downstream/iframe_ie.js")
+Orbited.require("ctapi/downstream/all.js")
 
 if (typeof(CTAPITransports) == "undefined")
     CTAPITransports = { }
@@ -29,7 +26,11 @@ CometWire = function () {
         self.downstream_transport.connect(self.message_cb, null, document.domain, 8000, "/_/cometwire/")
     }
     var choose_best_transport = function() {
-        return 'iframe'
+        //throw out non-XD
+        
+        for (t in CTAPITransports.downstream) {
+            return t        //actually, just return the first one
+        }
     }
     var create_transport = function(preferred_transports) {
         // TODO: error checking... transport_name in CSPTransports ?

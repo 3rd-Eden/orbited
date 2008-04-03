@@ -80,3 +80,5 @@ CTAPITransports['downstream']['iframe'] = function() {
         return domain_pieces.slice(-2).join('.');
     }
 }
+
+CTAPITransports['downstream']['iframe'].XD = false

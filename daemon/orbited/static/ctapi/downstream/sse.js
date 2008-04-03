@@ -36,3 +36,5 @@ CTAPITransports['downstream']['sse'] = function() {
         }, false);
     }
 }
+
+CTAPITransports['downstream']['sse'].XD = false

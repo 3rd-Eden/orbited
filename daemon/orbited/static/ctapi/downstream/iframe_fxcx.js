@@ -69,6 +69,6 @@ CTAPITransports['downstream']['iframe_fxcx'] = function() {
         document.body.appendChild(load_kill_ifr);
         document.body.removeChild(load_kill_ifr);
     }
-    
-
 }
+
+CTAPITransports['downstream']['iframe_fxcx'].XD = true

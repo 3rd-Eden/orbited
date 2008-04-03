@@ -74,3 +74,5 @@ CTAPITransports['downstream']['iframe_ie'] = function() {
         return "{}";
     }
 }
+
+CTAPITransports['downstream']['iframe_ie'].XD = false
