@@ -16,8 +16,14 @@ CSP = function() {
     var total_roundtrip_ms = 0
     var num_ack_back    = 0
 
-    self.connect = function(id, connect_cb, args) {
+    self.connect = function(id, domain, port, connect_cb, args) {
         self.id = id
+        if (typeof(domain) == "undefined")
+            domain = "internal"
+        if (typeof(port) == "undefined")
+            port = 80
+        self.domain = domain
+        self.port = 80
         self.conn = new CometWire()
         self.connect_cb = [connect_cb, args]
         self.conn.connect(connected_cb)
@@ -69,18 +75,23 @@ CSP = function() {
          *  call close callback
          */
     }
-    
+
     self.send = function(data) {
+        var frame = [num_sent, 'PAYLOAD', data]
+        send_frame('PAYLOAD', data)   
+    }
+    
+    var send_frame = function(type, payload) {
         num_sent++
-        if(arguments[1] == "ID")
-            var frame = [num_sent, 'ID', [self.id]]
-        else
-            var frame = [num_sent, 'PAYLOAD', data]
-        
+        var frame = [num_sent, type, payload]
         frame.timeout = setInterval(function(){send(frame)}, RESEND_TIMEOUT)
         frame.time_sent = new Date().getTime()
         sent_frames[num_sent] = frame
+        send(frame)
+    }
 
+    var send_ack = function(tag) {
+        var frame = ["ACK", tag]
         send(frame)
     }
     
@@ -89,13 +100,9 @@ CSP = function() {
     }
 
     var identify = function() {
-        self.send("", "ID")
+        send_frame("ID", [self.id, self.domain, self.port])
     }
 
-    var send_ack = function(tag) {
-        var frame = ["ACK", tag]
-        send(frame)
-    }
 
     var process_queue = function() {
         while(received_frames[num_dispatched+1]) {

@@ -15,6 +15,10 @@ from time import time
 class DuplicateConnection(Exception):
     pass
 
+
+def test(conn):
+    print 'Detected CSP connection', conn
+
 class CSP(object):
   
     def __init__(self, dispatcher):
@@ -23,6 +27,10 @@ class CSP(object):
         self.connections = {}
         self.unidentified_connections = {}
         self.connect_cbs = {}
+        self.set_internal_connect_cb(80, test)
+        
+        
+        
     def __conn_closed(self, id):
         conn = self.connections.pop(id, None)
         if conn:
@@ -36,7 +44,9 @@ class CSP(object):
             upstream_conn, 
             downstream_conn )
     
-    def __identify(self, transport_id, id):
+    def __identify(self, transport_id, id, domain=None, port=None):
+        if not domain:
+            domain = "internal"
         # TODO: let OP know about a connect here, and wait for welcome or unwelcome, 
         #       or go ahead, as specified by the config.
         if id in self.connections:
@@ -45,10 +55,12 @@ class CSP(object):
             del self.connections[id]
         
         self.connections[id] = self.unidentified_connections.pop(transport_id)
+        if domain == "internal" and port in self.connect_cbs:
+            cb, args = self.connect_cbs[port]
+            cb(self.connections[id], *args)
         
-    
-#    def set_identify_cb(self, url, cb, args):
-#        self.connect_cbs[url] = (cb, args)
+    def set_internal_connect_cb(self, port, cb, args=()):
+        self.connect_cbs[port] = (cb, args)
     
     def contains(self, key):        
         return key in self.connections
@@ -79,10 +91,10 @@ class CSPConnection(object):
         getattr(self, "receive_%s" % self.state)(type, payload)
         
     def receive_initial(self, type, payload):
-        if type != "ID":
+        if type != "ID" or len(payload) != 3:
             return self.stream.send("UNWELCOME")
         self.state = "connected"
-        self.__identify_cb(self.transport_id, payload[0])
+        self.__identify_cb(self.transport_id, *payload)
         self.stream.send("WELCOME")
             
     def receive_connected(self, type, payload):
