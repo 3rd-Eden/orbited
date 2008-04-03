@@ -29,6 +29,7 @@ setup(
         'orbited.op',
 #        'orbited.stomp',
 #        'orbited.transports',
+        'orbited.revolved',
     ],
     package_data = {
         '': [os.path.join('static', ext) for ext in static_types],
