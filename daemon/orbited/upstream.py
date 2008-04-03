@@ -10,8 +10,10 @@ class UpstreamHandler(object):
         self.callbacks = {}
         self.upstream_transports = {}
         for name, class_ in upstream_transports.items():
-            self.upstream_transports[name] = class_(self)
-            
+            transport = class_(self)
+            self.upstream_transports[name] = transport
+            # TODO: hard-coded urls bad in this case?
+            self.dispatcher.add_cb_rule(transport.url, transport.http_request)
     def set_connect_cb(self, identifier, cb, args=[]):
         self.callbacks[identifier] = (cb, args)
         
@@ -23,11 +25,11 @@ class UpstreamHandler(object):
             cb(conn, *args)
         
 class XHRUpstreamRouter(object):
+    url = '/_/csp/up/xhr'
     
     def __init__(self, upstream):
         self.upstream = upstream
         self.connections = {}
-        self.upstream.dispatcher.app.http_server.add_cb_rule("/_/csp/up", self.http_request)
     
     def __close(self, conn):
         pass

@@ -19,10 +19,10 @@ class CSP(object):
   
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
-        self.dispatcher.app.cometwire.set_connect_cb('/_/cometwire/', self.__connect)
+        self.dispatcher.app.cometwire.set_connect_cb('/_/csp/down', self.__connect)
         self.connections = {}
         self.unidentified_connections = {}
-        
+        self.connect_cbs = {}
     def __conn_closed(self, id):
         conn = self.connections.pop(id, None)
         if conn:
@@ -37,12 +37,18 @@ class CSP(object):
             downstream_conn )
     
     def __identify(self, transport_id, id):
+        # TODO: let OP know about a connect here, and wait for welcome or unwelcome, 
+        #       or go ahead, as specified by the config.
         if id in self.connections:
             # TODO: best to close previous connection?
             self.connections[id].close()
             del self.connections[id]
-#            raise DuplicateConnection
+        
         self.connections[id] = self.unidentified_connections.pop(transport_id)
+        
+    
+#    def set_identify_cb(self, url, cb, args):
+#        self.connect_cbs[url] = (cb, args)
     
     def contains(self, key):        
         return key in self.connections

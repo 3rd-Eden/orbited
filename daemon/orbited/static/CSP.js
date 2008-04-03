@@ -20,7 +20,7 @@ CSP = function() {
         self.id = id
         self.conn = new CometWire()
         self.connect_cb = [connect_cb, args]
-        self.conn.connect("/_/csp/up", connected_cb)
+        self.conn.connect(connected_cb)
     }
     
     var closed_cb = function() {

@@ -32,21 +32,15 @@ map = {
         'connect_timeout': '3',
     },
     '[csp]': {
-        'upstream_url':'/_/csp/upstream',
+        'upstream_url':'/_/csp/up/xhr',
     },
     '[admin]': {
         'admin.port': '9001'
     },
     '[routing]': {
-        '/_/csp/event': ('transport', ()),
         '/_/static/': ('static', (os.path.join(os.path.dirname(__file__), 'static'),)),        
-        '/_/csp/up': ('upstream', ()),
-        '/_/cometwire/': ('transport', ()),
-#        '/_/revolved/event': ('transport', ()),
-#        '/_/revolved/': ('revolved', ()),
         '/_/': ('system', ()),
         '/': ('transport', ()),
-
         # ""/djangoapp/ -> wsgi:djangoapp.application:main""
         # '/djangoapp/': ('wsgi', ('djangoapp.application','main'))
 

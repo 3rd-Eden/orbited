@@ -24,13 +24,10 @@ class Dispatcher(object):
         for prefix, (rule, params) in config['[routing]'].items():
             print prefix, '->', rule
             if rule == "transport":
-                self.app.http_server.add_cb_rule(prefix, self.app.transports.http_request)
-            elif rule == "csp":
-                self.app.http_server.add_cb_rule(prefix, self.app.csp.http_request)
-            elif rule == "revolved":
-                self.app.http_server.add_cb_rule(prefix, self.app.revolved.http_request)                
+                self.add_transport_rule(prefix)
+#                self.app.http_server.add_cb_rule(prefix, self.app.transports.http_request)
             elif rule == "system":
-                self.app.http_server.add_cb_rule(prefix, self.app.system.http_request)
+                self.add_cb_rule(prefix, self.app.system.http_request)
             elif rule == "static":
                 local_source = params[0]
                 self.app.http_server.add_static_rule(prefix, local_source)
@@ -54,3 +51,9 @@ class Dispatcher(object):
                 app = loadapp(app_config_file, relative_to=".")
                 self.app.http_server.add_wsgi_rule(prefix, app)
 
+    def add_transport_rule(self, prefix):
+        self.app.http_server.add_cb_rule(prefix, self.app.transports.http_request)
+        
+    def add_cb_rule(self, prefix, cb):
+        self.app.http_server.add_cb_rule(prefix, cb)
+        

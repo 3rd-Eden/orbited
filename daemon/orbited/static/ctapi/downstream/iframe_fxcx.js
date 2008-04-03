@@ -49,6 +49,7 @@ CTAPITransports['downstream']['iframe_fxcx'] = function() {
         kill_load_bar()
     }
     var hide_iframe = function (ifr) {
+        return
         ifr.style.display = 'block';
         ifr.style.width = '0';
         ifr.style.height = '0';

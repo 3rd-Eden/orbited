@@ -12,7 +12,7 @@ CometWire = function () {
     self.state = 0;
     self.id = null
     
-    self.connect = function(url, connect_cb, args, preferred_transports) {
+    self.connect = function(connect_cb, args, url, preferred_transports) {
         shell.print("[CW] connecting")
         /* Cross-browser "transport_name not in CSPTransports */
         if ((typeof(preferred_transports) == "undefined")) {
@@ -20,10 +20,12 @@ CometWire = function () {
         }
         self.state++;
         self.url = url;
+        if (self.url == null)
+            self.url = "/_/csp/"
         self.connect_cb = connect_cb
         self.args = args
-        self.downstream_transport = create_transport(preferred_transports)
-        self.downstream_transport.connect(self.message_cb, null, document.domain, 8000, "/_/cometwire/")
+        self.downstream_transport = create_downstream_transport(preferred_transports)
+        self.downstream_transport.connect(self.message_cb, null, document.domain, 8000, self.url + "down")
     }
     var choose_best_transport = function() {
         //throw out non-XD
@@ -32,12 +34,12 @@ CometWire = function () {
             return t        //actually, just return the first one
         }
     }
-    var create_transport = function(preferred_transports) {
+    var create_downstream_transport = function(preferred_transports) {
         // TODO: error checking... transport_name in CSPTransports ?
         for (var i = 0; i < preferred_transports.length; i++) {
-            if (typeof(CTAPITransports[preferred_transports[i]]) != "undefined")
+            if (typeof(CTAPITransports['downstream'][preferred_transports[i]]) != "undefined")
                 shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
-                return new CTAPITransports[preferred_transports[i]]()
+                return new CTAPITransports['downstream'][preferred_transports[i]]()
         }
         transport_name = choose_best_transport()
         shell.print("[ CW ] choose downstream transport: " + transport_name)
@@ -65,7 +67,9 @@ CometWire = function () {
             frame = eval(data)
             if (frame[0] == "ID")   {
                 self.id = frame[1]
-                self.upstream_transport = new CTAPITransports['upstream']['xhr'](self.url, frame[1]);
+                // TODO: choose best upstream transport
+                // TODO: ask downstream if it supporst upstream first.
+                self.upstream_transport = new CTAPITransports['upstream']['xhr'](self.url + "up/" + "xhr", frame[1]);
                 self.upstream_transport.connect(
                     function(args) {
                         self.upstream_connect_callback(args) 

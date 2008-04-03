@@ -4,11 +4,11 @@ from orbited.json import json
 import random
 import event
 
-COMETWIRE_URL = config['[cometwire]']['url']
-CSP_UPSTREAM_URL = config['[csp]']['upstream_url']
+#COMETWIRE_URL = config['[cometwire]']['url']
+#CSP_UPSTREAM_URL = config['[csp]']['upstream_url']
 
 TIMEOUT = int(config['[cometwire]']['connect_timeout'])
-URLS = [ COMETWIRE_URL, CSP_UPSTREAM_URL ]
+#URLS = [ COMETWIRE_URL, CSP_UPSTREAM_URL ]
 
 class CometWire(object):
     """Maps a downstream connection to an upstream connection."""
@@ -16,15 +16,17 @@ class CometWire(object):
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
         self.transports = self.dispatcher.app.transports
-        for url in URLS:
-            self.transports.set_identifier_callback(url, self.__client_connect_callback, [url])
+#        for url in URLS:
+#            self.transports.set_identifier_callback(url, self.__client_connect_callback, [url])
         self.callbacks = {}
         self.downstream_connections = {}
         self.timers = {}
         
     def set_connect_cb(self, url, cb, args=[]):
         self.callbacks[url] = cb, args
-    
+        self.dispatcher.add_transport_rule(url)
+        self.transports.set_identifier_callback(url, self.__client_connect_callback, [url])
+        
     def __client_connect_callback(self, url):
         print "CometWIRE downstream connect, url:", url
         key = self.__generate_key()
