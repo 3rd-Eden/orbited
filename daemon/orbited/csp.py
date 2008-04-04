@@ -41,7 +41,8 @@ class CSP(object):
         conn = self.connections.pop(id, None)
         if conn:
             conn.close()
-        
+            self.dispatcher.app.orbit_daemon.signoff_cb(id)
+            
     def __connect(self, transport_id, upstream_conn, downstream_conn):
         self.unidentified_connections[transport_id] = CSPConnection(
             self.__conn_closed, 
@@ -59,7 +60,7 @@ class CSP(object):
             # TODO: best to close previous connection?
             self.connections[id].close()
             del self.connections[id]
-        
+        self.dispatcher.app.orbit_daemon.signon_cb(id)
         self.connections[id] = self.unidentified_connections.pop(transport_id)
         if domain == "internal" and port in self.connect_cbs:
             cb, args = self.connect_cbs[port]
@@ -67,6 +68,7 @@ class CSP(object):
         
     def set_internal_connect_cb(self, port, cb, args=()):
         self.connect_cbs[port] = (cb, args)
+    
     
     def contains(self, key):        
         return key in self.connections
@@ -88,9 +90,13 @@ class CSPConnection(object):
         self.stream = Stream(upstream, downstream, self.__receive_frame)
         self.state = "initial"
         self.received_cb = (None, None)
+        self.closed_cb = (None, None)
 # ============================================
 # Public
 # ============================================
+        
+    def set_close_cb(self, cb, args):
+        self.close_cb = (cb, args)
         
     def send_msgs(self, msgs):
         # TODO: Use success / failure callbacks

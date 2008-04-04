@@ -35,7 +35,9 @@ class OPDaemon(object):
             frame.success(message.success_recipients)
 
     def signon_cb(self, key):
+        print 'signon_cb, KEY!!: ', key
         for conn in self.connections:
+            print '%s.signon_cb(%s)' % (conn, {'key': key})
             conn.signon_cb({'key': key})
             
     def signoff_cb(self, key):

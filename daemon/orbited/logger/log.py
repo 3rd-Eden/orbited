@@ -2,12 +2,21 @@ from datetime import datetime
 import sys
 import traceback
 #from orbited.config import map as config
-    
-def setup(config):
+val = []
+def setup(configmap):
+    if val:
+        return val[0]
+    print "".join(traceback.format_stack()[:-1])
+    print type(configmap)
+    print configmap.__class__
+    print configmap
     defaults = {}
     for logtype in [ 'debug', 'access', 'warn', 'error', 'info' ]:
-        defaults[logtype] = []
-        outputs = config['[logging]'][logtype].split(',')
+        print 'whirl1'
+        defaults[logtype] = []        
+        a = configmap['[logging]']
+        b =a[logtype]
+        outputs = b.split(',')
         for loc in outputs:
             loc = loc.strip()
             if not loc:
@@ -21,10 +30,12 @@ def setup(config):
             defaults[logtype][-1].open()
             
     overrides = {}
-    for key, value in config['[loggers]'].items():
+    for key, value in configmap['[loggers]'].items():
         overrides[key] = int(value)
-    enabled = int(config['[logging]']['enabled.default']) == 1
-    return LoggerRoot(enabled, defaults, overrides)
+    enabled = int(configmap['[logging]']['enabled.default']) == 1
+    print 'exiting'
+    val.append(LoggerRoot(enabled, defaults, overrides))
+    return val[0]
             
 class LoggerRoot(object):
   

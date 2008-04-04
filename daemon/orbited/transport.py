@@ -58,17 +58,20 @@ class TransportHandler(object):
         # If no identifier is specified, see if the
         # url callback can provide an identifier.
         initial_msgs = None
+        surpress = False
         if identifier is None:
             if req.url in self.url_callbacks:
                 cb, args = self.url_callbacks[req.url]
                 identifier, initial_msgs = cb(*args)
+                surpress = True
             else:
                 return req.error("Identifier not specified.")
             
         key = identifier
         if key not in self.connections:
             # OP SIGNON
-            self.orbit_daemon.signon_cb(key)
+            if not surpress:
+                self.orbit_daemon.signon_cb(key)
             self.connections[key] = TransportConnection(key, self.__timed_out)
         self.connections[key].http_request(req)
         

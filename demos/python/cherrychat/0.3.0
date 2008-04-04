@@ -1,0 +1,51 @@
+Searching for CherryPy
+Reading http://cheeseshop.python.org/pypi/CherryPy/
+Reading http://cheeseshop.python.org/pypi/CherryPy/3.0.3
+Reading http://www.cherrypy.org
+Reading http://download.cherrypy.org/cherrypy/3.0.3/
+Reading http://cheeseshop.python.org/pypi/CherryPy/2.3.0
+Reading http://download.cherrypy.org/cherrypy/2.3.0/
+Reading http://cheeseshop.python.org/pypi/CherryPy/3.1.0beta3
+Reading http://download.cherrypy.org/cherrypy/3.1.0beta3/
+Best match: CherryPy 3.1.0beta3
+Downloading http://download.cherrypy.org/cherrypy/3.1.0beta3/CherryPy-3.1.0beta3.zip
+Processing CherryPy-3.1.0beta3.zip
+Running CherryPy-3.1.0beta3/setup.py -q bdist_egg --dist-dir /tmp/easy_install-vOl0OY/CherryPy-3.1.0beta3/egg-dist-tmp-OVt_44
+zip_safe flag not set; analyzing archive contents...
+cherrypy._cpmodpy: module references __file__
+cherrypy._cptree: module references __file__
+cherrypy.tutorial.tut05_derived_objects: module references __file__
+cherrypy.tutorial.tut03_get_and_post: module references __file__
+cherrypy.tutorial.tut06_default_method: module references __file__
+cherrypy.tutorial.tut08_generators_and_yield: module references __file__
+cherrypy.tutorial.tut02_expose_methods: module references __file__
+cherrypy.tutorial.tut10_http_errors: module references __file__
+cherrypy.tutorial.tut01_helloworld: module references __file__
+cherrypy.tutorial.tut04_complex_site: module references __file__
+cherrypy.tutorial.tut09_files: module references __file__
+cherrypy.tutorial.tut07_sessions: module references __file__
+cherrypy.restsrv.plugins: module references __file__
+cherrypy.test.benchmark: module references __file__
+cherrypy.test.modpy: module references __file__
+cherrypy.test.test_session: module references __file__
+cherrypy.test.test_core: module references __file__
+cherrypy.test.checkerdemo: module references __file__
+cherrypy.test.test_states_demo: module references __file__
+cherrypy.test.test_tidy: module references __file__
+cherrypy.test.test_states: module references __file__
+cherrypy.test.test_config: module references __file__
+cherrypy.test.test_routes: module references __file__
+cherrypy.test.modwsgi: module references __file__
+cherrypy.test.test_caching: module references __file__
+cherrypy.test.test_wsgiapps: module references __file__
+cherrypy.test.test_virtualhost: module references __file__
+cherrypy.test.test_static: module references __file__
+cherrypy.test.test_misc_tools: module references __file__
+cherrypy.test.test: module references __file__
+cherrypy.lib.profiler: module references __file__
+cherrypy.lib.covercp: module references __file__
+Adding CherryPy 3.1.0beta3 to easy-install.pth file
+
+Installed /usr/lib/python2.5/site-packages/CherryPy-3.1.0beta3-py2.5.egg
+Processing dependencies for CherryPy
+Finished processing dependencies for CherryPy

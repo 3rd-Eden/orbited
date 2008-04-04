@@ -17,7 +17,7 @@ from orbited.json import json
 from orbited.logger import get_logger
 
 log = get_logger("revolved")
-
+REVOLVED_PORT = 80
 #######################################################################
 # TODO: The Revolved dispatcher will need to handle calls to dispatcher.publish()
 # in order to actually publish messages to clients. Everything else should be
@@ -26,17 +26,18 @@ log = get_logger("revolved")
 class DummyCSPHandler(object):
     
     def __init__(self):
-        self.connect_callbacks = []
+        self.connect_callbacks = {}
     
     def trigger_connection_made(self, port, conn):
         """Notify listeners of a new CSP Connection."""
-        cb, args = self.connect_callbacks[port]
-        cb(conn, *args)
+        if port in self.connect_callbacks:
+            cb, args = self.connect_callbacks[port]
+            cb(conn, *args)
     
     # Callbacks
         
-    def set_internal_connect_cb(self, port cb, args=[]):
-        self.connect_callbacks.append( (cb, args) )
+    def set_internal_connect_cb(self, port, cb, args=[]):
+        self.connect_callbacks[port] = (cb, args)
     
 #    def remove_connect_callback(self, cb):
 #        for fn, args in self.connect_callbacks:
@@ -47,48 +48,42 @@ class DummyCSPHandler(object):
 class DummyCSPConnection(object):
     
     def __init__(self):
-        self.disconnect_callbacks = []
-        self.message_callbacks = []
+        self.disconnect_callback = (None, None)
+        self.message_callback = (None, None)
     
     def send(self, data):
         """Send a message on this connection."""
         pass
     
-    def disconnect(self):
+    def close(self):
+        self.trigger_disconnect()
+    
+    def trigger_disconnect(self):
         """Disconnect this connection."""
         # Triggered by the revolved connection upon a DISCONNECT message
-        for cb, args in self.disconnect_callbacks:
+        cb, args = self.disconnect_callback
+        if cb:
             cb(self, *args)
-   
-    def on_receive_message(self, msg):
-        """Handle a received message."""
-        for cb, args in self.message_callbacks:
-            cb(self, msg, *args)
-              
+        self.disconnect_callback = None, None
     # Callbacks
            
-    def add_message_callback(self, cb, args=[]):
+    def set_message_callback(self, cb, args=[]):
         """Set a callback for when messages arrive on this connection."""
-        self.message_callbacks.append( (cb, args) )
-
-    def remove_message_callback(self, cb):
-        for fn, args in self.message_callbacks:
-            if fn == cb:
-                self.message_callbacks.remove( (fn, args) )
-                break
+        self.message_callback = cb, args
     
-    def add_disconnect_callback(self, cb, args=[]):
+    def set_disconnect_callback(self, cb, args=[]):
         """Set a callback for when this connection disconnects."""
-        self.disconnect_callbacks.append( (cb, args) )
-    
-    def remove_disconnect_callback(self, cb):
-        for fn, args in self.disconnect_callbacks:
-            if fn == cb:
-                self.disconnect_callbacks.remove( (fn, args) )
-                break
-    
-
-
+        self.disconnect_callback = cb, args    
+        
+    def trigger_receive_message(self, msg):
+        """Handle a received message."""
+        cb, args = self.message_callback
+        if cb:
+            print 'cb:', cb
+            print 'msg:', msg            
+            cb(self, msg, *args)
+        
+        
     
 class RevolvedHandler(object):
     """Handle Revolved connections.
@@ -99,24 +94,23 @@ class RevolvedHandler(object):
     
     def __init__(self, csp, backend, auth_backend):
         self.csp = csp
-        self.csp.set_internal_connect_cb(80, self.__csp_connect_cb)
+        self.csp.set_internal_connect_cb(REVOLVED_PORT, self.__csp_connect_cb)
         self.connections = []
         self.auth_backend = auth_backend
         self.backend = backend
     
     def __csp_connect_cb(self, conn):
         """Accept a new CSP connection and assign a RevolvedConnection to it."""
-        conn.add_disconnect_callback(self.__csp_disconnect_cb)
+#        conn.set_disconnect_callback(self.__csp_disconnect_cb)
         log.debug("Got CSP Connection")
         self.connections.append(RevolvedConnection(self, conn))
         
-    def __csp_disconnect_cb(self, csp_conn):
+    def disconnect_cb(self, conn):
         """Handle a CSPConnection Disconnection, removing the corresponding
         RevolvedConnection from the list of connections."""
         log.debug("Got CSP Disconnection")
-        for conn in self.connections:
-            if conn.csp_conn == csp_conn:
-                self.connections.remove(conn)
+        if conn in self.connections:
+            self.connections.remove(conn)
 
 class RevolvedConnection(object):
     """Handle one Revolved connection.
@@ -126,9 +120,10 @@ class RevolvedConnection(object):
     """
     
     def __init__(self, handler, csp_conn):
+        self.handler = handler
         self.csp_conn = csp_conn
-        self.csp_conn.add_disconnect_callback(self.__disconnect_cb)
-        self.csp_conn.add_message_callback(self.__message_cb)
+        self.csp_conn.set_disconnect_callback(self.__disconnect_cb)
+        self.csp_conn.set_message_callback(self.__message_cb)
         self.backend = handler.backend
         self.auth_backend = handler.auth_backend
         self.user_key = None
@@ -138,7 +133,8 @@ class RevolvedConnection(object):
         if self.user_key:
             self.backend.disconnect(self.user_key)
             self.user_key = None
-    
+        self.handler.disconnect_cb(self)
+        
     def send(self, obj):
         log.debug("Revolved SENDING: ", json.encode(obj))
         self.csp_conn.send(json.encode(obj))
@@ -266,5 +262,5 @@ class RevolvedConnection(object):
             if self.user_key:
                 self.backend.disconnect(self.user_key)
                 self.user_key = None
-            self.csp_conn.disconnect()
+            self.csp_conn.close()
         
