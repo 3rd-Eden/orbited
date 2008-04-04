@@ -67,7 +67,6 @@ class Thread_Checker(object):
 
 def check_init():
     if not registrar:
-        print "rel.initialize not called. Trying event notification methods in default order: pyevent,epoll,poll,select"
         initialize()
 
 def get_registrar(method):
@@ -102,7 +101,7 @@ def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
         timeout(5,__report)
     if "verbose" in options:
         verbose = True
-        print 'Registered Event Listener initialized with method:',method
+        _display('Registered Event Listener initialized with method:%s'%method)
 
 def __report():
     print "=========="
