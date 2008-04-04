@@ -1,4 +1,5 @@
 #from orbited.router import router, CSPDestination
+from orbited.op.message import SingleRecipientMessage
 from orbited.http import HTTPRequest
 import random
 import event
@@ -16,8 +17,13 @@ class DuplicateConnection(Exception):
     pass
 
 
+def echo(msg, conn):
+    print 'CSP RECV: ' + msg
+    conn.send(json.encode(['Echo', msg]))
+
 def test(conn):
     print 'Detected CSP connection', conn
+    conn.set_received_callback(echo, [conn])
 
 class CSP(object):
   
@@ -81,11 +87,30 @@ class CSPConnection(object):
         self.id = None
         self.stream = Stream(upstream, downstream, self.__receive_frame)
         self.state = "initial"
+        self.received_cb = (None, None)
+# ============================================
+# Public
+# ============================================
         
     def send_msgs(self, msgs):
+        # TODO: Use success / failure callbacks
         for msg in msgs:
-#            payload = json.encode(msg.payload)
             self.stream.send("PAYLOAD", msg.payload)
+        
+    def send(self, data, success_cb=None, failure_cb=None):
+        r = SingleRecipientMessage(data, self.id, success_cb, failure_cb)
+        self.send_msgs([r])
+
+    def disconnect(self):
+        self.close()
+        
+    def set_received_callback(self, cb, args=()):
+        self.received_cb = (cb, args)
+        
+    
+# ============================================
+# Internal Yoho Shizat
+# ============================================
         
     def __receive_frame(self, type, payload):
         getattr(self, "receive_%s" % self.state)(type, payload)
@@ -101,8 +126,10 @@ class CSPConnection(object):
         if type == "DISCONNECT":
             return self.close()
         elif type == "PAYLOAD":
-            self.stream.send("PAYLOAD", json.encode(["ECHO", payload]))
-        
+#            self.stream.send("PAYLOAD", json.encode(["ECHO", payload]))
+            cb, args = self.received_cb
+            if cb:
+                cb(payload, *args)
         
     def close(self):
         self.stream.send("DISCONNECT")

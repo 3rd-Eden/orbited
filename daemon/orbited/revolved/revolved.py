@@ -28,21 +28,21 @@ class DummyCSPHandler(object):
     def __init__(self):
         self.connect_callbacks = []
     
-    def trigger_connection_made(self, conn):
+    def trigger_connection_made(self, port, conn):
         """Notify listeners of a new CSP Connection."""
-        for (cb, args) in self.connect_callbacks:
-            cb(conn, *args)        
+        cb, args = self.connect_callbacks[port]
+        cb(conn, *args)
     
     # Callbacks
         
-    def add_connect_callback(self, cb, args=[]):
+    def set_internal_connect_cb(self, port cb, args=[]):
         self.connect_callbacks.append( (cb, args) )
     
-    def remove_connect_callback(self, cb):
-        for fn, args in self.connect_callbacks:
-            if fn == cb:
-                self.connect_callbacks.remove( (fn, args) )
-                break
+#    def remove_connect_callback(self, cb):
+#        for fn, args in self.connect_callbacks:
+#            if fn == cb:
+#                self.connect_callbacks.remove( (fn, args) )
+#                break
                 
 class DummyCSPConnection(object):
     
@@ -99,7 +99,7 @@ class RevolvedHandler(object):
     
     def __init__(self, csp, backend, auth_backend):
         self.csp = csp
-        self.csp.add_connect_callback(self.__csp_connect_cb)
+        self.csp.set_internal_connect_cb(80, self.__csp_connect_cb)
         self.connections = []
         self.auth_backend = auth_backend
         self.backend = backend
