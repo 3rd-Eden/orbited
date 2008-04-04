@@ -16,7 +16,7 @@ Library = function() {
             if (url.substring(0,7) != "http://")
                 url = baseurl + url
             
-            var script = get(url)
+            var script = get(url)            
             eval(script)
         }
     }
