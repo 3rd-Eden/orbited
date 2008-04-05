@@ -19,7 +19,7 @@ CTAPITransports['upstream']['xhr'] = function(url, id) {
         var qs = '?payload=' + s + "&identifier=" + id;
         
         var xhr = create_xhr();
-        xhr.open('GET', url+qs, false);
+        xhr.open('GET', url+qs, true);
         xhr.send(null);
         
         var cb = {

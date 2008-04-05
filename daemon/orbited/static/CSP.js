@@ -16,7 +16,7 @@ CSP = function() {
     var total_roundtrip_ms = 0
     var num_ack_back    = 0
 
-    self.connect = function(id, domain, port, connect_cb, args) {
+    self.connect = function(id, connect_cb, domain, port, args) {
         self.id = id
         if (typeof(domain) == "undefined" || domain == null)
             domain = "internal"
@@ -30,6 +30,7 @@ CSP = function() {
     }
     
     var closed_cb = function() {
+        self.disconnect()
     }
 
     var connected_cb = function() {
@@ -42,7 +43,6 @@ CSP = function() {
     }
 
     var received_cb = function(data) {
-        // TODO: real JSON
         try {
             var frame = JSON.parse(data)
             
@@ -69,11 +69,17 @@ CSP = function() {
     }
 
     self.disconnect = function() {
-        delete self.conn
-        /* TODO:
-         *  zero the rest of the state
-         *  call close callback
-         */
+        delete self.conn         
+         for (frame in sent_frames) {
+             clearInterval(frame.timeout)
+         }
+         delete sent_frames
+         
+         /* TODO:
+          *  call close callback
+          */
+          var cb = self.close_cb[0]
+          cb()
     }
 
     self.send = function(data) {
@@ -84,8 +90,16 @@ CSP = function() {
     var send_frame = function(type, payload) {
         num_sent++
         var frame = [num_sent, type, payload]
-        frame.timeout = setInterval(function(){send(frame)}, RESEND_TIMEOUT)
+        
+        var retry = function() {
+            send(frame)
+            if (frame.sent > 10)
+                self.disconnect()
+        }
+        
+        frame.timeout = setInterval(retry, RESEND_TIMEOUT)
         frame.time_sent = new Date().getTime()
+        frame.try = 1
         sent_frames[num_sent] = frame
         send(frame)
     }

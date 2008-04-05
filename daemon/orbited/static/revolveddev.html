@@ -1,0 +1,79 @@
+<html>
+  <head>
+    <title>Revolved Development Tests</title>
+    <link rel="stylesheet" href="chat.css">
+	<script src="/_/static/library.js"></script>
+
+    <script>
+		Orbited.require("socket.js")
+		Orbited.require("shell.js")
+
+		onload = function() {
+
+			var output = document.getElementById('events')
+			shell = new Shell(output)
+			
+			c = TCPstart()
+    	}
+
+		TCPstart = function() {
+		    var c = new TCPConnection(null, null, false)
+			c.onopen = TCPonopen
+			c.onread = TCPonread
+			c.onclose = TCPonclose
+		    return c
+		}
+		TCPonopen = function() {
+			shell.print("Connected to TCP Socket")
+		}
+		TCPonread = function(data) {
+		    shell.print("Socket received: " +  data)
+		}
+		TCPonclose = function() {
+		}
+		
+		sendMSG = function(test) {
+			switch (test) {
+				case 1:
+					frame = ["AUTH", ["user_key" , "opaquedata"]]
+					break
+				case 2:
+					frame = ["SUBSCRIBE", ["kspc"]]
+					break
+				case 3:
+					frame = ["UNSUBSCRIBE", ["kspc"]]
+					break
+				case 4:
+					frame = ["PUBLISH", ["kspc", "hello everybody"]]
+					break
+				case 5:
+					frame = ["SEND", ["max", "hello max"]]
+					break
+				case 6:
+					frame = ["DISCONNECT", []]
+					break
+				default:
+					throw "unknown test flag"
+			}
+
+
+			c.send(JSON.stringify(frame))
+		}
+
+    </script>
+  </head>
+  <body>
+    <h1>Test</h1>
+    <div id="events" style="height: 200px; overflow-y: scroll"></div>
+
+	<button onClick="sendMSG(1)">auth</button><br>
+	<button onClick="sendMSG(2)">sub</button><br>
+	<button onClick="sendMSG(3)">unsub</button><br>
+	<button onClick="sendMSG(4)">publish</button><br>
+	<button onClick="sendMSG(5)">send</button><br>
+	<button onClick="sendMSG(6)">disconnect</button><br>
+	
+	
+	
+  </body>
+</html>

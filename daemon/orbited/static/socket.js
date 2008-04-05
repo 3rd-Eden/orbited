@@ -20,7 +20,7 @@ TCPConnection = function(domain, port, secure) {
     }
 
     var conn = new CSP()
-    conn.connect(null, domain, port, _onconnect)
+    conn.connect(null, _onconnect, domain, port)
     
     var _onread = function(s) {
         if (typeof(self.onread.handleEvent) == "undefined") {
@@ -31,6 +31,7 @@ TCPConnection = function(domain, port, secure) {
             onread.handleEvent("read", s.data)
         }
     }
+
 
     self.send = function(s) {
         conn.send(s)
