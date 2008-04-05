@@ -1,6 +1,7 @@
 import socket
 from orbited.json import json
 
+#DELIM = "^@\r\n"
 DELIM = "\x00"
 
 class OrbitClient(object):
@@ -16,12 +17,12 @@ class OrbitClient(object):
         try:
             self.sock.connect_ex((self.host, self.port))
             self.sock.send(
-                "CONNECT\r\n"
-                "id: 1\r\n"
-                "response: receipt\r\n"
-                "connection_id: client\r\n"
-                "\r\n"
-                +DELIM
+                    "CONNECT\r\n"
+                    "id: 1\r\n"
+                    "response: receipt\r\n"
+                    "connection_id: client\r\n"
+                    "\r\n"
+                    +DELIM
             )
             return self.read_frame()
         except:
