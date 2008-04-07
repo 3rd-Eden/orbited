@@ -107,6 +107,7 @@ def initialize(methods=supported_methods,options=()):
     if "report" in options and registrar != pyevent:
         timeout(5,__report)
     _display('Initialized with "%s"'%method)
+    return method
 
 def __report():
     print "=========="
