@@ -5,7 +5,8 @@ from orbited.json import json
 import urllib
 log = get_logger("revolved")
 
-options = config.get('revolved_plugin:http', {})
+options = config.get('[revolved_auth:http]', {})
+print options
 """
 [revolved_plugin:http]
 callback.authorize_channel = http://localhost:4700/revolved_authorize_channel
@@ -14,18 +15,18 @@ cookies.enable = True
 cookies.index = 0'
 """
 
-auth_chan_url = config.get('callback.authorize_channel', None)
-auth_conn_url = config.get('callback.authorize_connect', None)
+auth_chan_url = options.get('callback.authorize_channel', None)
+auth_conn_url = options.get('callback.authorize_connect', None)
 
-
-auth_conn_url = "http://localhost:4700/revolved_auth_connect"
-auth_chan_url = "http://localhost:4700/revolved_auth_channel"
 
 #TODO: ensure that these are valid http urls
 
 if False:
     auth_chan_url = None
     auth_conn_url = None
+    
+print auth_chan_url
+print auth_conn_url
     
 class RevolvedHTTPAuthBackend(object):
     """An open authorization backend for Revolved 
@@ -56,20 +57,17 @@ class RevolvedHTTPAuthBackend(object):
                 method='POST'
             )
         else:
+            print 'no url...'
             return cb(False, *args)
                 
     def _conn_cb(self, response, cb, args):
-        print ('-a')
-        print repr(response.body.get_value())
         try:
             result = json.decode(response.body.get_value())
-            print 'a', repr(result)
             assert isinstance(result, bool)
         except:
             raise
             log.warn("Invalid http callback Response: %s" % response.body.get_value())
             return cb(False, *args)
-        print 'cb(%s, %s)' % (result, args)
         return cb(result, *args)
     
         

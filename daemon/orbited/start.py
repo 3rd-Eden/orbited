@@ -5,6 +5,7 @@ from orbited.app import Application
 from orbited.config import map as config
 from orbited.config import load as load_config
 from orbited import __version__
+import pprint
 import sys
 
 from optparse import OptionParser
@@ -31,6 +32,7 @@ def main():
     print ("Orbited " + __version__).center(60)
     print "-" * 60
     load_configuration(options.config)
+    pprint.pprint(config)
     print ""
 
 

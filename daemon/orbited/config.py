@@ -53,6 +53,16 @@ map = {
         # ""/event/ -> transport""
         # '/event/': ('transport', (,))
     },
+    '[revolved]': {
+        'auth': 'open',
+    },
+    
+    '[revolved_auth:http]': {
+        'callback.authorize_connect': "http://localhost:4700/revolved_auth_connect",
+        'callback.authorize_channel': "http://localhost:4700/revolved_auth_channel"
+    },
+        
+    
     '[logging]': {
         'debug': '',
         'info': 'SCREEN',
@@ -135,5 +145,5 @@ def load(filename):
             value = tuple([val.strip() for val in value.split(',')])
 
         map[section][key] = value
-
+    print map
     return True

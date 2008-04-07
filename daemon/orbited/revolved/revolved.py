@@ -18,9 +18,15 @@ from orbited.logger import get_logger
 from orbited.revolved.auth.open import RevolvedOpenAuthBackend
 from orbited.revolved.auth.http import RevolvedHTTPAuthBackend
 from orbited.revolved.backends.simple import SimpleRevolvedBackend
+
 from orbited.revolved.dispatcher import RevolvedDispatcher
+from orbited.config import map as config
+
 log = get_logger("revolved")
 REVOLVED_PORT = 80
+
+options = config.get('[revolved]')
+
 #######################################################################
 # TODO: The Revolved dispatcher will need to handle calls to dispatcher.publish()
 # in order to actually publish messages to clients. Everything else should be
@@ -82,8 +88,6 @@ class DummyCSPConnection(object):
         """Handle a received message."""
         cb, args = self.message_callback
         if cb:
-            print 'cb:', cb
-            print 'msg:', msg            
             cb(self, msg, *args)
 
         
@@ -100,7 +104,11 @@ class RevolvedHandler(object):
         self.csp = app.csp
         self.csp.set_internal_connect_cb(REVOLVED_PORT, self.__csp_connect_cb)
         self.connections = []
-        self.auth_backend = RevolvedHTTPAuthBackend()
+        if options.get('auth', 'open') == 'open':
+            self.auth_backend = RevolvedOpenAuthBackend()
+        elif options.get('auth', 'open') == 'http':
+            self.auth_backend = RevolvedHTTPAuthBackend()
+            
         self.dispatcher = RevolvedDispatcher()
         self.backend = SimpleRevolvedBackend(self.dispatcher)
         
@@ -241,18 +249,18 @@ class RevolvedConnection(object):
                 self.send_ERR(msg_id, "unable to unsubscribe to some channels")
             
     def _message_PUBLISH(self, msg_id, channel, payload):
-        log.info("_message_PUBLISH")
+        log.debug("_message_PUBLISH")
         self.auth_backend.authorize_channel(self.user_key, channel, self._PUBLISH_auth_cb, [msg_id, channel, payload])
         
     def _PUBLISH_auth_cb(self, permissions, msg_id, channel, payload):
-        log.info("_PUBLISH_auth_cb")
+        log.debug("_PUBLISH_auth_cb")
         if not permissions['publish']:
             return self.send_ERR(msg_id, "Not Authorized")
             
         self.backend.publish(self.user_key, channel, payload, self._PUBLISH_pub_cb, [msg_id])
         
     def _PUBLISH_pub_cb(self, published, msg_id):
-        log.info("_PUBLISH_pub_cb")
+        log.debug("_PUBLISH_pub_cb")
         
         if published == True:
             self.send_OK(msg_id)

@@ -8,7 +8,6 @@ def setup(configmap):
         return val[0]
     defaults = {}
     for logtype in [ 'debug', 'access', 'warn', 'error', 'info' ]:
-        print 'whirl1'
         defaults[logtype] = []        
         a = configmap['[logging]']
         b =a[logtype]

@@ -12,7 +12,7 @@ from time import time
 
 #router.register(CSPDestination, '/_/csp')
 #router.register(StaticDestination, '/_/csp/static', '[orbited-static]')
-
+NOOP_TIME = 30
 class DuplicateConnection(Exception):
     pass
 
@@ -34,8 +34,13 @@ class CSP(object):
         self.unidentified_connections = {}
         self.connect_cbs = {}
         self.set_internal_connect_cb(81, test)
+        self.ping_timer = event.timeout(NOOP_TIME, self.ping)
         
         
+    def ping(self):
+        for connection in self.connections.values():
+            connection.ping()
+        return True
         
     def __conn_closed(self, id):
         conn = self.connections.pop(id, None)
@@ -113,6 +118,8 @@ class CSPConnection(object):
     def set_received_cb(self, cb, args=()):
         self.received_cb = (cb, args)
         
+    def ping(self):
+        self.stream.send("PING")
     
 # ============================================
 # Internal Yoho Shizat
@@ -200,7 +207,7 @@ class Stream(object):
             if not isinstance(payload, int):
                 raise Exception("InvalidFrame")
             frame = ["ACK", payload]
-        elif type in [ "WELCOME", "UNWELCOME", "PAYLOAD", "DISCONNECT" ]:
+        elif type in [ "PING", "WELCOME", "UNWELCOME", "PAYLOAD", "DISCONNECT" ]:
             self.last_sent_id += 1
             id = self.last_sent_id
             frame = [ id, type, payload ]
