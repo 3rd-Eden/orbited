@@ -24,6 +24,7 @@ except:
 registrar = None
 threader = None
 verbose = False
+supported_methods = ['pyevent','epoll','poll','select']
 
 mapping = {
     'select': SelectRegistrar,
@@ -33,7 +34,7 @@ mapping = {
 
 def _display(text):
     if verbose:
-        print text
+        print "Registered Event Listener output:",text
 
 class Thread_Checker(object):
     def __init__(self):
@@ -78,7 +79,7 @@ def get_registrar(method):
         return mapping[method]()
     raise ImportError
 
-def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
+def initialize(methods=supported_methods,options=()):
     """
     initialize(methods=['pyevent','epoll','poll','select'],options=[])
     possible options:
@@ -88,20 +89,24 @@ def initialize(methods=['pyevent','epoll','poll','select'],options=[]):
     global registrar
     global threader
     global verbose
+    if "verbose" in options:
+        verbose = True
+    if "strict" not in options:
+        for m in supported_methods:
+            if m not in methods:
+                methods.append(m)
     for method in methods:
         try:
             registrar = get_registrar(method)
             break
         except:
-            pass
+            _display('Could not import "%s"'%method)
     if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     threader = Thread_Checker()
     if "report" in options and registrar != pyevent:
         timeout(5,__report)
-    if "verbose" in options:
-        verbose = True
-        _display('Registered Event Listener initialized with method:%s'%method)
+    _display('Initialized with "%s"'%method)
 
 def __report():
     print "=========="

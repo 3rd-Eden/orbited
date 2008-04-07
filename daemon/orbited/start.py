@@ -23,8 +23,17 @@ def main():
                         help="write output to FILE")
     parser.add_option("-d", "--daemonize", dest="daemonize",
                         action="store_true", help="run as a daemon")
+    parser.add_option("-e", "--event", dest="event", default="pyevent", help="event notification method (%s)"%str(rel.supported_methods)[1:-1])
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="verbose output")
     options, args = parser.parse_args()
-    
+    try:
+        rel_options = []
+        if options.verbose:
+            rel_options.append("verbose")
+        rel.initialize([options.event],rel_options)
+    except ImportError:
+        print "invalid event notification method specified"        
+        return
     if options.daemonize:
         daemonize(True)
     
