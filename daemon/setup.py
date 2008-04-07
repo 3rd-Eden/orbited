@@ -44,9 +44,6 @@ setup(
         orbited = orbited.start:main
         orbited_profile = orbited.start:profile
         orbited_daemonized = orbited.start:daemon
-        dez_test = dez.test:main
-        dez_test_profile = dez.test:profile
-        dez_bench = dez.benchmark:connections
           
 #        [orbited.transports]
 #        raw = orbited.transports.raw:RawTransport
