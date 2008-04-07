@@ -11,7 +11,6 @@ TCPConnection = function(domain, port, secure) {
     self.onopen = null
     self.onread = null
     self.onclose = null
-
     var _onconnect = function() {
         conn.receive_cb = [_onread, null]
         conn.close_cb = [self.onclose, null]
@@ -20,8 +19,7 @@ TCPConnection = function(domain, port, secure) {
     }
 
     var conn = new CSP()
-    conn.connect(null, _onconnect, domain, port)
-    
+    conn.connect(null, _onconnect, domain, port, null)
     var _onread = function(s) {
         if (typeof(self.onread.handleEvent) == "undefined") {
             self.onread(s)
@@ -34,7 +32,10 @@ TCPConnection = function(domain, port, secure) {
 
 
     self.send = function(s) {
+        if (self.readyState != 1)
+            throw "cannot send on disconnected socket"
         conn.send(s)
+        return true
     }
 
     self.disconnect = function() {

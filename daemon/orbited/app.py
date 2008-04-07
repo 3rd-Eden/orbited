@@ -13,11 +13,10 @@ from orbited.transport import TransportConnection, TransportHandler
 from orbited.cometwire import CometWire
 from orbited.upstream import UpstreamHandler
 from orbited.csp import CSP
-from orbited.revolved import Revolved
+from orbited.revolved.revolved import RevolvedHandler
 from orbited.system import System
 from orbited.dispatcher import Dispatcher
 from orbited.logger import get_logger
-
 log = get_logger("app")
 
 import random
@@ -39,7 +38,12 @@ class Application(object):
         self.cometwire = CometWire(self.dispatcher)
         self.upstream = UpstreamHandler(self.dispatcher)
         self.csp = CSP(self.dispatcher)
-        self.revolved = Revolved(self.dispatcher)
+        self.revolved = RevolvedHandler(self)
+#            self.csp,
+#            SimpleRevolvedBackend(s
+#            RevolvedOpenAuthBackend(),
+            
+#            self.dispatcher)
         self.system = System()
         self.dispatcher.setup()
         

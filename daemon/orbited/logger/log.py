@@ -6,10 +6,6 @@ val = []
 def setup(configmap):
     if val:
         return val[0]
-    print "".join(traceback.format_stack()[:-1])
-    print type(configmap)
-    print configmap.__class__
-    print configmap
     defaults = {}
     for logtype in [ 'debug', 'access', 'warn', 'error', 'info' ]:
         print 'whirl1'
@@ -33,7 +29,6 @@ def setup(configmap):
     for key, value in configmap['[loggers]'].items():
         overrides[key] = int(value)
     enabled = int(configmap['[logging]']['enabled.default']) == 1
-    print 'exiting'
     val.append(LoggerRoot(enabled, defaults, overrides))
     return val[0]
             

@@ -35,7 +35,7 @@ class TransportHandler(object):
         return key in self.connections
     
     def get(self, key):
-        print self.connections
+#        print self.connections
         return self.connections[key]
         
     def set_identifier_callback(self, url, cb, args=[]):
@@ -127,7 +127,6 @@ class TransportConnection(object):
             self.__start_timer()
         
     def http_request(self, request):
-        print 'TransportConnection.http_request', request
         transport_name = request.form['transport']
         if self.transport is not None and transport_name != self.transport.name:
             self.end_transport()
@@ -189,7 +188,6 @@ class DownstreamTransport(object):
         return payload
     
     def __msg_success_cb(self, message):
-        print 'success!', message
         message.success()
         self.__ready()
         
@@ -204,7 +202,6 @@ class DownstreamTransport(object):
             self.close_cb(self)
 
     def http_request(self, req):
-        print 'DownstreamTransport.http_request,', req
         set_ready = False
         if self.browser_conn:
             self.browser_conn.close()
@@ -285,17 +282,20 @@ class ServerSentEventsTransport(DownstreamTransport):
     name = 'sse'
     
     def initial_response(self):
+        print '[SSE] in initial_response'
         self.browser_conn.write_status('200', 'OK')
         self.browser_conn.write_header('Server', 'Orbited/%s' % __version__)
         self.browser_conn.write_header('Content-Type', 'application/x-dom-event-stream')      
         self.browser_conn.write_headers_end()
     
     def encode(self, payload):
-        return (
+        payload = json.encode(payload)
+        data =(
             'Event: orbited\n' +
             '\n'.join(['data: %s' % line for line in payload.splitlines()]) +
             '\n\n'
         )
+        return data
     
     def ping_render(self):
         return (

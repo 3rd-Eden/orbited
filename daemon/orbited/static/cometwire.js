@@ -13,7 +13,6 @@ CometWire = function () {
     self.id = null
     
     self.connect = function(connect_cb, args, url, preferred_transports) {
-        shell.print("[CW] connecting")
         /* Cross-browser "transport_name not in CSPTransports */
         if ((typeof(preferred_transports) == "undefined")) {
             preferred_transports = []
@@ -38,11 +37,11 @@ CometWire = function () {
         // TODO: error checking... transport_name in CSPTransports ?
         for (var i = 0; i < preferred_transports.length; i++) {
             if (typeof(CTAPITransports['downstream'][preferred_transports[i]]) != "undefined")
-                shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
+//                shell.print("[ CW ] choose downstream transport: " + preferred_transports[i])
                 return new CTAPITransports['downstream'][preferred_transports[i]]()
         }
         var transport_name = choose_best_transport()
-        shell.print("[ CW ] choose downstream transport: " + transport_name)
+//        shell.print("[ CW ] choose downstream transport: " + transport_name)
         return new CTAPITransports['downstream'][transport_name]()
     }
     self.set_close_cb = function(cb, args) {

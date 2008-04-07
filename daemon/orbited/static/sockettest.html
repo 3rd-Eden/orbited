@@ -16,7 +16,7 @@
     	}
 
 		TCPstart = function() {
-		    var c = new TCPConnection(null, null, false)
+		    var c = new TCPConnection(null, 81, false)
 			c.onopen = TCPonopen
 			c.onread = TCPonread
 			c.onclose = TCPonclose

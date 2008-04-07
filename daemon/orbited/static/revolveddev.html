@@ -31,26 +31,27 @@
 		}
 		TCPonclose = function() {
 		}
-		
+		var id = 0
 		sendMSG = function(test) {
+            id += 1
 			switch (test) {
 				case 1:
-					frame = ["AUTH", ["user_key" , "opaquedata"]]
+					frame = [id, "AUTH", [document.getElementById("userkey").value, "opaquedata"]]
 					break
 				case 2:
-					frame = ["SUBSCRIBE", ["kspc"]]
+					frame = [id, "SUBSCRIBE", ["kspc"]]
 					break
 				case 3:
-					frame = ["UNSUBSCRIBE", ["kspc"]]
+					frame = [id, "UNSUBSCRIBE", ["kspc"]]
 					break
 				case 4:
-					frame = ["PUBLISH", ["kspc", "hello everybody"]]
+					frame = [id, "PUBLISH", ["kspc", "hello everybody"]]
 					break
 				case 5:
-					frame = ["SEND", ["max", "hello max"]]
+					frame = [id, "SEND", ["max", "hello max"]]
 					break
 				case 6:
-					frame = ["DISCONNECT", []]
+					frame = [id, "DISCONNECT", []]
 					break
 				default:
 					throw "unknown test flag"
@@ -65,7 +66,7 @@
   <body>
     <h1>Test</h1>
     <div id="events" style="height: 200px; overflow-y: scroll"></div>
-
+    <input type=text id=userkey value="user_key">
 	<button onClick="sendMSG(1)">auth</button><br>
 	<button onClick="sendMSG(2)">sub</button><br>
 	<button onClick="sendMSG(3)">unsub</button><br>

@@ -23,7 +23,7 @@ def echo(msg, conn):
 
 def test(conn):
     print 'Detected CSP connection', conn
-    conn.set_received_callback(echo, [conn])
+    conn.set_received_cb(echo, [conn])
 
 class CSP(object):
   
@@ -33,7 +33,7 @@ class CSP(object):
         self.connections = {}
         self.unidentified_connections = {}
         self.connect_cbs = {}
-        self.set_internal_connect_cb(80, test)
+        self.set_internal_connect_cb(81, test)
         
         
         
@@ -95,7 +95,7 @@ class CSPConnection(object):
 # Public
 # ============================================
         
-    def set_close_cb(self, cb, args):
+    def set_close_cb(self, cb, args=()):
         self.close_cb = (cb, args)
         
     def send_msgs(self, msgs):
@@ -110,7 +110,7 @@ class CSPConnection(object):
     def disconnect(self):
         self.close()
         
-    def set_received_callback(self, cb, args=()):
+    def set_received_cb(self, cb, args=()):
         self.received_cb = (cb, args)
         
     
@@ -139,7 +139,6 @@ class CSPConnection(object):
         
     def close(self):
         self.stream.send("DISCONNECT")
-        print "CSP close", self.id
 
 class Stream(object):
     

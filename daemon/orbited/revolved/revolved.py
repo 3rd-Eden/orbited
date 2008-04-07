@@ -15,7 +15,10 @@ we modify this stuff.
 
 from orbited.json import json
 from orbited.logger import get_logger
-
+from orbited.revolved.auth.open import RevolvedOpenAuthBackend
+from orbited.revolved.auth.http import RevolvedHTTPAuthBackend
+from orbited.revolved.backends.simple import SimpleRevolvedBackend
+from orbited.revolved.dispatcher import RevolvedDispatcher
 log = get_logger("revolved")
 REVOLVED_PORT = 80
 #######################################################################
@@ -71,7 +74,7 @@ class DummyCSPConnection(object):
         """Set a callback for when messages arrive on this connection."""
         self.message_callback = cb, args
     
-    def set_disconnect_callback(self, cb, args=[]):
+    def set_close_callback(self, cb, args=[]):
         """Set a callback for when this connection disconnects."""
         self.disconnect_callback = cb, args    
         
@@ -82,7 +85,7 @@ class DummyCSPConnection(object):
             print 'cb:', cb
             print 'msg:', msg            
             cb(self, msg, *args)
-        
+
         
     
 class RevolvedHandler(object):
@@ -92,13 +95,15 @@ class RevolvedHandler(object):
     listen for connection and disconnection notifications from CSP.
     """
     
-    def __init__(self, csp, backend, auth_backend):
-        self.csp = csp
+    def __init__(self, app):
+        self.app = app
+        self.csp = app.csp
         self.csp.set_internal_connect_cb(REVOLVED_PORT, self.__csp_connect_cb)
         self.connections = []
-        self.auth_backend = auth_backend
-        self.backend = backend
-    
+        self.auth_backend = RevolvedHTTPAuthBackend()
+        self.dispatcher = RevolvedDispatcher()
+        self.backend = SimpleRevolvedBackend(self.dispatcher)
+        
     def __csp_connect_cb(self, conn):
         """Accept a new CSP connection and assign a RevolvedConnection to it."""
 #        conn.set_disconnect_callback(self.__csp_disconnect_cb)
@@ -112,6 +117,9 @@ class RevolvedHandler(object):
         if conn in self.connections:
             self.connections.remove(conn)
 
+    def auth_cb(self, conn):
+        self.dispatcher.connect(conn.user_key, conn)
+
 class RevolvedConnection(object):
     """Handle one Revolved connection.
     
@@ -122,8 +130,8 @@ class RevolvedConnection(object):
     def __init__(self, handler, csp_conn):
         self.handler = handler
         self.csp_conn = csp_conn
-        self.csp_conn.set_disconnect_callback(self.__disconnect_cb)
-        self.csp_conn.set_message_callback(self.__message_cb)
+        self.csp_conn.set_close_cb(self.__disconnect_cb)
+        self.csp_conn.set_received_cb(self.__message_cb)
         self.backend = handler.backend
         self.auth_backend = handler.auth_backend
         self.user_key = None
@@ -139,15 +147,15 @@ class RevolvedConnection(object):
         log.debug("Revolved SENDING: ", json.encode(obj))
         self.csp_conn.send(json.encode(obj))
     
-    def send_ERR(self, msg_id, msg):
+    def send_ERR(self, msg_id, info):
         """Send an error in response to msg_id."""
-        self.send([msg_id, "ERR", [msg]])
+        self.send(["ERR", [msg_id, info]])
         
-    def send_OK(self, msg_id, msg=""):
+    def send_OK(self, msg_id):
         """Send an OK acknowledgement in response to msg_id."""
-        self.send([msg_id, "OK", [msg]])
+        self.send(["OK", [msg_id]])
         
-    def __message_cb(self, conn, msg):
+    def __message_cb(self, msg):
         """Process Revolved Messages.
         
         Client-To-Server Messages:
@@ -164,103 +172,112 @@ class RevolvedConnection(object):
             [0, "PUBLISH", [message]]
             
         """
-        
         try:
             msg = json.decode(msg)
         except:
-            log.warn("Invalid JSON message from ", conn, ": ", msg)
+            log.warn("Invalid JSON message from ", self.csp_conn, ": ", msg)
             self.send_ERR(0, "invalid json")
             return
         
         if len(msg) != 3:
             self.send_ERR(0, "invalid message format")
             return
-        
         # Every frame will be a 3-tuple. The third item will be a list of arguments.
         msg_id, msg_type, args = msg
         log.debug("Got Revolved Message: %s %s %s" % (msg_id, msg_type, args))
+        try:
+            f = getattr(self, '_message_%s' % msg_type)
+            f(msg_id, *args)
+        # Note: may obscure unanticipated Attribute and Value Exceptions
+        except AttributeError:
+            return self.send_ERR        
+        except ValueError:
+            self.send_ERR(msg_id, "invalid message format")
+        except Exception, e:
+            self.send_ERR(msg_id, "unknown error: " + str(e))
+            raise
         
+    def _message_AUTH(self, msg_id, user_key, auth_data):
+        self.auth_backend.authorize_connect(user_key, auth_data, self._AUTH_auth_cb, [msg_id, user_key])
+            
+    def _AUTH_auth_cb(self, msg_id, can_connect, user_key):
+        if can_connect != True:
+            can_connect = can_connect or "" # convert to string
+            return self.send_ERR(msg_id, can_connect)
+        
+        self.backend.connect(user_key, self._AUTH_conn_cb, [msg_id, user_key])
+        
+    def _AUTH_conn_cb(self, connected, msg_id, user_key):
+        if connected != True:
+            return self.send_ERR(msg_id, "could not connect")
+        self.user_key = user_key
+        self.send_OK(msg_id)
+        self.handler.auth_cb(self)
+        
+                
+    def _message_SUBSCRIBE(self, msg_id, channel):
+        permissions = self.auth_backend.authorize_channel(self.user_key, channel, self._SUBSCRIBE_auth_cb, [msg_id, channel])
+            
+    def _SUBSCRIBE_auth_cb(self, permissions, msg_id, channel):
+      
+        if not permissions['subscribe']:            
+            return self.send_ERR(msg_id, "Not Authorized")
 
-        if msg_type == "AUTH":
+        self.backend.subscribe(self.user_key, channel, self._SUBSCRIBE_sub_cb, [msg_id])
             
-            try:
-                user_key, data = args
-            except ValueError:
-                self.send_ERR(msg_id, "invalid auth format")
-                return
-            
-            can_connect = self.auth_backend.authorize_connect(user_key, data)
-            if can_connect is True:
-                can_connect = self.backend.connect(user_key)
-            if can_connect is True:
-                self.user_key = user_key
+    def _SUBSCRIBE_sub_cb(self, subscribed, msg_id):
+        if subscribed == True:
+            self.send_OK(msg_id)
+        else:
+            self.send_ERR(msg_id, subscribed)
+                    
+    def _message_UNSUBSCRIBE(self, msg_id, *channels):
+        # TODO: Don't send multiple OKs for multiple channels
+        for channel in channels:
+            unsubscribed = self.backend.unsubscribe(self.user_key, channel)                
+            if unsubscribed:
                 self.send_OK(msg_id)
             else:
-                # Send an error message
-                can_connect = can_connect or "" # convert to string
-                self.send_ERR(msg_id, can_connect)
+                self.send_ERR(msg_id, "unable to unsubscribe to some channels")
+            
+    def _message_PUBLISH(self, msg_id, channel, payload):
+        log.info("_message_PUBLISH")
+        self.auth_backend.authorize_channel(self.user_key, channel, self._PUBLISH_auth_cb, [msg_id, channel, payload])
         
-        elif msg_type == "SUBSCRIBE":
+    def _PUBLISH_auth_cb(self, permissions, msg_id, channel, payload):
+        log.info("_PUBLISH_auth_cb")
+        if not permissions['publish']:
+            return self.send_ERR(msg_id, "Not Authorized")
             
-            channels = args
-            if type(channels) != type([]):
-                self.send_ERR(msg_id, "channel names must be a list")
-                return
-            for channel in channels:
-                permissions = self.auth_backend.authorize_channel(self.user_key, channel)
-                if not permissions['subscribe']:
-                    self.send_ERR(msg_id, "Not Authorized")
-                    return
-                subscribed = self.backend.subscribe(self.user_key, channel)
-                
-                if subscribed:
-                    self.send_OK(msg_id)
-                else:
-                    self.send_ERR(msg_id, subscribed or "unable to subscribe to some channels")
-            
-        elif msg_type == "PUBLISH":
-            
-            try:
-                channel, payload = args
-            except ValueError:
-                self.send_ERR("invalid publish format")
-                return
-
-            permissions = self.auth_backend.authorize_channel(self.user_key, channel)
-            if not permissions['publish']:
-                self.send_ERR(msg_id, "Not Authorized")
-                return
-                
-            published = self.backend.publish(self.user_key, channel, payload)
-            
-            if published is True:
-                self.send_OK(msg_id)
-            else:
-                self.send_ERR(msg_id, published or "unable to publish")
-
-        elif msg_type == "SEND":
-            
-            try:
-                recipient, payload = args
-            except ValueError:
-                self.send_ERR("invalid send format")
-                return
-
-            # TODO: No permissions check?
-                
-            sent = self.backend.send(self.user_key, recipient, payload)
-            
-            if sent is True:
-                self.send_OK(msg_id)
-            else:
-                self.send_ERR(msg_id, sent or "unable to publish")
+        self.backend.publish(self.user_key, channel, payload, self._PUBLISH_pub_cb, [msg_id])
         
-        elif msg_type == "DISCONNECT":
-            
-            # If we're connected to the backend, disconnect from it;
-            # regardless, you must disconnect the CSP connection.
-            if self.user_key:
-                self.backend.disconnect(self.user_key)
-                self.user_key = None
-            self.csp_conn.close()
+    def _PUBLISH_pub_cb(self, published, msg_id):
+        log.info("_PUBLISH_pub_cb")
+        
+        if published == True:
+            self.send_OK(msg_id)
+        else:
+            self.send_ERR(msg_id, published or "unable to publish")
+
+    def _message_SEND(self, msg_id, recipient, payload):
+        # TODO: No permissions check?
+        self.auth_backend.authorize_send(self.user_key, recipient, self._SEND_auth_cb, [msg_id, recipient, payload])
+        
+    def _SEND_auth_cb(self, can_send, msg_id, recipient, payload):
+        self.backend.send(self.user_key, recipient, payload, self._SEND_send_cb, [msg_id])
+        
+    def _SEND_send_cb(self, sent, msg_id):        
+        if sent == True:
+            self.send_OK(msg_id)
+        else:
+            self.send_ERR(msg_id, sent or "unable to publish")
+        
+    def _message_DISCONNECT(self, msg_id):
+        # If we're connected to the backend, disconnect from it;
+        # regardless, you must disconnect the CSP connection.
+        # TODO: what if we've issued a backend.connect, but haven't yet connected?
+        if self.user_key:
+            self.backend.disconnect(self.user_key)
+            self.user_key = None
+        self.csp_conn.close()
         

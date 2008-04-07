@@ -28,14 +28,11 @@ class CometWire(object):
         self.transports.set_identifier_callback(url, self.__client_connect_callback, [url])
         
     def __client_connect_callback(self, url):
-        print "CometWIRE downstream connect, url:", url
         key = self.__generate_key()
         initial_msgs = []
         initial_msgs.append(SingleRecipientMessage(json.encode(["ID", key]), key))
-        print "UPSTREAM -- SET CONNECT CB for COMETWIRE"
         self.dispatcher.app.upstream.set_connect_cb(key, self.__upstream_connected, [key, url])
         self.timers[key] = event.timeout(TIMEOUT, self.__upstream_connect_timed_out, key, url)
-        print 'return', (key, initial_msgs)
         return (key, initial_msgs)
         
     def __upstream_connect_timed_out(self, key, url):
@@ -45,7 +42,6 @@ class CometWire(object):
         conn.close()
         self.timers[key].delete()
         del self.timers[key]
-        print "COMETWIRE -- upstream connect timeout", key
         
     def __generate_key(self):
         # return 'test'
@@ -54,14 +50,12 @@ class CometWire(object):
     def __upstream_connected(self, conn, key, url):
         # Are we waiting on this particular upstream connection?
         if key not in self.timers:
-            print 'Key NOT IN TIMERS?'
             # TODO: error...?
             return
         self.timers[key].delete()
         del self.timers[key]
         
         if url in self.callbacks:
-            print 'url in callbacks'
             upstream_conn = conn
             downstream_conn = self.transports.get(key)
             downstream_conn.send(json.encode(["CONNECTED", []]))
@@ -69,7 +63,6 @@ class CometWire(object):
             #self.callbacks[url]
             return cb(key, upstream_conn, downstream_conn, *args)
         else:
-            print 'url not in', self.callbacks
             conn.set_receive_cb(self.__upstream_receive_cb)
 
     def __upstream_receive_cb(self, data):

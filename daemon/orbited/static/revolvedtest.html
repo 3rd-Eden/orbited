@@ -1,29 +1,86 @@
 <html>
   <head>
-    <title>Test</title>
+    <title>Revolved Development Tests</title>
     <link rel="stylesheet" href="chat.css">
-	<script src="/_/static/library.js"></script>
+    <script src="/_/static/library.js"></script>
+    <script src="/_/static/revolved.js"></script>
 
     <script>
-		Orbited.require("revolved.js")
-		Orbited.require("shell.js")
+//        Orbited.require("revolved.js")
+        Orbited.require("shell.js")
 
-		onload = function() {
 
-			
-			var output = document.getElementById('events')
-			shell = new Shell(output)
-			
-		}
-		
+        onload = function() {
+
+            var output = document.getElementById('events')
+            shell = new Shell(output)
+            var cb_maker = function(type) {
+                var tmp = function() {
+                    shell.print("on" + type + ": " + JSON.stringify(arguments))
+                }
+                return tmp
+            }
+            r = new Revolved()
+            r.onopen = cb_maker("open")
+            r.onpublish = cb_maker("publish")
+            r.onreceive = cb_maker("receive")
+            r.onclose = cb_maker("close")
+            r.onsuccess = cb_maker("success")
+            r.onerror = cb_maker("error")
+        }
+        var id = 0
+        sendMSG = function(test) {
+            id += 1
+            switch (test) {
+                case 1:
+                    r.connect(document.getElementById("connuser").value)
+                    break
+                case 2:
+                    r.subscribe(document.getElementById("subchan").value)
+                    break
+                case 3:
+                    r.unsubscribe(document.getElementById("unsubchan").value)
+                    break
+                case 4:
+                    r.publish(
+                        document.getElementById("pubchan").value,
+                        document.getElementById("pubdata").value
+                    )
+                    break
+                case 5:
+                    r.send(
+                        document.getElementById("senduser").value,
+                        document.getElementById("senddata").value
+                    )
+                    break
+                case 6:
+                    r.disconnect()
+                    break
+                default:
+                    throw "unknown test flag"
+            }
+        }
 
     </script>
   </head>
   <body>
     <h1>Test</h1>
     <div id="events" style="height: 200px; overflow-y: scroll"></div>
-
-	<button onClick="sendMSG()">send</button><input type=text value="hello from the browser" id="messagebox">
-	
+    <button onClick="sendMSG(1)">connect</button>
+    <input type=text id=connuser value="max"><br>
+    <button onClick="sendMSG(2)">sub</button>
+    <input type=text id=subchan value="kspc"><br>
+    <button onClick="sendMSG(3)">unsub</button>
+    <input type=text id=unsubchan value="kspc"><br>
+    <button onClick="sendMSG(4)">publish</button>
+    <input type=text id=pubchan value="kspc">
+    <input type=text id=pubdata value="hello"><br>
+    <button onClick="sendMSG(5)">send</button>
+    <input type=text id=senduser value="max">
+    <input type=text id=senddata value="hey m-money"><br>
+    <button onClick="sendMSG(6)">disconnect</button><br>
+    
+    
+    
   </body>
 </html>

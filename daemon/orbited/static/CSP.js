@@ -23,7 +23,7 @@ CSP = function() {
         if (typeof(port) == "undefined" || port == null)
             port = 80
         self.domain = domain
-        self.port = 80
+        self.port = port
         self.conn = new CometWire()
         self.connect_cb = [connect_cb, args]
         self.conn.connect(connected_cb)
@@ -43,9 +43,10 @@ CSP = function() {
     }
 
     var received_cb = function(data) {
+//        shell.print("[CSP] " + data)
         try {
             var frame = JSON.parse(data)
-            
+//            var frame = data
             if (frame[0] == "ACK") {
                 var tag = frame[1]
                 clearInterval(sent_frames[tag].timeout)
@@ -93,13 +94,14 @@ CSP = function() {
         
         var retry = function() {
             send(frame)
-            if (frame.sent > 10)
+            frame.attempt += 1
+            if (frame.attempt > 10)
                 self.disconnect()
         }
         
         frame.timeout = setInterval(retry, RESEND_TIMEOUT)
         frame.time_sent = new Date().getTime()
-        frame.try = 1
+        frame.attempt = 1
         sent_frames[num_sent] = frame
         send(frame)
     }
@@ -149,7 +151,7 @@ CSP = function() {
                 break
             case "PING":
                 break
-            case "WELCOME":            
+            case "WELCOME":
                 var conn_cb = self.connect_cb[0]
                 var args = self.connect_cb[1]
                 delete self.connect_cb

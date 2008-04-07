@@ -10,10 +10,10 @@ class SimpleRevolvedBackend(object):
         self.users = {} # Mapping of users to a list subscribed channels
         self.channels = {} # Mapping of channels to a list of users
 
-    def connect(self, user):
+    def connect(self, user, cb, args=()):
         """Connect a user to Revolved."""
         self.users[user] = [] # Start without any subscriptions
-        return True # OK
+        return cb(True, *args) # OK
     
     def disconnect(self, user):
         """Handle a disconnection from a revolved user, removing them from
@@ -29,7 +29,7 @@ class SimpleRevolvedBackend(object):
         del self.users[user]
         return True
         
-    def send(self, sender, recipient, payload):
+    def send(self, sender, recipient, payload, cb, args=()):
         """Send a payload to another revolved user.
         
         If the sender or receiver don't exist, do nothing.
@@ -37,19 +37,19 @@ class SimpleRevolvedBackend(object):
         if sender not in self.users or recipient not in self.users:
             return "User Not Found"
         self.dispatcher.send(sender, recipient, payload)
-        return True
+        return cb(True, *args)
         
-    def publish(self, publisher, channel, payload):
+    def publish(self, publisher, channel, payload, cb, args=()):
         """Publish a payload to a channel on behalf of a revolved user.
         
         If the channel does not exist, do nothing.
         """
         if channel in self.channels:
             for user in self.channels[channel]:
-                self.dispatcher.publish(user, channel, payload)
-        return True
+                self.dispatcher.publish(user, channel, publisher, payload)
+        return cb(True, *args)
         
-    def subscribe(self, subscriber, channel):
+    def subscribe(self, subscriber, channel, cb, args=()):
         """Subscribe the revolved user to a channel.
         
         If the channel does not exist, create it.
@@ -63,7 +63,7 @@ class SimpleRevolvedBackend(object):
             if channel not in self.channels:
                 self.channels[channel] = []
             self.channels[channel].append(subscriber)
-        return True
+        return cb(True, *args)
         
     def unsubscribe(self, user, channel):
         """Unsubscribe the revolved user from a channel.
@@ -76,7 +76,7 @@ class SimpleRevolvedBackend(object):
         
         return True
     
-    def move(self, old_user, new_user):
+    def move(self, old_user, new_user, cb, *args):
         """Rename a user, transferring all old subscriptions to the
         new username and removing the old user.
         """
@@ -88,7 +88,7 @@ class SimpleRevolvedBackend(object):
             self.channels[channel].append(new_user)
             self.users[new_user].append(channel)
         del self.users[old_user]
-        return True
+        return cb(True, *args)
     
     #----------------------------------------------------------------------
     # Utility functions for testing
