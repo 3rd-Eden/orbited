@@ -19,7 +19,7 @@ def load_configuration(config_file=None):
         
 def main():
     parser = OptionParser("usage: orbited [-d] [-c FILE]")
-    parser.add_option("-c", "--config", metavar="FILE", dest="config",
+    parser.add_option("-c", "--config", metavar="FILE", dest="config", default="orbited.cfg",
                         help="write output to FILE")
     parser.add_option("-d", "--daemonize", dest="daemonize",
                         action="store_true", help="run as a daemon")
