@@ -1,0 +1,40 @@
+<html>
+ <head>
+  <title>Manage Plugin</title>
+    <link rel=stylesheet href=/_/static/manage.css>
+    <script src=/_/static/manage.js></script>
+    <script src=/_/static/library.js></script>
+    <script>
+        Plugin = new Library("/_/manage/");
+    </script>
+ </head>
+ <body onload='Plugin.get("get_plugins",Manager.load);'>
+    <h1>
+	    Orbited<span>Plugin</span>: <b id=name>Loading...</b>
+    </h1>
+
+    <div class=section>
+        <h4>Active Plugins</h4>
+        <div id=plugins>
+            list plugins here
+        </div>
+    </div>
+
+    <div class=section>
+	    <h4>Last Output <b id=flag>Loading...</b></h4>
+	    <div id=output>
+	    </div>
+    </div>
+
+    <div class=section>
+	    <h4>Available Functions</h4>
+	    <div id=functions>
+	        <ol>
+                <li><a href="javascript:Plugin.get('status',Manager.display_result);">status</a></li>
+                <li><a href="javascript:Plugin.get('start',Manager.display_result);">start</a></li>
+                <li><a href="javascript:Plugin.get('stop',Manager.display_result);">stop</a></li>
+            </ol>
+	    </div>
+    </div>
+ </body>
+</html>

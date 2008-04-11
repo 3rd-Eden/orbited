@@ -75,6 +75,12 @@ class SocketIO(object):
         self.timeout = self.registrar.timeout(0,self.callback)
         self.add()
 
+    def __repr__(self):
+        cbname = self.cb.__name__
+        if hasattr(self.cb,"im_class"):
+            cbname = self.cb.im_class.__name__ + "." + cbname
+        return '<SocketIO Object | Callback:"%s">'%cbname
+
     def persistent(self):
         self.persist = True
 
@@ -108,6 +114,12 @@ class Signal(object):
         self.timeout = self.registrar.timeout(0,self.callback)
         self.add()
 
+    def __repr__(self):
+        cbname = self.cb.__name__
+        if hasattr(self.cb,"im_class"):
+            cbname = self.cb.im_class.__name__ + "." + cbname
+        return '<Signal Object | Callback:"%s">'%cbname
+
     def add(self, delay=0):
         if delay:
             self.timeout.add(delay)
@@ -139,6 +151,12 @@ class Timer(object):
             self.args = ()
             return
         self.add(delay)
+
+    def __repr__(self):
+        cbname = self.cb.__name__
+        if hasattr(self.cb,"im_class"):
+            cbname = self.cb.im_class.__name__ + "." + cbname
+        return '<Timer Object | Callback:"%s">'%cbname
 
     def add(self, delay=0):
         self.delay = delay

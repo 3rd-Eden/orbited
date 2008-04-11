@@ -56,4 +56,6 @@ class Dispatcher(object):
         
     def add_cb_rule(self, prefix, cb):
         self.app.http_server.add_cb_rule(prefix, cb)
-        
+
+    def add_static_rule(self, prefix, resource):
+        self.app.http_server.add_static_rule(prefix, resource)

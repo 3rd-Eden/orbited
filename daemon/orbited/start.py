@@ -25,11 +25,14 @@ def main():
                         action="store_true", help="run as a daemon")
     parser.add_option("-e", "--event", dest="event", default="pyevent", help="event notification method (%s)"%str(rel.supported_methods)[1:-1])
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="verbose output")
+    parser.add_option("-r", "--report", action="store_true", dest="report", default=False, help="system status reporting")
     options, args = parser.parse_args()
     try:
         rel_options = []
         if options.verbose:
             rel_options.append("verbose")
+        if options.report:
+            rel_options.append("report")
         rel.initialize([options.event],rel_options)
     except ImportError:
         print "invalid event notification method specified"        
@@ -41,7 +44,8 @@ def main():
     print ("Orbited " + __version__).center(60)
     print "-" * 60
     load_configuration(options.config)
-    pprint.pprint(config)
+    if options.verbose:
+        pprint.pprint(config)
     print ""
 
 

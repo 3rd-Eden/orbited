@@ -82,14 +82,7 @@ def update(**kwargs):
     return True
 
 class ParseError(Exception):
-    def __init__(self, reason):
-        self.reason = "\r\n==========\r\n%s\r\n==========" % (reason,)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        print self.reason
+    pass
 
 def error(f,s,n,l):
     return "Invalid entry in \"%s\" under \"%s\" on line %s:\r\n-- \"%s\"\r\nConfig parsing aborted."%(f,s,n,l)
@@ -145,5 +138,4 @@ def load(filename):
             value = tuple([val.strip() for val in value.split(',')])
 
         map[section][key] = value
-    print map
     return True
