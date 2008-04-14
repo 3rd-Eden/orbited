@@ -214,6 +214,7 @@ class DownstreamTransport(object):
             self.__ready()
         
     def initial_response(self):
+        return
         self.browser_conn.write_status('200', 'OK', mcb('write_status'))
         self.browser_conn.write_header('Server', 'Orbited %s' % __version__, mcb('write_server'))
         self.browser_conn.write_headers_end(mcb('headers_end'))

@@ -1,0 +1,149 @@
+<html>
+ <head>
+    <script language="javascript" type="text/javascript" src="/_/static/firebug/firebug.js"></script>
+    <script language="javascript" type="text/javascript" src="/_/static/library.js"></script>
+  <script>
+    HOST = "http://" + document.domain + ":" + location.port
+    //"http://192.168.28.2:8000"
+    Orbited.require("shell.js")
+
+    onload = function() {
+        var output = document.getElementById('events')
+        shell = new Shell(output)
+    }
+
+    var dirlog = function(obj) {
+        console.log('dirlog');
+        var attributeName;
+        var attributeValue;
+        for (attributeName in obj)
+        {
+            console.log(attributeName)
+            attributeValue = obj[attributeName];
+            consoloe.log(attributeValue)
+            consoloe.log('===')
+        }
+        if (str)
+            return "{ " + str + " }";
+        else
+            return "{}";
+    }
+    var dir = function(obj) {
+        var attributeName;
+        var attributeValue;
+        var str= "";
+        for (attributeName in obj)
+        {
+            attributeValue = obj[attributeName];
+        
+            if (str)
+                str+= ", ";
+        
+                str+= attributeName + " = " + attributeValue + "<br>";
+        }
+        if (str)
+            return "{ " + str + " }";
+        else
+            return "{}";
+    }
+    var hide_iframe = function (ifr) {
+        ifr.style.display = 'block';
+        ifr.style.width = '0';
+        ifr.style.height = '0';
+        ifr.style.border = '0';
+        ifr.style.margin = '0';
+        ifr.style.padding = '0';
+        ifr.style.overflow = 'hidden';
+        ifr.style.visibility = 'hidden';
+    }
+   function printResponseText() {
+        try {
+            shell.print("responseText: " + xhr.responseText)
+        }
+        catch(e) {
+            shell.print("responseText not accessible")
+        }
+    }
+   function connectXHR() {
+        if (typeof(ienocache) == "undefined")
+            ienocache = 0
+        ienocache += 1
+        xhr = create_xhr();
+        xhr.onreadystatechange = function() {
+            shell.print("=====xhr=====")
+            shell.print("readyState: " + xhr.readyState)
+            try {
+                shell.print("status: " + xhr.status)
+            }
+            catch(e) { }
+            try {
+                shell.print("responseText: " + xhr.responseText)
+            }
+            catch(e) { }
+        }
+        xhr.open("GET", HOST + "/?identifier=develop&transport=raw&nocache=" + ienocache, true)
+        xhr.send(null);
+    }
+
+   function connectXML() {
+    xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+    xmlDoc.async = true;
+    xmlDoc.validateOnParse = true;
+
+    function myreadystatechange()
+    {
+        shell.print("readyState: " + xmlDoc.readyState)
+    }
+    
+    function mydataavailable()
+    {
+        var mydate = new Date();
+        var timedisplay = mydate.getMinutes() + ":" + mydate.getSeconds() + "." + ":" + mydate.getMilliseconds();
+        shell.print("we now have " + xmlDoc.firstChild.childNodes.length + " nodes - time: " + timedisplay);
+    }
+
+    xmlDoc.onreadystatechange = myreadystatechange;
+    xmlDoc.ondataavailable = mydataavailable;
+    if (typeof(ienocache) == "undefined")
+        ienocache = 0
+    ienocache += 1
+    xmlDoc.load(HOST + "/?identifier=develop&transport=raw&nocache=" + ienocache);
+
+   }
+
+   function connectIframe() {
+        
+        ifr = document.createElement("iframe")
+        document.body.appendChild(ifr)
+        ifr.src = HOST + "/test?identifier=develop&transport=raw"
+    }
+
+    function create_xhr() {
+        try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) {}
+        try { return new ActiveXObject("Microsoft.XMLHTTP"); } catch (e) {}
+        try { return new XMLHttpRequest(); } catch(e) {}
+        return null;
+    };
+
+   function sendPayload() {
+        var payloadTA = document.getElementById("payload")
+        var data = payloadTA.value
+        payloadTA.value = ""
+        var xhr = create_xhr()
+        xhr.open("POST",HOST + "/_/develop/send", true)
+        xhr.send(data);
+    }
+
+  </script>
+ </head>
+ <body>
+  <button onClick="connectIframe()">Connect IFRAME</button><br>
+  <button onClick="connectXHR()">Connect XHR</button><br>
+  <button onClick="connectXML()">Connect XML</button><br>
+  <button onClick="printResponseText()">responseText</button><br>
+  <textarea style="width:400px; height: 300px;" id="payload"></textarea>
+  <button onClick="sendPayload()">Send</button><br>
+  <div id="events" style="height: 200px; overflow-y: scroll; border: 1px dashed black;"></div>
+
+ </body>
+</html>

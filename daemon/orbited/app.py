@@ -15,6 +15,7 @@ from orbited.upstream import UpstreamHandler
 from orbited.csp import CSP
 from orbited.revolved.revolved import RevolvedHandler
 from orbited.system import System
+from orbited.develop import Development
 from orbited.dispatcher import Dispatcher
 from orbited.logger import get_logger
 log = get_logger("app")
@@ -26,7 +27,6 @@ class Application(object):
     def __init__(self, config):
         httpconf = config['[http]']
         orbitconf = config['[op]']
-
         self.dispatcher = Dispatcher(self)
         self.http_server = HTTPApplication(
             httpconf['bind_addr'], 
@@ -45,6 +45,7 @@ class Application(object):
             
 #            self.dispatcher)
         self.system = System()
+        self.develop = Development(self)
         self.dispatcher.setup()
         
 
