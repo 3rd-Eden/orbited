@@ -17,6 +17,8 @@ class Registrar(object):
     def __init__(self):
         self.events = {'read':{},'write':{}}
         self.timers = set()
+        self.addlist = []
+        self.rmlist = []
         self.signals = {}
         self.run_dispatch = False
         self.error_check = False
@@ -67,19 +69,22 @@ class Registrar(object):
         return Timer(self,delay,cb,*args)
 
     def add_timer(self, timer):
-        self.timers.add(timer)
+         self.addlist.append(timer)
 
     def remove_timer(self, timer):
-        if timer in self.timers:
-            self.timers.remove(timer)
+        self.rmlist.append(timer)
 
     def check_timers(self):
-        rmlist = []
+        for timer in self.addlist:
+            self.timers.add(timer)
+        self.addlist = []
+        for timer in self.rmlist:
+            if timer in self.timers:
+                self.timers.remove(timer)
+        self.rmlist = []
         for timer in self.timers:
             if not timer.check():
-                rmlist.append(timer)
-        for timer in rmlist:
-            timer.delete()
+                self.rmlist.append(timer)
         return bool(self.timers)
 
     def handle_error(self, fd):

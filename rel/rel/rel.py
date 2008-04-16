@@ -13,7 +13,7 @@ functions:
     abort()
     init()
 """
-import sys, threading, time
+import sys, threading, time, pprint
 from registrar import SelectRegistrar, PollRegistrar, EpollRegistrar
 from listener import EV_PERSIST, EV_READ, EV_SIGNAL, EV_TIMEOUT, EV_WRITE
 try:
@@ -32,9 +32,23 @@ mapping = {
     'poll': PollRegistrar,
 }
 
-def _display(text):
+def __display(text):
     if verbose:
         print "Registered Event Listener output:",text
+
+def __report():
+    print "=" * 60
+    print "rel status report".center(60)
+    print str(time.time()).center(60)
+    print "-" * 60
+    print "events".center(60)
+    pprint.pprint(registrar.events)
+    print "signals".center(60)
+    pprint.pprint(registrar.signals)
+    print "timers".center(60)
+    pprint.pprint(registrar.timers)
+    print "=" * 60
+    return True
 
 class Thread_Checker(object):
     def __init__(self):
@@ -58,11 +72,11 @@ class Thread_Checker(object):
     def check(self):
         if threading.activeCount() > 1:
             if not self.sleeper.pending():
-                _display('Enabling GIL hack')
+                __display('Enabling GIL hack')
                 self.sleeper.add(.01)
         else:
             if self.sleeper.pending():
-                _display('Disabling GIL hack')
+                __display('Disabling GIL hack')
                 self.sleeper.delete()
         return True
 
@@ -100,24 +114,14 @@ def initialize(methods=supported_methods,options=()):
             registrar = get_registrar(method)
             break
         except:
-            _display('Could not import "%s"'%method)
+            __display('Could not import "%s"'%method)
     if registrar is None:
         raise ImportError, "Could not import any of given methods: %s" % (methods,)
     threader = Thread_Checker()
     if "report" in options and registrar != pyevent:
         timeout(5,__report)
-    _display('Initialized with "%s"'%method)
+    __display('Initialized with "%s"'%method)
     return method
-
-def __report():
-    print "=========="
-    print "rel status report"
-    print "----------"
-    print "events",registrar.events
-    print "signals",registrar.signals
-    print "timers",registrar.timers
-    print "=========="
-    return True
 
 def read(sock,cb,*args):
     check_init()
