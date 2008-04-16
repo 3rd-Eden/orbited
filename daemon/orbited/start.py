@@ -11,11 +11,8 @@ import sys
 from optparse import OptionParser
 
 def load_configuration(config_file=None):
-    if config_file:
-        load_config(config_file)
-    else:
-        config_file = "(built-in)"
     print "Configuration:", config_file
+    load_config(config_file)
         
 def main():
     parser = OptionParser("usage: orbited [-d] [-c FILE]")
