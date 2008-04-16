@@ -6,7 +6,7 @@ import urllib
 log = get_logger("revolved")
 
 options = config.get('[revolved_auth:http]', {})
-print options
+#print options
 """
 [revolved_plugin:http]
 callback.authorize_channel = http://localhost:4700/revolved_authorize_channel
@@ -25,8 +25,8 @@ if False:
     auth_chan_url = None
     auth_conn_url = None
     
-print auth_chan_url
-print auth_conn_url
+#print auth_chan_url
+#print auth_conn_url
     
 class RevolvedHTTPAuthBackend(object):
     """An open authorization backend for Revolved 
