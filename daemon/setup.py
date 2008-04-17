@@ -22,18 +22,10 @@ setup(
     license='MIT License',
     description='A libevent/pyevent based comet server',
     long_description='',
-    packages=[
-        'orbited', 
-#        'orbited.http',
-        'orbited.logger',         
-        'orbited.op',
-#        'orbited.stomp',
-#        'orbited.transports',
-        'orbited.revolved',
-    ],
-    package_data = {
-        '': [os.path.join('static', ext) for ext in static_types],
-    },
+    packages= find_packages(),
+    package_data = {'': reduce(list.__add__, [ '.svn' not in d and [ os.path.join(d[len('orbited')+1:], e) for e in
+            static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
+        ]) },
     zip_safe = False,
     install_requires = [
         # "event >= 0.3"
