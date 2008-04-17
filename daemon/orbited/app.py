@@ -78,6 +78,7 @@ class Application(object):
 
 #                logger.critical('%s:%s\t%s' % (exception, instance, relevant_line))
                 print x
+                print e
 #                sys.stdout.flush()
             else:
                 break
