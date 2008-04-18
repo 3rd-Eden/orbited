@@ -7,4 +7,4 @@ class OrbitedOPDaemon(OPServer):
         self.app = app
     
     def dispatch(self, request):
-        self.app.transports.dispatch_op(request)
+        self.app.tcp.send(request.recipient, request.payload)

@@ -1,8 +1,12 @@
 import cgi
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
+import traceback
 from twisted.internet.protocol import Factory
 from twisted.internet import reactor, defer
 from connection import StructuredReader
-
 
 class HTTPRequest(object):
   
@@ -18,12 +22,18 @@ class HTTPRequest(object):
         if not hasattr(self, '_form'):
             self._form = {}
             try:
-                if self.method.lower() == "get":
+                if self.qs:
                     qs = self.qs
                 else:
                     qs = self.body
                 for key, val in cgi.parse_qsl(qs):
-                    self.form[key] = val
+                    if key in self.form:
+                        if isinstance(self.form[key], list):
+                            self.form[key].append(val)
+                        else:
+                            self.form[key] = [self.form[key], val]
+                    else:
+                        self.form[key] = val
             except ValueError:
                 raise HTTPProtocolError, "Invalid querystring format"
         return self._form
@@ -40,7 +50,10 @@ class HTTPRequest(object):
     
     def error(self, reason="Unknown", details="", code="500"):
         r = self.HTTPResponse()
+        
         r.status = "%s Orbited Error" % (code,)
+        f = StringIO.StringIO()
+        traceback.print_stack(file=f)
         r.write("""
         <html>
           <head>
@@ -50,11 +63,18 @@ class HTTPRequest(object):
           <body>
             <h1>%s Orbited Error - %s</h1>
             <p>%s</p>
+            %s
           </body>
         </html>        
-        """ % (code, reason, code, reason, details))
+        """ % (code, reason, code, reason, details, f.getvalue().replace('\n', '<br>\n')))
         r.dispatch()
-    
+    def respond(self, status, headers={}, body=""):
+        r = self.HTTPResponse()
+        r.status = status
+        r.headers.update(headers)
+        r.write(body)
+        r.dispatch()
+        
     def HTTPResponse(self):
         return HTTPResponse(self)
     
@@ -65,7 +85,7 @@ class HTTPRequest(object):
         return HTTPVariableResponse(self)
     
     def write(self, data):
-        self.conn.write(self, data)
+        return self.conn.write(self, data)
         
     def end(self, *args, **kwargs):
         return self.conn.end(self, *args, **kwargs)
@@ -79,7 +99,7 @@ class HTTPRequest(object):
         except ValueError:
             raise HTTPProtocolError, "Invalid HTTP status line"
         #self.protocol = self.protocol.lower()
-        if self.method.lower() == "get" and "?" in self.url:
+        if "?" in self.url:
             self.url, self.qs = self.url.split('?', 1)        
         url_scheme, version = self.protocol.split('/',1)
         self.version = version
@@ -167,9 +187,15 @@ class HTTPVariableResponse(object):
             self.headers['Connection'] = 'keep-alive'
             self.headers['Keep-alive'] = '300'
             self.headers['Transfer-encoding'] = 'chunked'
-            
+        self.buffer = ""
+        
     def write(self, data):
-        print 'write:', data
+        self.buffer += data
+    def flush(self):
+        if not self.buffer:
+            return
+        data = self.buffer
+        self.buffer = ""
         if not self.started:
             self.start_response()
         if not data:
@@ -213,7 +239,8 @@ class HTTPServerProtocol(StructuredReader):
         
     def write(self, request, data):
         if self.response_queue and request == self.response_queue[0]:
-            return self.transport.write(data)
+            d = self.transport.write(data)
+            return d
         else:
             pass
             # TODO: hold on to the write and buffer it until its this request's
@@ -227,7 +254,6 @@ class HTTPServerProtocol(StructuredReader):
         # TODO: close the connection if close == True
         
     def connectionMade(self):
-        print "HTTP Connection opened: %s" % self.id
         self._start_request()
       
     def _start_request(self):
