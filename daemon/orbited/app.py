@@ -30,8 +30,6 @@ class Application(object):
     def set_session_handler(self,id, handler):
         self.handlers[id] = handler
         
-        
-        
 class ExampleHandler(object):
     def __init__(self, app):
         self.app = app

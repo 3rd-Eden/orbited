@@ -1,0 +1,36 @@
+triggers
+    TCPOpen
+    TCPClose
+    TCPRecv
+
+GET /tcp?id=abc
+    if id is missing:
+        return status 401 unauthorized
+    if "Last-Event-ID" header is not present
+        if session 'abc' is already in use:
+            return status 409 Conflict
+        if the session is not authorized
+            return status 401 Unauthorized (Or 403 Forbidden)
+        else
+            trigger TCPOpen
+            queue for push 'event: TCPOpen\n'
+    else: (Last-Event-ID is present)
+        remove any messages with id <= int(Last-Event-ID) from the ack_queue
+        queue for push any unacknowledged messages with id > int(Last-Event-ID)
+    optionally queue 'retry: N\n' for some appropriate integer N
+    queue for push 'id: -1\n\n'
+    send status 200 OK
+        
+POST /tcp?id=abc
+    if 'Last-Event-ID' is present: 
+        remove any messages with id <= int(Last-Event-ID) from the queue
+    if content-length > 0 (or body is otherwise present):
+        trigger TCPRecv(body)
+
+DELETE /tcp?id=abc
+    if 'abc' is a valid session
+        delete message queues for the 'abc' session
+        close any GET /tcp?session=abc requests
+        trigger a TCPClose
+    else:
+        respond with status code 404 session not found
