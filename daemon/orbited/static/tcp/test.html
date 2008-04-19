@@ -4,7 +4,7 @@
   <script src="/_/static/tcp/tcp.js"></script>
   <script>
    function setup() {
-        tcp = new TCPConnection("http://localhost:8000/tcp?id=abc", false)
+        tcp = new TCPConnection("http://localhost:8000/tcp")
         tcp.onopen = function(evt) { console.log("connected!") }
         tcp.onread = function(evt) { console.log("recv: " + evt.data )}
         tcp.onclose = function(evt) { console.log("closed!") }

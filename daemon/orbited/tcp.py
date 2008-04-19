@@ -1,6 +1,6 @@
 __version__ = "0.4.twisted.alpha1"
 from transports.sse import SSEConnection
-
+import random
 class TCPAuthentication(object):
     def __init__(self):
         pass
@@ -43,6 +43,10 @@ class TCPHandler(object):
         conn.send(payload)
         return True
     
+    def put(self, request):
+        key = "".join([random.choice("ABCDEF1234567890") for i in range(10)])
+        request.respond('200 OK', {}, key)
+        
     def get(self, request):
         id = request.form.get('id', None)
         if not id:
@@ -115,12 +119,15 @@ class TCPConnection(object):
         self.conn.flush()
     
     def send(self, data):
+        print 'sending:', data
         if not self.conn:
+            print 'no conn'
             self.push_queue.append(data)
         else:
             self._send(data)
                 
     def _send(self, data):
+        print 'actually sending', data
         if data == "!close":
             self.conn.flush()
             self.conn.close()
@@ -161,6 +168,7 @@ class TCPConnection(object):
         print 'TCP.recv:', data
     
     def get(self, conn):
+        print 'got conn'
         if self.conn:
             self.conn.close()
         self.conn = conn

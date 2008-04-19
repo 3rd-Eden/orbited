@@ -45,7 +45,10 @@ FxSSE = function(source) {
             xhr.abort()
 //            xhr = null;
             offset = 0;
+            lineQueue = []
+            source.lastEventId = null;
         }
+        src = null;
     }
     var connect = function() {
         // TODO: re-use this xhr connection
@@ -75,12 +78,15 @@ FxSSE = function(source) {
     }
 
     var process = function() {
+//        console.log('a')
         var stream = xhr.responseText
         if (stream.length < offset) // in safari the offset starts at 256
             return 
+//        console.log('b')
         var next_boundary = stream.indexOf(boundary, offset);
         if (next_boundary == -1)
             return
+//        console.log('c')
         var line = stream.slice(offset, next_boundary)
         offset = next_boundary + boundary.length
         if (line.length == 0)
@@ -88,6 +94,7 @@ FxSSE = function(source) {
         else
             lineQueue.push(line) // TODO: is this cross-browser?                
         // TODO: use a while loop here. We don't want a stack overflow
+//        console.log('c')        
         process() // Keep going until we run out of new lines
         
     }

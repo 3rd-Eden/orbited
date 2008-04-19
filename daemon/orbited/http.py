@@ -18,6 +18,12 @@ class OrbitedHTTPDaemon(HTTPServer):
         if request.url.startswith('/_/static/'):
             return self.static(request, '/_/static/', os.path.join(os.path.split(__file__)[0], 'static'))
         elif request.url == "/tcp":
+            if request.method == "PUT":
+                return self.app.tcp.put(request)
+        elif request.url.startswith("/tcp/"):
+            id = request.url.split('?', 1)[0].rsplit('/', 1)[1]
+            print id
+            request.form['id'] = id
             if request.method == "GET":
                 return self.app.tcp.get(request)
             if request.method == "POST":

@@ -37,6 +37,7 @@ setup(
     entry_points = '''    
         [console_scripts]
         orbited = orbited.start:main
+        mapdemo = orbited.mapdemo:main
     ''',
     
     classifiers = [

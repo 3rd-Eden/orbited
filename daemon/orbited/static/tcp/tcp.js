@@ -1,13 +1,11 @@
-TCPConnection = function(url, reliable) {
-    // TODO: does Boolean() return false for undefined on all platforms?
+TCPConnection = function(url, session) {
     var self = this
-    self.reliable = Boolean(reliable)
         
     self.readyState = -1
     self.onopen = function(evt) {}
     self.onread = function(evt) {}
     self.onclose = function(evt) {}
-
+    var tcpUrl = null;
     var source = null;
     // NOTE: connect doesn't appear in the html5 spec. We include it here as an
     //       improvement suggestion to be more explicit in when actions such as
@@ -17,20 +15,57 @@ TCPConnection = function(url, reliable) {
         if (self.readyState != -1)
             throw new Error("connect may only be called once");
         self.readyState = 0
+        if (session == null || typeof(session) == "undefined")
+            getSession()
+        else
+            attachSSE()
+    }
+    var getSession = function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('PUT', url, true)
+        xhr.onreadystatechange = function() {
+            switch(xhr.readyState) {
+                case 4:
+                    if (xhr.status != 200) {
+                        self.readyState = 2
+                        self.onclose(null) // TODO: pass an event
+                    }
+                    else {
+                        session = xhr.responseText;
+                        attachSSE();
+                    }
+            }
+        }
+        xhr.send(null)
+    }
+    var attachSSE = function() {
+        var path = url.split('?', 1)[0]
+        var qs = url.slice(path.length+1)
+        if (path[path.length-1] != "/")
+            path += '/'
+        tcpUrl = path + session
+        if (qs.length > 0)
+            tcpUrl += "?" + qs
+
         source = document.createElement("event-source")
         source.addEventListener("message", receivePayload, false)
         source.addEventListener("TCPOpen", receiveTCPOpen, false)
         source.addEventListener("TCPClose", receiveTCPClose, false)
-        source.addEventSource(url)
+        source.addEventSource(tcpUrl)
         document.body.appendChild(source)
     }
+    
     self.disconnect = function() {
         if (self.readyState == 1) {
-            source.removeEventSource(url)
+            source.removeEventListener("message", receivePayload, false)
+            source.removeEventListener("TCPOpen", receiveTCPOpen, false)
+            source.removeEventListener("TCPClose", receiveTCPClose, false)
+            source.removeEventSource(tcpUrl)
+            document.body.removeChild(source)
             self.readyState = 2
             self.onclose(null) //TODO: pass an event
             xhr = new XMLHttpRequest()
-            xhr.open('DELETE', url, true)
+            xhr.open('DELETE', tcpUrl, true)
             xhr.send(null);
         }
         // TODO: disconnect in readyState 0 should also be allowed.
@@ -43,7 +78,7 @@ TCPConnection = function(url, reliable) {
         if (self.readyState != 1)
             throw new Error("Invalid readyState to send")
         var xhr = createXHR()
-        xhr.open('POST', url, true);
+        xhr.open('POST', tcpUrl, true);
         if (source.lastEventId != null && typeof(source.lastEventId) != "undefined") {
             xhr.setRequestHeader('Last-Event-ID', source.lastEventId)
         } 

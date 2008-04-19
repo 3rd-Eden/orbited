@@ -18,7 +18,7 @@ GET /tcp?id=abc
         remove any messages with id <= int(Last-Event-ID) from the ack_queue
         queue for push any unacknowledged messages with id > int(Last-Event-ID)
     optionally queue 'retry: N\n' for some appropriate integer N
-    queue for push 'id: -1\n\n'
+    queue for push 'id: 0\n\n'
     send status 200 OK
         
 POST /tcp?id=abc
