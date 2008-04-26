@@ -1,0 +1,19 @@
+<html>
+ <head>
+  <script src="ServerSentEvents-Gecko.js"></script>
+  <script src="TCPConnection.js"></script>
+  <script>
+   function setup() {
+        tcp = new TCPConnection()
+        tcp.onopen = function(evt) { console.log("connected!") }
+        tcp.onread = function(evt) { console.log("recv: " + evt.data )}
+        tcp.onclose = function(evt) { console.log("closed!") }
+        tcp.connect("http://127.0.0.1:7000/echo")
+//        tcp.connect("http://www.test.local:7000/echo")
+   }
+  </script>
+ </head>
+ <body onLoad="setup()">
+  <event-source id="ssedom">
+ </body>
+</html>

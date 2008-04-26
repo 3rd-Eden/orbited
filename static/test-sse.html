@@ -1,0 +1,21 @@
+<html>
+ <head>
+  <script src="/_/static/sse/fx.js"></script>
+  <script>
+   receiveCB = function(evt) {
+      console.log('test');
+      console.log("Received Event:" + evt.data)
+      console.log("Origin: " + evt.origin)
+   }
+   function setup() {
+        var s = document.getElementById("ssedom")
+        s.addEventSource("http://localhost:8000/?id=test&transport=sse")
+        s.addEventListener("message", receiveCB, false)
+   }
+  </script>
+ </head>
+ <body onLoad="setup()">
+  <event-source id="ssedom">
+ </body>
+</html>
+    
