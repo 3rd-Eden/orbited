@@ -5,17 +5,18 @@ from twisted.internet import reactor, defer
 from sse import SSEConnection
 
     
-            
+
 class TCPPing(object):
     pass    
     
 class TCPConnection(resource.Resource):
-    
+    ping_timeout = 20
+    ping_interval = 20
+    retry = 5000
     def __init__(self, handler, id):
         resource.Resource.__init__(self)
         self.handler = handler
         self.id = id
-        self.retry = 5000
         self.conn = None
         self.open = False
         self.msg_queue = []
@@ -47,12 +48,12 @@ class TCPConnection(resource.Resource):
         if self.timeout_timer:
             self.timeout_timer.cancel()
             self.timeout_timer = None
-        self.ping_timer = reactor.callLater(20, self.send_ping)
+        self.ping_timer = reactor.callLater(self.ping_interval, self.send_ping)
     
     def send_ping(self):
         self.ping_timer = None
         self.send(TCPPing())
-        self.timeout_timer = reactor.callLater(20, self.timeout)
+        self.timeout_timer = reactor.callLater(self.ping_timeout, self.timeout)
         
     def timeout(self):
         self.close()
