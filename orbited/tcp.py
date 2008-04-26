@@ -65,7 +65,7 @@ class TCPConnection(resource.Resource):
             self.conn.write_dispatch()
             self.conn.flush()
             self.conn.finish()
-        self.handler.conn_closed(self)
+        self.factory.conn_closed(self)
         self.conn = None
         self.connectionLost()
         
