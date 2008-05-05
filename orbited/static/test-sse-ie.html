@@ -1,6 +1,8 @@
 <html>
  <head>
-  <script src="ServerSentEvents-Gecko.js"></script>
+
+  <script language="javascript" type="text/javascript" src="/echo/static/firebug/firebug.js"></script>
+  <script src="ServerSentEvents-IE.js"></script>
   <script>
    function print(s) {
        output = document.getElementById("shell")
@@ -22,13 +24,14 @@
         s.addEventListener("message", receiveCB, false)
         s.addEventListener("TCPOpen", receiveCB, false)
         s.addEventListener("TCPPing", receiveCB, false)
+        ifr = document.getElementsByTagName("iframe")[0]
    }
   </script>
  </head>
  <body>
   <event-source id="ssedom">
   <button onClick=connect()>connect</button><br>
-  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+  <div style="border: 1px solid black; height: 400px; overflow-y: scroll" id="shell"></div>
  </body>
 </html>
     

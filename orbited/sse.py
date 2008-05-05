@@ -1,12 +1,16 @@
 from twisted.internet import defer
 from twisted.web import server
 from twisted.web import resource
+IE_BANNER = "Get a real browser"
 
 class SSEConnection(resource.Resource):
-    
     def __init__(self, request):
         self.request = request
-        request.setHeader("content-type", "text/event-stream")
+        if 'ie' in request.args:
+            request.setHeader("content-type", "text/plain")            
+            request.write(":" + IE_BANNER + " " * (254 - len(IE_BANNER)) + "\n")
+        else:
+            request.setHeader("content-type", "text/event-stream")
         self.buffer = ""
         self.close_deferred = defer.Deferred()
 

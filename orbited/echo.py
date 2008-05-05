@@ -1,16 +1,19 @@
 from tcp import TCPConnection, TCPConnectionFactory
-
+from twisted.internet import reactor
 
 class EchoConnection(TCPConnection):
-    ping_timeout = 5 # override default of 20.
-    ping_interval = 5 # override default of 20
+    ping_timeout = 600 # override default of 20.
+    ping_interval = 600 # override default of 20
     def dataReceived(self, data):
         print "Echo Recv: " + data
         self.send("Echo: " + data)
         
     def connectionMade(self):
+        DELAY = 0.1
         print "EchoConnection Made"
         self.send("Welcome to the Echo Server 0.1")
+        for i in range(5):
+            reactor.callLater(i*DELAY, self.send, ("reactor %s!" % i) * 20)
         
     def connectionLost(self):
         print "EchoConnection Lost"
@@ -19,3 +22,6 @@ class EchoConnection(TCPConnection):
 class EchoFactory(TCPConnectionFactory):
     protocol = EchoConnection
 
+    def __init__(self, *args, **kwargs):
+      TCPConnectionFactory.__init__(self, *args, **kwargs)
+      self.connections['ABC'] = EchoConnection(self, 'ABC')

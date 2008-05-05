@@ -74,14 +74,16 @@ TCPConnection = function() {
     self.connect = function(_url, _session) {
         if (self.readyState != -1 && self.readyState != 2)
             throw new Error("connect may only be called on a closed socket");
-        
+        alert('a');
         document.domain = document.domain
         url = new URL(_url);
         session = _session;
+        alert('a')
         if (url.isSameDomain(location.href)) {
             communicator = new TCPConnection.Communicator(true, receive);
             communicator.connect(url.render(), _session)
         }
+        alert('b');
         else if (url.isSameParentDomain(location.href)) {
             if (typeof(TCPConnection.count) == "undefined") {
                 TCPConnection.count = 0
@@ -244,7 +246,7 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
     }
 
     var getSession = function() {
-        var xhr = new XMLHttpRequest();
+        var xhr = createXHR();
         xhr.open('POST', url, true)
         xhr.onreadystatechange = function() {
             switch(xhr.readyState) {
