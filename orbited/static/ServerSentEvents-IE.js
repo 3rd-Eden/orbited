@@ -1,4 +1,3 @@
-alert('woota');
 var oldLoad = function() { }
 if (window.onload) 
     oldLoad = window.onload
@@ -47,6 +46,8 @@ IESSE = function(source) {
     var lineQueue = []
     var origin = "" // TODO: derive this from the src argument 
     var src = null;
+    var ifrInitialized = false;
+    var ifrInitialized2 = false;
     dummyTextNode = null;
 //    source.lastEventId = null;
     
@@ -75,23 +76,53 @@ IESSE = function(source) {
     }
     var poll = function() {
         var bodyLen = null;
-        if (dummyTextNode == null) {
-            dummyTextNode = ifr.contentWindow.document.createTextNode(".")
+/*        if (!ifrInitialized) {
+            if (ifr.contentWindow.document) {
+                print ('setting iframe document.domain')
+                var s = ifr.contentWindow.document.createElement("<script src='alert.js'>")
+                ifr.contentWindow.document.body.insertBefore(s)
+                ifrInitialized = true;
+                print ('iframe document.domain set')
+                print ('setting document.domain')
+                document.domain = document.domain;
+            }
+            return;
         }
+
+        if (!ifrInitialized2) {
+            
+            ifrInitialized2 = true;
+            print ('accessing iframe document.domain')
+            print('iframe document.domain: ' + ifr.contentWindow.document.domain)
+            print('initialized');
+        }
+        else
+            print('what?')
+//            catch (e) {
+//                return
+//            }
+//        } */
         try {
+//            print('ala')
+//            print("ifr domain: " + ifr.contentWindow.document.domain)
             bodyLen = ifr.contentWindow.document.body.childNodes[0].innerText.length
+//            print ("bodyLen: " + bodyLen)
         }
         catch(e) {
             return
+        }
+
+        if (dummyTextNode == null) {
+            dummyTextNode = ifr.contentWindow.document.createTextNode(".")
         }
         if (bodyLen > lastLength) {
             lastLength = bodyLen
             process()
         }
-        else {
+        else { /*408 234 1363*/
             ifr.contentWindow.document.body.childNodes[0].appendChild(dummyTextNode)
             var bodyLen2 = ifr.contentWindow.document.body.childNodes[0].innerText.length
-            if (bodyLen2 >= bodyLen+5) {
+            if (bodyLen2 >= bodyLen+5 && false) {
                 lastLength = bodyLen2-1
                 process()
 //                toDelete = dummyTextNode.replaceAdjacentText("beforeBegin", ":woot\r\n")
@@ -114,7 +145,7 @@ IESSE = function(source) {
         ifr.style.width = 600
         ifr.style.height= 400
         document.body.appendChild(ifr)
-        setInterval(poll, 25)
+        setInterval(poll, 200)
     }
     var reconnect = function() {
         // TODO: reuse this xhr connection

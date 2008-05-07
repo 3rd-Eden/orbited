@@ -9,11 +9,11 @@ class EchoConnection(TCPConnection):
         self.send("Echo: " + data)
         
     def connectionMade(self):
-        DELAY = 0.1
+        DELAY = 0.25
         print "EchoConnection Made"
         self.send("Welcome to the Echo Server 0.1")
-        for i in range(5):
-            reactor.callLater(i*DELAY, self.send, ("reactor %s!" % i) * 20)
+        for i in range(300):
+            reactor.callLater(i*DELAY, self.send, ("Welcome %s!" % i) * 1)
         
     def connectionLost(self):
         print "EchoConnection Lost"

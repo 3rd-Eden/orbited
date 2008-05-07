@@ -112,7 +112,42 @@ class TCPConnection(resource.Resource):
         return server.NOT_DONE_YET
 
     def post(self, request):
-        last_event_id = request.received_headers.get('last-event-id', None)
+        if request.received_headers.get('content-type', None) != "text/event-stream":
+            return "ERR, wrong content-type"
+        stream = request.content.read()
+        event = "message"
+        id = None
+        data = ""
+        for line in stream.splitlines():
+            if line.startswith('data:'):
+                if data != "":
+                    data += "\n"
+                data += line[5:]
+            elif line.startswith('id:'):
+                try:
+                    id = int(line[3:])
+                except ValueError:
+                    pass
+            elif line.startswith('event:'):
+                event = line[6:]
+            if line == "": # dispatch
+                if event == "message":
+                    print "recv:", data.replace("\n", "\\n\n")
+                    self.dataReceived(data)
+                elif event == "TCPAck":
+                    try:
+                        last_event_id = int(data)
+                    except ValueError:
+                        pass
+                    else:
+                        print "ack: ", last_event_id
+                        self.ack(last_event_id)
+                event = "message"
+                id = None
+                data = ""
+
+            
+        """last_event_id = request.received_headers.get('last-event-id', None)
         if last_event_id != None:
             try:
                 last_event_id = int(last_event_id)
@@ -122,7 +157,7 @@ class TCPConnection(resource.Resource):
             self.ack(last_event_id)
         tcp = request.received_headers.get('tcp', None)
         if tcp == 'send':
-            self.dataReceived(request.content.read())
+            self.dataReceived(request.content.read())"""
         return ""
         
     def ack(self, ack_id):

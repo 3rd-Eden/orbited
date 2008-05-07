@@ -87,7 +87,7 @@ FxSSE = function(source) {
             return
         var line = stream.slice(offset, next_boundary)
         offset = next_boundary + boundary.length
-        if (line.length == 0)
+        if (line.length == 0 || line == "\r")
             dispatch()
         else
             lineQueue.push(line) // TODO: is this cross-browser?                
@@ -101,6 +101,8 @@ FxSSE = function(source) {
         lineQueue.reverse() // So we can use pop which removes elements from the end
         while (lineQueue.length > 0) {
             line = lineQueue.pop()
+            if (line.slice(-1) == "\r")
+                line = line.slice(0, -1)
             var field = null;
             var value = "";
             var j = line.indexOf(':')

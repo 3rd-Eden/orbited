@@ -13,14 +13,19 @@
         tcp.onopen = function(evt) { print("Connection opened") }
         tcp.onread = function(evt) { print("RECV: " + evt.data )}
         tcp.onclose = function(evt) { print("Connection closed") }
-        tcp.connect("http://127.0.0.1:7000/echo")
+        var url = "http://" + document.domain
+        if (location.port)
+            url += ":" + location.port
+        url += "/echo"
+        tcp.connect(url)
 //        tcp.connect("http://www.test.local:7000/echo")
    }
    function send() {
         if (tcp.readyState < 1)
             print("ERR: Not Connected")
-        else if (tcp.readyState > 1)
+        else if (tcp.readyState > 1) {
             print("ERR: Disconnected")
+        }
         else {
             var d = document.getElementById("data").value
             tcp.send(d)

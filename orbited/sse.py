@@ -1,21 +1,23 @@
 from twisted.internet import defer
 from twisted.web import server
 from twisted.web import resource
-IE_BANNER = "Get a real browser"
+IE_BANNER = ":Get a real browser"
 
 class SSEConnection(resource.Resource):
     def __init__(self, request):
         self.request = request
         if 'ie' in request.args:
-            request.setHeader("content-type", "text/plain")            
-            request.write(":" + IE_BANNER + " " * (254 - len(IE_BANNER)) + "\n")
+            request.setHeader("content-type", "text/plain")
+#            del request.headers['content-type']
+            request.write("" + IE_BANNER + " " * (2048 - len(IE_BANNER)) + "\n")
+#            request.write(":<pre>:\n")
         else:
             request.setHeader("content-type", "text/event-stream")
         self.buffer = ""
         self.close_deferred = defer.Deferred()
 
     def write_event(self, name):
-        self.buffer += 'event:%s\n' % name
+        self.buffer += 'event:%s\r\n' % name
     def write_data(self, value):
         self.buffer += '\n'.join(['data:%s' % d for d in value.splitlines()]) + '\n'
     def write_id(self, value):
@@ -23,7 +25,7 @@ class SSEConnection(resource.Resource):
     def write_retry(self, retry):
         self.buffer += 'retry:%s\n' % retry
     def write_dispatch(self):
-        self.buffer += '\n'
+        self.buffer += '\r\n'
     def flush(self):
         try:
             self.request.write(self.buffer)

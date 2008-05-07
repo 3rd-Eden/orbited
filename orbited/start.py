@@ -8,7 +8,7 @@ def main():
     root.putChild('echo', EchoFactory())
 #    root.putChild('revolved', TCPConnectionResource(RevolvedConnection))
     site = server.Site(root)
-    reactor.listenTCP(7000, site)
+    reactor.listenTCP(80, site)
     reactor.run()
 
 if __name__ == "__main__":

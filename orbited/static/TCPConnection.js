@@ -1,4 +1,5 @@
-URL = function(url) {
+//document.domain = document.domain;
+CURL = function(url) {
     var self = this;
     var protocolIndex = url.indexOf("://")
     if (protocolIndex != -1)
@@ -41,11 +42,11 @@ URL = function(url) {
         return output
     }
     self.isSameDomain = function(url) {
-        url = new URL(url)
+        url = new CURL(url)
         return (url.port == self.port && url.domain == self.domain)
     }
     self.isSameParentDomain = function(url) {
-        url = new URL(url)
+        url = new CURL(url)
         var parts = document.domain.split('.')
         var orig_domain = document.domain
         for (var i = 0; i < parts.length-1; ++i) {
@@ -74,17 +75,22 @@ TCPConnection = function() {
     self.connect = function(_url, _session) {
         if (self.readyState != -1 && self.readyState != 2)
             throw new Error("connect may only be called on a closed socket");
-        alert('a');
-        document.domain = document.domain
-        url = new URL(_url);
+//        alert('connect: ' + _url);
+//        alert('document.domain: ' + document.domain)
+//        document.domain = document.domain;
+//        alert('b!');
+//        print('c');
+//        print('d');
+        url = new CURL(_url);
         session = _session;
-        alert('a')
         if (url.isSameDomain(location.href)) {
+            print('d');
             communicator = new TCPConnection.Communicator(true, receive);
             communicator.connect(url.render(), _session)
+            print('e');
         }
-        alert('b');
         else if (url.isSameParentDomain(location.href)) {
+            print('f');
             if (typeof(TCPConnection.count) == "undefined") {
                 TCPConnection.count = 0
                 TCPConnection.connections = {}
@@ -96,7 +102,7 @@ TCPConnection = function() {
                 receive: receive
             }
             ifr = document.createElement("iframe")
-            var ifrSrc = new URL(url.render())
+            var ifrSrc = new CURL(url.render())
             if (ifrSrc.path.slice(ifrSrc.path.length-1) != "/")
                 ifrSrc.path += "/"
             ifrSrc.path += "static/bridge.html"
@@ -253,6 +259,8 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
                 case 4:
                     if (xhr.status != 200) {
                         self.readyState = 2
+                        print('got: ' + xhr.status)
+                        print(xhr.responseText)
                         self.onclose(null) // TODO: pass an event
                     }
                     else {
@@ -298,11 +306,13 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
     }
     self.send = function(data) {
         var xhr = createXHR()
+        var payload = ""
         xhr.open('POST', tcpUrl, true);
+        xhr.setRequestHeader('Content-Type', 'text/event-stream')
+        var payload = "data:" + data.split("\n").join("\ndata:") + "\n\n"
         if (lastEventId != null && typeof(lastEventId) != "undefined") {
-            xhr.setRequestHeader('Last-Event-ID', lastEventId)
+            payload += "event:TCPAck\ndata:" + lastEventId + "\n\n"
         } 
-        xhr.setRequestHeader('Tcp', 'send')
         xhr.onreadystatechange = function() {
             switch(xhr.readyState) {
                 case 4:
@@ -311,7 +321,7 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
                     }
             }
         }
-        xhr.send(data);
+        xhr.send(payload);
     }
     self.ack_only = function() {
         if (self.readyState != 1)
