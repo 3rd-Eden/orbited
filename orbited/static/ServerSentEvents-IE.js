@@ -119,10 +119,10 @@ IESSE = function(source) {
             lastLength = bodyLen
             process()
         }
-        else { /*408 234 1363*/
+        else { 
             ifr.contentWindow.document.body.childNodes[0].appendChild(dummyTextNode)
             var bodyLen2 = ifr.contentWindow.document.body.childNodes[0].innerText.length
-            if (bodyLen2 >= bodyLen+5 && false) {
+            if (bodyLen2 >= bodyLen+5) {
                 lastLength = bodyLen2-1
                 process()
 //                toDelete = dummyTextNode.replaceAdjacentText("beforeBegin", ":woot\r\n")
