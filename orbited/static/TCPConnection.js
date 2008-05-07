@@ -313,14 +313,11 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
         xhr.send(payload);
     }
     self.ack_only = function() {
-        if (self.readyState != 1)
-            throw new Error("Invalid readyState to send")
         var xhr = createXHR()
+        var payload = ""
         xhr.open('POST', tcpUrl, true);
-//        xhr.setRequestHeader('Tcp', 'ping-response')
-        if (lastEventId != null && typeof(lastEventId) != "undefined") {
-            xhr.setRequestHeader('Last-Event-ID', lastEventId)
-        }
+        xhr.setRequestHeader('Content-Type', 'text/event-stream')
+        payload = "event:TCPAck\ndata:" + lastEventId + "\n\n"
         xhr.onreadystatechange = function() {
             switch(xhr.readyState) {
                 case 4:
@@ -329,7 +326,7 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
                     }
             }
         }
-        xhr.send(null);
+        xhr.send(payload);
     }
     
     var receiveTCPPing = function(evt) {
