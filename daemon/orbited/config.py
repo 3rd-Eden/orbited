@@ -120,7 +120,7 @@ def load(filename):
             if '->' not in line:
                 raise ParseError, error(filename,section,line_number,full_line)
             source, target = [side.strip() for side in line.split('->')]
-            location = target.split(':', 1)
+            location = target.split(':', 2)
             keyword = location.pop(0)
             map[section][source] = (keyword, tuple(location))
             continue
