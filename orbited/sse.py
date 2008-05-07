@@ -8,8 +8,10 @@ class SSEConnection(resource.Resource):
         self.request = request
         if 'ie' in request.args:
             request.setHeader("content-type", "text/plain")
+            request.setHeader("cache-control", "no-cache, must-revalidate")
+            request.setHeader("expires" "Mon, 26 Jul 1997 05:00:00 GMT")
 #            del request.headers['content-type']
-            request.write("" + IE_BANNER + " " * (2048 - len(IE_BANNER)) + "\n")
+            request.write("" + IE_BANNER + " " * (256 - len(IE_BANNER)) + "\n")
 #            request.write(":<pre>:\n")
         else:
             request.setHeader("content-type", "text/event-stream")
