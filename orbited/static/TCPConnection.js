@@ -75,22 +75,13 @@ TCPConnection = function() {
     self.connect = function(_url, _session) {
         if (self.readyState != -1 && self.readyState != 2)
             throw new Error("connect may only be called on a closed socket");
-//        alert('connect: ' + _url);
-//        alert('document.domain: ' + document.domain)
-//        document.domain = document.domain;
-//        alert('b!');
-//        print('c');
-//        print('d');
         url = new CURL(_url);
         session = _session;
         if (url.isSameDomain(location.href)) {
-            print('d');
             communicator = new TCPConnection.Communicator(true, receive);
             communicator.connect(url.render(), _session)
-            print('e');
         }
         else if (url.isSameParentDomain(location.href)) {
-            print('f');
             if (typeof(TCPConnection.count) == "undefined") {
                 TCPConnection.count = 0
                 TCPConnection.connections = {}
@@ -259,8 +250,6 @@ TCPConnection.Communicator = function(direct, receiveFunction) {
                 case 4:
                     if (xhr.status != 200) {
                         self.readyState = 2
-                        print('got: ' + xhr.status)
-                        print(xhr.responseText)
                         self.onclose(null) // TODO: pass an event
                     }
                     else {
