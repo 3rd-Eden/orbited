@@ -92,9 +92,14 @@ class TCPConnection(resource.Resource):
         last_event_id = request.received_headers.get('Last-Event-ID', None)
         if last_event_id == None:
             if self.open: # Conflicted session
+                print "Conflicted Session!"
+                print "Conflicted Session!"
+                print "Conflicted Session!"
                 request.setResponseCode('409', 'Conflict')
                 return "Session already in use (Did you forget the Last-Event-ID header?)"
             else: # new session
+                print ("recieved GET(%s): " % self.id) + str(request.received_headers)
+                print "==="
                 self.open = True
                 self.conn = SSEConnection(request)
                 self.conn.write_event('TCPOpen')
@@ -120,6 +125,8 @@ class TCPConnection(resource.Resource):
         return server.NOT_DONE_YET
 
     def post(self, request):
+        print ('received POST(%s)' % self.id) + str(request.received_headers)
+        print "==="
         if request.received_headers.get('content-type', None) != "text/event-stream":
             return "ERR, wrong content-type"
         stream = request.content.read()
