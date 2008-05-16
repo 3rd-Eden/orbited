@@ -9,9 +9,9 @@ class SSEConnection(resource.Resource):
         if 'ie' in request.args:
             request.setHeader("content-type", "text/plain")
             request.setHeader("cache-control", "no-cache, must-revalidate")
-            request.setHeader("expires" "Mon, 26 Jul 1997 05:00:00 GMT")
+            request.setHeader("expires", "Mon, 26 Jul 1997 05:00:00 GMT")
 #            del request.headers['content-type']
-            request.write("" + IE_BANNER + " " * (256 - len(IE_BANNER)) + "\n")
+            request.write("" + IE_BANNER + "x" * (2560 - len(IE_BANNER)) + "\n")
 #            request.write(":<pre>:\n")
         else:
             request.setHeader("content-type", "text/event-stream")
@@ -21,11 +21,11 @@ class SSEConnection(resource.Resource):
     def write_event(self, name):
         self.buffer += 'event:%s\r\n' % name
     def write_data(self, value):
-        self.buffer += '\n'.join(['data:%s' % d for d in value.splitlines()]) + '\n'
+        self.buffer += '\r\n'.join(['data:%s' % d for d in value.splitlines()]) + '\r\n'
     def write_id(self, value):
-        self.buffer += 'id:%s\n' % value
+        self.buffer += 'id:%s\r\n' % value
     def write_retry(self, retry):
-        self.buffer += 'retry:%s\n' % retry
+        self.buffer += 'retry:%s\r\n' % retry
     def write_dispatch(self):
         self.buffer += '\r\n'
     def flush(self):

@@ -27,7 +27,10 @@ class TCPConnection(resource.Resource):
         self.timeout_timer = None
         self.reset_ping_timer()
         self.client_ip = None
+        self.setup()
         
+    def setup(self):
+        pass
         
     def dataReceived(self, data):
         pass
@@ -38,6 +41,8 @@ class TCPConnection(resource.Resource):
     def connectionLost(self):
         pass
         
+    def loseConnection(self):
+        self.close()
 
     def getClientIP(self):
         return self.client_ip
@@ -60,11 +65,14 @@ class TCPConnection(resource.Resource):
         
     def close(self):
         if self.conn:
+            print 'sending TCPCLose'
             self.conn.write_event('TCPClose')
             self.conn.write_data('timeout')
             self.conn.write_dispatch()
             self.conn.flush()
+            print 'finishing conn'
             self.conn.finish()
+        print self.factory
         self.factory.conn_closed(self)
         self.conn = None
         self.connectionLost()
@@ -132,7 +140,6 @@ class TCPConnection(resource.Resource):
                 event = line[6:]
             if line == "": # dispatch
                 if event == "message":
-                    print "recv:", data.replace("\n", "\\n\n")
                     self.dataReceived(data)
                 elif event == "TCPAck":
                     try:
@@ -140,7 +147,7 @@ class TCPConnection(resource.Resource):
                     except ValueError:
                         pass
                     else:
-                        print "ack: ", last_event_id
+                        print 'ack:', last_event_id
                         self.ack(last_event_id)
                 event = "message"
                 id = None
@@ -207,8 +214,8 @@ class TCPConnectionFactory(resource.Resource):
     protocol = TCPConnection
     def __init__(self):
         resource.Resource.__init__(self)
-        print os.path.join(os.path.split(__file__)[0], 'static', 'tcp', 'bridge.html')
-        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
+#        print os.path.join(os.path.split(__file__)[0], 'static', 'tcp', 'bridge.html')
+        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static', 'build'))
 
 #        self.putChild('', self)
         self.connections = {}
