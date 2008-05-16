@@ -3250,6 +3250,7 @@ FxSSE = function(source) {
         xhr.onreadystatechange = function() {
             switch (xhr.readyState) {
                 case 4: // disconnect case
+                    print(xhr.responseText);
                     dispatch()
                     reconnect()
                     break
