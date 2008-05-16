@@ -1,0 +1,29 @@
+<html>
+ <head>
+  <script language="javascript" type="text/javascript" src="/echo/static/firebug/firebug.js"></script>
+  <script>
+
+    receive = function(data) {
+        alert('received: ' + data);
+    }
+    loaded = function(data) {
+        alert('loaded');
+        ifr = document.createElement("iframe")
+        ifr.style.width = 400;
+        ifr.style.height=600;
+        ifr.src = "http://www.test.local/echo/static/sub/child.html#hello"
+        document.body.appendChild(ifr);
+        ifr2 = document.createElement("iframe")
+        ifr2.src = "http://www.test.local/echo/static/sub/child.html#yoho"
+        document.body.appendChild(ifr2);
+
+
+//        document.domain = document.domain
+        alert('src: ' + ifr.src)
+    }
+  </script>
+ </head>
+ <body onload="loaded()">
+ <h1>Parent</h1>
+ </body>
+</html>

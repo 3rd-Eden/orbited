@@ -1,0 +1,23 @@
+<html>
+ <head>
+  <script>
+   function print(s) {
+       output = document.getElementById("shell")
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight
+   }
+   window.onload = function() {
+      tcp = new TCPConnection.Communicator(false)
+      tcp.connect("http://www.test.local/echo?ie=1", 'ABC')
+   }
+  </script>
+  <script src="ServerSentEvents-IE.js"></script>
+  <script src="TCPConnection.js"></script>
+  <!--script language="javascript" type="text/javascript" src="/echo/static/firebug/firebug.js"></script-->
+ </head>
+ <body>
+  <h1>Bridge Iframe</h1>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+
+ </body>
+</html>

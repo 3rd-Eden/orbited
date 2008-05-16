@@ -1,0 +1,20 @@
+TCPOpen
+// Any number of arguments are allowed for the AUTH. The server-side auth plugin will interpret the fields
+// In this case, the server-side auth plugin is expecting two values, a user name and a password
+C: [ 1, "AUTH", [ "michael.carter", "somepassword" ] ]
+S: [ "OK", [ 1 ] ]
+C: [ 2, "SUBSCRIBE", [ "mychannel" ] ]
+S: [ "OK", [ 2 ] ]
+S: [ "PUBLISH", [ "mychannel", "john", "hello world" ] ]
+C: [ 3, "PUBLISH", [ "mychannel", "hello yourself" ] ]
+S: [ "OK", [ 3 ] ]
+S: [ "PUBLISH", [ "mychannel", "michael.carter", "hello yourself" ] ]
+C: [ 4, "SUBSCRIBE", [ "myotherchannel" ] ]
+S: [ "ERR", [ 4, "Unauthorized" ] ]
+// Note: even if you aren't subscribed to a channel that you attempt to unsubscribe from, no error will be raised
+C: [ 5, "UNSUBSCRIBE", [ "myotherchannel" ] ]
+S: [ "OK", [ 5 ] ]
+// Note: you don't have to be subscribe to a channel in order to publish to it, assuming you have the appropriate authorization
+C: [ 6, "PUBLISH", [ "myotherchannel", "good day" ] ]
+S: [ "OK", [ 6 ] ]
+

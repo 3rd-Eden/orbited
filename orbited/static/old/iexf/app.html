@@ -1,0 +1,60 @@
+<html>
+ <head>
+  <script>
+    loaded = function() {
+
+        ifr = document.createElement("iframe")
+        ifr.style.width = 600;
+        ifr.style.height = 300;
+        ifr.style.borderColor = "black";
+        ifr.src = "http://www.test.local/echo/ABC?ie=1";
+        document.body.appendChild(ifr)
+//        document.domain = "www.test.local";
+    }
+    count = 0
+    receive = function(data) {
+        count += 1;
+//        if (count % 5 == 0) {
+//            alert('received*5: ' + data);
+//        }
+        alert('received: ' + data);
+    }
+
+    setCode = function(data) {
+        code  = "push = function(data) {\n"
+        code += "    document.domain='test.local';\n"
+        code += "    parent.receive(data);\n"
+        code += "    document.domain='www.test.local';\n"
+        code += "}\n"
+        code += "var createXHR = function() {\n"
+        code += "    try { return new ActiveXObject(\"Msxml2.XMLHTTP\"); } catch (e) {}\n"
+        code += "    try { return new ActiveXObject(\"Microsoft.XMLHTTP\"); } catch (e) {}\n"
+        code += "    try { return new XMLHttpRequest(); } catch(e) {}\n"
+        code += "    return null;\n"
+        code += "};\n"
+
+        code += "get = function() {\n"
+//        code += "    alert('sending xhr');\n"
+        code += "    xhr = createXHR();\n"
+        code += "    xhr.onreadystatechange = function() {\n"
+//        code += "        alert('readyState: ' + xhr.readyState);\n"
+        code += "        if (xhr.readyState == 4) {\n"
+        code += "            push(xhr.responseText)\n"
+        code += "        }\n"
+        code += "    }\n"
+        code += "    xhr.open('GET', 'http://www.test.local/echo/static/iexf/data.html', true);\n"
+        code += "    xhr.send(null);\n"
+        code += "    alert('btw, push: ' + push);\n"
+        code += "}\n"
+        code += "setTimeout(get, 500);\n"
+        ifr.contentWindow.setTimeout(code, 0)
+        document.domain = "test.local";
+//        setInterval("receive('yo');", 500);
+    }
+  </script>
+ </head>
+ <body onLoad="loaded()">
+  <button onClick = "setCode();">setCode</button>
+ </body>
+
+</html>

@@ -1,0 +1,24 @@
+// Browser detect by Frank Salim
+var browser = null;
+if (typeof(ActiveXObject) != "undefined") {
+    browser = 'ie'
+} else if (navigator.product == 'Gecko' && window.find && !navigator.savePreferences) {
+    browser = 'firefox'
+} else if((typeof window.addEventStream) === 'function') {
+    browser = 'opera'
+} else {
+    throw new Error("couldn't detect browser")
+}
+
+@include(URL.js)@
+switch(browser) {
+    case 'ie':
+        @include(ServerSentEvents-IE.js)@
+        @include(base2.js)@
+        break;
+    case 'firefox':
+        @include(ServerSentEvents-Gecko.js)@
+        break;
+}
+@include(ReliableTCPConnection.js)@
+@include(XSubdomainRequest.js)@

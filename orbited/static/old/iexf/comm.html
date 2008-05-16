@@ -1,0 +1,26 @@
+<html>
+ <head>
+  <script>
+    loaded = function() {
+/*        ifr1 = document.createElement("iframe")
+        ifr1.style.width = 200;
+        ifr1.style.height = 200;
+        ifr1.src = "/echo/ABC?ie=1";
+        document.appendChild(ifr1) */
+        ifr2 = document.createElement("iframe")
+        ifr2.style.width = 200;
+        ifr2.style.height = 200;
+        ifr2.src = "http://www.test.local/echo/static/iexf/bridge.html";
+        document.body.appendChild(ifr2)
+        document.domain = 'test.local';
+    }
+   receive = function(data) {
+       parent.receive(data);
+   }
+  </script>
+ </head>
+ <body onLoad="loaded()">
+  <h2>comm.html</h2>
+ </body>
+
+</html>

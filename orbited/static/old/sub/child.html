@@ -1,0 +1,27 @@
+<html debug=true>
+ <head>
+  <script language="javascript" type="text/javascript" src="/echo/static/firebug/firebug.js"></script>
+
+  <script>
+    window.name = location.hash.slice(1)
+    send = function() { 
+        var data = document.getElementById("data").value
+        parent.receive(data);
+    }
+    loaded = function(data) {
+        if (window.name == "hello") {
+            ifr = document.createElement("iframe")
+            ifr.style.width  = 350;
+            ifr.style.height = 500;
+            ifr.src = "http://test.local/echo/static/sub/child.html#woot"
+            document.body.appendChild(ifr)
+        }
+//        document.domain = "test.local"
+    }
+  </script>
+ </head>
+ <body onload="loaded()">
+  <h2>Child</h2>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+ </body>
+</html>

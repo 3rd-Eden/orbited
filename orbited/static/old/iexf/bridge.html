@@ -1,0 +1,30 @@
+<html>
+ <head>
+  <script>
+    loaded = function() {
+        superParent = parent.parent;
+        document.domain = "test.local"
+        CollectGarbage();
+    }
+    send = function() {
+        alert('a');
+//        document.domain = "test.local"
+        alert('b');
+        var d = document.getElementById("data").value
+        alert('c');
+        alert(typeof(superParent));
+        alert(typeof(superParent.document));
+        parent.receive(d);
+        alert('d');
+//        document.domain = "www.test.local"
+        alert('e');
+    }
+
+  </script>
+ </head>
+ <body onLoad="loaded()">
+  <h3>bridge.html</h3>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+ </body>
+
+</html>

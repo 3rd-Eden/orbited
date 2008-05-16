@@ -1,0 +1,58 @@
+<html>
+ <head>
+  <script>document.domain = document.domain</script>
+
+  <script src="URL.js"></script>
+  <script src="ServerSentEvents-IE.js"></script>
+  <script src="base2.js"></script>
+  <script src="ReliableTCPConnection.js"></script>
+  <script src="XSubdomainRequest.js"></script>
+  <script>
+    tcp = new ReliableTCPConnection()
+   function print(s) {
+       output = document.getElementById("shell")
+       while(s.indexOf('\r') != -1)
+            s = s.replace('\r', '\\r')
+       while(s.indexOf('\n') != -1)
+            s = s.replace('\n', '\\n<br>')
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight     
+   }
+   function connect() {
+//        alert('a');
+        tcp.onopen = function(evt) {
+            print("Connection opened");
+            tcp.send("www.google.com:80");
+            tcp.send("GET / HTTP/1.0\r\n\r\n");
+        }
+        tcp.onread = function(evt) { print("RECV: " + evt.data )}
+        tcp.onclose = function(evt) { print("Connection closed") }
+//        alert('b');
+/*        var url = "http://" + document.domain
+        if (location.port)
+            url += ":" + location.port
+        url += "/echo?ie=1" */
+        url = 'http://www.test.local:7000/proxy'
+        tcp.connect(url)
+//        tcp.connect("http://www.test.local:7000/echo")
+   }
+   function send() {
+        if (tcp.readyState < 1)
+            print("ERR: Not Connected")
+        else if (tcp.readyState > 1) {
+            print("ERR: Disconnected")
+        }
+        else {
+            var d = document.getElementById("data").value
+            tcp.send(d)
+            print("SEND: " + d)
+        }
+   }
+  </script>
+ </head>
+ <body>
+  <button onClick=connect(1,2)>connect</button><br>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+ </body>
+</html>

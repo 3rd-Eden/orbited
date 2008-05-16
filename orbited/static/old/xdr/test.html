@@ -1,0 +1,30 @@
+<html>
+ <head>
+  <script>
+        document.domain = "test.local"
+  </script>
+  <script src="XSubdomainRequest.js"></script>
+  <script>
+    var xhr = new XSubdomainRequest("http://www.test.local/echo/static/xdr/sub.html")
+    request = function() {
+        var url = document.getElementById('surl').value
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+//            alert('Parent readyState: ' + xhr.readyState);
+            if (xhr.readyState == 4) {
+                alert("Complete, status: " + xhr.status + ', responseText: ' + xhr.responseText);
+            }
+        }
+        xhr.send(null);
+    }
+  </script>
+
+
+ </head>
+ <body>
+  <input type=text style="width: 400px;" id=surl value='http://www.test.local/echo/static/iexf/data.html'> <br>
+ 
+ <button onClick="request()">Send XSubdomainRequest</button><br>
+ </body>
+
+</html>
