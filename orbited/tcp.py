@@ -95,6 +95,7 @@ class TCPConnection(resource.Resource):
                 print "Conflicted Session!"
                 print "Conflicted Session!"
                 print "Conflicted Session!"
+                raise "Debug!"
                 request.setResponseCode('409', 'Conflict')
                 return "Session already in use (Did you forget the Last-Event-ID header?)"
             else: # new session
