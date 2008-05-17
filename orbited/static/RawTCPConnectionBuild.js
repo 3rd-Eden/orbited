@@ -3454,7 +3454,7 @@ BaseTCPConnection = function() {
         var payload = ""
         xhr.open('POST', tcpUrl, true);
         xhr.setRequestHeader('Content-Type', 'text/event-stream')
-        var payload = "data:" + data.split("\r\n").join("\ndata:") + "\r\n\r\n"
+        var payload = "data:" + data.split("\n").join("\r\ndata:") + "\r\n\r\n"
         if (lastEventId != null && typeof(lastEventId) != "undefined") {
             payload += "event:TCPAck\r\ndata:" + lastEventId + "\r\n\r\n"
         } 
