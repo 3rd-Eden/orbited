@@ -10,7 +10,7 @@ class JsonProxyProtocol(Protocol):
         self.transport.write(msg)
         
     def dataReceived(self, data):
-        self.proxy_conn.send(data)
+        self.proxy_conn.send(str(data))
 
     def connectionLost(self, reason):
         self.proxy_conn.loseConnection()
