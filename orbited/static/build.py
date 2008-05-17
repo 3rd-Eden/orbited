@@ -3,7 +3,7 @@ import sys
 import os
 from minify import jsmin
 def load_target(name):
-    filename = os.path.join('src', *name.split('/'))
+    filename = os.path.join(*name.split('/'))
     f = open(filename)
     data = f.read()
     f.close()
@@ -13,11 +13,7 @@ def load_target(name):
     return output
 
 def main():
-    print "Removing previous builds"
-    shutil.rmtree('build')
-    print "copying source files"
-    shutil.copytree('src', 'build')
-    print "Building RawTCPConnection.js"
+    print "Building RawTCPConnectionBuild.js"
     f = open('RawTCPConnection.js.template', 'r')
     template = f.read()
     f.close()
@@ -40,16 +36,14 @@ def main():
         marker = j+2
     
     print "Total Size: %dk" % (len(output)/1024.0 )
-#    output = jsmin(output)
-#    print "Minified Size: %dk" % (len(output)/1024.0 )
     
-    f = open(os.path.join('build', 'RawTCPConnection.js'), 'w')
+    f = open(os.path.join('RawTCPConnectionBuild.js'), 'w')
     f.write(output)
     f.close()
-    print "Cleaning up"
-    for name in os.listdir('build'):
-        if name.endswith('~'):
-            os.remove(os.path.join('build', name))
+
+
+
+
 
 if __name__ == "__main__":
     main()
