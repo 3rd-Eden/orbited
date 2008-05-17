@@ -17,7 +17,7 @@ def main():
     static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
     sys.putChild('static', static_files)
     site = server.Site(root)
-    reactor.listenTCP(7000, site)
+    reactor.listenTCP(80, site)
     reactor.run()
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ JSONTCPConnection = function(domain, port) {
     }
     var connUrl = new URL(location.href)
 //    connUrl.domain = document.domain
-//    connUrl.port = location.port
+    connUrl.port = 7000
     connUrl.path = "/jsonproxy"
     connUrl.qs = ""
     conn.connect(connUrl.render())
