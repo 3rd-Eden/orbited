@@ -1,0 +1,60 @@
+<html>
+ <head>
+  <script>document.domain = document.domain</script>
+
+  <script src="URL.js"></script>
+  <script src="ServerSentEvents-Gecko.js"></script>
+  <script src="BaseTCPConnection.js"></script>
+  <script src="RawTCPConnection.implementation.js"></script>
+  <script src="XSubdomainRequest.js"></script>
+  <script>
+   tcp = null;
+   function print(s) {
+       output = document.getElementById("shell")
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight     
+   }
+   function connect() {
+        var h = document.getElementById("host").value
+        var p = parseInt(document.getElementById("port").value)
+        tcp = new RawTCPConnection(h, p)
+        tcp.onopen = function(evt) {
+            print("Connection opened");
+//            tcp.send("GET / HTTP/1.0\r\n\r\n");
+        }
+        tcp.onread = function(evt) { 
+            var d = evt.data;
+            while(d.indexOf('\r') != -1)
+                d = d.replace('\r', '\\r')
+            while(d.indexOf('\n') != -1)
+                d = d.replace('\n', '\\n<br>')
+
+            print("RECV: " + d )
+        }
+        tcp.onclose = function(evt) { print("Connection closed") }
+   }
+   function send() {
+        if (tcp.readyState < 1)
+            print("ERR: Not Connected")
+        else if (tcp.readyState > 1) {
+            print("ERR: Disconnected")
+        }
+        else {
+            var orig = document.getElementById("data").value
+            var d = orig
+            while(d.indexOf('\\r') != -1)
+                d = d.replace('\\r', '\r')
+            while(d.indexOf('\\n') != -1)
+                d = d.replace('\\n', '\n')
+            tcp.send(d);
+            print("SEND: " + d);
+            }
+        }
+  </script>
+ </head>
+ <body>
+  <input type=text id=host> <input type=text id=port> <button onClick=connect(1,2)>connect</button><br>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+ </body>
+</html>

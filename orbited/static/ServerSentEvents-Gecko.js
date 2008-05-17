@@ -73,12 +73,16 @@ FxSSE = function(source) {
 //        xhr = new XMLHttpRequest();
         xhr.open('GET', src, true);
         if (id != null) {
+            console.log('setting id: ' + id)
             xhr.setRequestHeader('Last-Event-ID', id)
+        }
+        else {
+            console.log('id is: ' + typeof(id))
         }
         xhr.onreadystatechange = function() {
             switch (xhr.readyState) {
                 case 4: // disconnect case
-                    print(xhr.responseText);
+                    
                     dispatch()
                     reconnect()
                     break

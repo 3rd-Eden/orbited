@@ -3245,12 +3245,16 @@ FxSSE = function(source) {
 //        xhr = new XMLHttpRequest();
         xhr.open('GET', src, true);
         if (id != null) {
+            console.log('setting id: ' + id)
             xhr.setRequestHeader('Last-Event-ID', id)
+        }
+        else {
+            console.log('id is: ' + typeof(id))
         }
         xhr.onreadystatechange = function() {
             switch (xhr.readyState) {
                 case 4: // disconnect case
-                    print(xhr.responseText);
+                    
                     dispatch()
                     reconnect()
                     break
@@ -3659,6 +3663,8 @@ XSubdomainRequest.prototype._event = function(id, payload) {
 // end @include(XSubdomainRequest.js)
 
 
+
+// start @include(RawTCPConnection.js)
 RawTCPConnection = function(domain, port) {
     var self = this;
     self.onopen = function() { }
@@ -3691,3 +3697,5 @@ RawTCPConnection = function(domain, port) {
     conn.connect(connUrl.render())
 //    conn.connect("http://www.test.local:7000/proxy")
 }
+
+// end @include(RawTCPConnection.js)
