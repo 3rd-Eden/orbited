@@ -7,7 +7,7 @@ class JsonProxyProtocol(Protocol):
        
     def send(self, msg):
         print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
-        self.transport.write(msg)
+        self.transport.write(msg.encode('ascii', 'ignore'))
         
     def dataReceived(self, data):
         self.proxy_conn.send(str(data))
