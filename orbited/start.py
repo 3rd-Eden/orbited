@@ -22,8 +22,7 @@ def main():
       
         port = int(sys.argv[1])
     except:
-        raise
-        port = 80
+        port = 7000
     reactor.listenTCP(port, site)
     reactor.run()
 
