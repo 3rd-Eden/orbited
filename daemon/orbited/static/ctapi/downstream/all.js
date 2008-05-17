@@ -28,7 +28,7 @@ new function() {
         var browser = ["iframe"]    
     }
         
-    document.writeln("browser has "+ browser)
+//    document.writeln("browser has "+ browser)
 
     for (var i=0; i<browser.length; i++)
         Orbited.require("ctapi/downstream/" + browser[i] + ".js")

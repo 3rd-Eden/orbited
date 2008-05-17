@@ -33,7 +33,7 @@ class Dispatcher(object):
                 self.app.http_server.add_static_rule(prefix, local_source)
             elif rule == "proxy":
                 host, port = params
-                self.app.http_server.add_proxy_rule(prefix, host, port)
+                self.app.http_server.add_proxy_rule(prefix, host, int(port))
             elif rule == "wsgi":                
                 # TODO: load app
                 app = None
