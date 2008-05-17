@@ -5,8 +5,6 @@ from twisted.internet.protocol import Protocol, ClientCreator
 class ProxyProtocol(Protocol):
        
     def send(self, msg):
-#        msg = msg.replace('\n', '\r\n')
-#        print 'write: ' + msg.replace('\r', '\\r').replace('\n', '\\n\n')
         self.transport.write(msg)
         
     def dataReceived(self, data):
@@ -22,7 +20,7 @@ class ProxyClient(object):
         
     def connect(self, host, port):
         d = defer.Deferred()
-        print 'do connected to ', host, ':', port, port.__class__
+        print "opening remote connection to %s:%s" % (host, port)
         self.c.connectTCP(host, port).addCallback(self.connected, d)
         return d
     
@@ -54,7 +52,6 @@ class ProxyConnection(TCPConnection):
             host, port = data.split(':')
             self.host = host
             self.port = int(port)
-            print self.host, self.port
             self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
             self.state = 'proxy'
         except Exception, x:
@@ -67,15 +64,16 @@ class ProxyConnection(TCPConnection):
         else:
             self.remote_conn.send(data)
         
-    def connectionMade(self):
-        print "Proxy Connection Made", self.id
+#    def connectionMade(self):
+#        print "Proxy Connection Made", self.id
         
     def connectionLost(self):
-        self.remote_conn.transport.loseConnection()
-        print "Proxy Connection Lost", self.id
+        if self.remote_conn:
+            self.remote_conn.transport.loseConnection()
+#        print "Proxy Connection Lost", self.id
 
 class SimpleProxyFactory(TCPConnectionFactory):
-    protocol = Proxy5Connection
+    protocol = ProxyConnection
 
     def __init__(self, *args, **kwargs):
         TCPConnectionFactory.__init__(self, *args, **kwargs)

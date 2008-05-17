@@ -6,7 +6,6 @@ class HTML5ProxyProtocol(Protocol):
        
     def send(self, msg):
 #        msg = msg.replace('\n', '\r\n')
-        print 'write: ' + msg.replace('\r', '\\r').replace('\n', '\\n\n')
         self.transport.write(msg)
         
     def dataReceived(self, data):

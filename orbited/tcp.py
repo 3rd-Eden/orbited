@@ -65,14 +65,11 @@ class TCPConnection(resource.Resource):
         
     def close(self):
         if self.conn:
-            print 'sending TCPCLose'
             self.conn.write_event('TCPClose')
             self.conn.write_data('timeout')
             self.conn.write_dispatch()
             self.conn.flush()
-            print 'finishing conn'
             self.conn.finish()
-        print self.factory
         self.factory.conn_closed(self)
         self.conn = None
         self.connectionLost()
@@ -92,15 +89,9 @@ class TCPConnection(resource.Resource):
         last_event_id = request.received_headers.get('Last-Event-ID', None)
         if last_event_id == None:
             if self.open: # Conflicted session
-                print "Conflicted Session!"
-                print "Conflicted Session!"
-                print "Conflicted Session!"
-                raise "Debug!"
                 request.setResponseCode('409', 'Conflict')
                 return "Session already in use (Did you forget the Last-Event-ID header?)"
             else: # new session
-                print ("recieved GET(%s): " % self.id) + str(request.received_headers)
-                print "==="
                 self.open = True
                 self.conn = SSEConnection(request)
                 self.conn.write_event('TCPOpen')
@@ -126,10 +117,9 @@ class TCPConnection(resource.Resource):
         return server.NOT_DONE_YET
 
     def post(self, request):
-        print ('received POST(%s)' % self.id) + str(request.received_headers)
-        print "==="
-        if request.received_headers.get('content-type', None) != "text/event-stream":
-            return "ERR, wrong content-type"
+# The following two lines are commented out because ff3b5 doesn't seem to support this
+#        if request.received_headers.get('content-type', None) != "text/event-stream":
+#            return "ERR, wrong content-type"
         stream = request.content.read()
         event = "message"
         id = None
@@ -155,7 +145,6 @@ class TCPConnection(resource.Resource):
                     except ValueError:
                         pass
                     else:
-                        print 'ack:', last_event_id
                         self.ack(last_event_id)
                 event = "message"
                 id = None
