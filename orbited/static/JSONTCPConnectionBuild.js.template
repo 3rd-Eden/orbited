@@ -20,5 +20,7 @@ switch(browser) {
         @include(ServerSentEvents-Gecko.js)@
         break;
 }
-@include(ReliableTCPConnection.js)@
+@include(BaseTCPConnection.js)@
 @include(XSubdomainRequest.js)@
+@include(JSON.js)@
+@include(JSONTCPConnection.js)@
