@@ -1,7 +1,7 @@
 <html>
  <head>
   <script>document.domain = document.domain</script>
-  <script src="JSONTCPConnectionBuild.js"></script>
+  <script src="http://localhost:7000/_/static/JSONTCPConnectionBuild.js"></script>
   <script>
    tcp = null;
    function print(s) {
@@ -12,7 +12,7 @@
    function connect() {
         var h = document.getElementById("host").value
         var p = parseInt(document.getElementById("port").value)
-        tcp = new JSONTCPConnection(h, p)
+         tcp = new JSONTCPConnection(h, p)
         tcp.onopen = function(evt) {
             print("Connection opened");
 //            tcp.send("GET / HTTP/1.0\r\n\r\n");
