@@ -5,6 +5,7 @@ from twisted.internet.protocol import Protocol, ClientCreator
 class ProxyProtocol(Protocol):
        
     def send(self, msg):
+        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
         self.transport.write(msg)
         
     def dataReceived(self, data):
@@ -21,10 +22,11 @@ class ProxyClient(object):
     def connect(self, host, port):
         d = defer.Deferred()
         print "opening remote connection to %s:%s" % (host, port)
-        self.c.connectTCP(host, port).addCallback(self.connected, d)
+        self.c.connectTCP(host, port).addCallback(self.connected, d, host, port)
         return d
     
-    def connected(self, conn, d):
+    def connected(self, conn, d, host, port):
+        conn.host, conn.port = host, port
         d.callback(conn)
         
 class ProxyConnection(TCPConnection):

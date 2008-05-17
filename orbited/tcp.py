@@ -124,7 +124,7 @@ class TCPConnection(resource.Resource):
         event = "message"
         id = None
         data = ""
-        for line in stream.splitlines():
+        for line in stream.split('\r\n'):
             if line.startswith('data:'):
                 if data != "":
                     data += "\n"
