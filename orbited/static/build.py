@@ -12,11 +12,7 @@ def load_target(name):
     output += "\n// end @include(%s)\n" % name
     return output
 
-def main():
-    print "Building RawTCPConnectionBuild.js"
-    f = open('RawTCPConnection.js.template', 'r')
-    template = f.read()
-    f.close()
+def fillout(template):
     marker = 0
     output = ""
     while True:
@@ -34,12 +30,23 @@ def main():
         output += template[marker:i]
         output += load_target(include_filename)
         marker = j+2
-    
-    print "Total Size: %dk" % (len(output)/1024.0 )
-    
-    f = open(os.path.join('RawTCPConnectionBuild.js'), 'w')
-    f.write(output)
-    f.close()
+    return output
+  
+
+def main():
+    for name in os.listdir('.'):
+        if not name.endswith('.template'):
+            continue
+        print "Building",  name[:-9]
+        f = open(name, 'r')
+        template = f.read()
+        f.close()
+        output = fillout(template)
+        print "%s otal Size: %dk" % (name[:-9], len(output)/1024.0 )
+        
+        f = open(name[:-9], 'w')
+        f.write(output)
+        f.close()
 
 
 
