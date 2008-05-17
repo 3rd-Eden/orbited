@@ -67,13 +67,18 @@ URL = function(_url) {
 */
     self.isSameParentDomain = function(_url) {
         _url = new URL(_url)
+        if (_url.domain == self.domain) {
+            return true;
+        }
+        var orig_domain = _url.domain;
         var parts = document.domain.split('.')
-        var orig_domain = document.domain
+//        var orig_domain = document.domain
         for (var i = 0; i < parts.length-1; ++i) {
             var new_domain = parts.slice(i).join(".")
             if (orig_domain == new_domain)
                 return true;
         }
+        return false
     }
 
 }

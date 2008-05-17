@@ -1,22 +1,36 @@
 <html>
  <head>
   <script>
-
+//  alert('a');
 var origDomain = document.domain
 //alert(origDomain)
 var topDomain = null;
 var id = parseInt(location.hash.slice(1));
 //var id = location.hash
 var parts = document.domain.split('.')
-for (var i = 0; i < parts.length-1; ++i) {
-//    alert('try: ' + parts.slice(i).join("."))
-    document.domain = parts.slice(i).join(".")
+//alert('parts: ' + parts + ', length: ' + parts.length)
+if (parts.length == 1) {
+//    alert('a')
     try {
+        document.domain = document.domain
         parent.XSubdomainRequest.prototype
         topDomain = document.domain
-        break;
     }
     catch(e) {
+    }
+}
+else {
+    for (var i = 0; i < parts.length-1; ++i) {
+//        alert('try: ' + parts.slice(i).join("."))
+        document.domain = parts.slice(i).join(".")
+        try {
+            parent.XSubdomainRequest.prototype
+            topDomain = document.domain
+            break;
+        }
+        catch(e) {
+//            alert(e.name + ': ' + e.message)
+        }
     }
 }
 if (topDomain == null)

@@ -81,13 +81,18 @@ URL = function(_url) {
 */
     self.isSameParentDomain = function(_url) {
         _url = new URL(_url)
+        if (_url.domain == self.domain) {
+            return true;
+        }
+        var orig_domain = _url.domain;
         var parts = document.domain.split('.')
-        var orig_domain = document.domain
+//        var orig_domain = document.domain
         for (var i = 0; i < parts.length-1; ++i) {
             var new_domain = parts.slice(i).join(".")
             if (orig_domain == new_domain)
                 return true;
         }
+        return false
     }
 
 }
@@ -3890,8 +3895,13 @@ JSONTCPConnection = function(domain, port) {
         self.onopen(evt)
     }
     var connUrl = new URL(location.href)
-//    connUrl.domain = document.domain
-//    connUrl.port = location.port
+    if (typeof(ORBITED_DOMAIN) != "undefined") 
+        connUrl.domain = ORBITED_DOMAIN
+    // Otherwise use the href domain
+    if (typeof(ORBITED_PORT) != "undefined")
+        connUrl.port = ORBITED_PORT
+    else
+        connUrl.port = 7000
     connUrl.path = "/jsonproxy"
     connUrl.qs = ""
     conn.connect(connUrl.render())

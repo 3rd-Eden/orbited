@@ -24,8 +24,13 @@ JSONTCPConnection = function(domain, port) {
         self.onopen(evt)
     }
     var connUrl = new URL(location.href)
-//    connUrl.domain = document.domain
-    connUrl.port = 7000
+    if (typeof(ORBITED_DOMAIN) != "undefined") 
+        connUrl.domain = ORBITED_DOMAIN
+    // Otherwise use the href domain
+    if (typeof(ORBITED_PORT) != "undefined")
+        connUrl.port = ORBITED_PORT
+    else
+        connUrl.port = 7000
     connUrl.path = "/jsonproxy"
     connUrl.qs = ""
     conn.connect(connUrl.render())

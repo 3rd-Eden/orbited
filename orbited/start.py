@@ -1,3 +1,4 @@
+import sys
 import os
 from twisted.internet import reactor
 from twisted.web import server, resource, static
@@ -12,12 +13,18 @@ def main():
     root.putChild('echo', EchoFactory())
     root.putChild('proxy', SimpleProxyFactory())
     root.putChild('jsonproxy', JsonProxyFactory())
-    sys = resource.Resource()
-    root.putChild('_', sys)
+    system = resource.Resource()
+    root.putChild('_', system)
     static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
-    sys.putChild('static', static_files)
+    system.putChild('static', static_files)
     site = server.Site(root)
-    reactor.listenTCP(80, site)
+    try:
+      
+        port = int(sys.argv[1])
+    except:
+        raise
+        port = 80
+    reactor.listenTCP(port, site)
     reactor.run()
 
 if __name__ == "__main__":
