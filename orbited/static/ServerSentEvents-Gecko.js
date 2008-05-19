@@ -39,7 +39,6 @@ FxSSE = function(source) {
     }
     
     source.removeEventSource = function(eventSrc) {
-        console.log('remove event source')
         if (eventSrc != src)
             throw new Error("NotConnected to src: " + eventSrc)
         if (reconnectTimer != null) {
@@ -73,11 +72,9 @@ FxSSE = function(source) {
 //        xhr = new XMLHttpRequest();
         xhr.open('GET', src, true);
         if (id != null) {
-            console.log('setting id: ' + id)
             xhr.setRequestHeader('Last-Event-ID', id)
         }
         else {
-            console.log('id is: ' + typeof(id))
         }
         xhr.onreadystatechange = function() {
             switch (xhr.readyState) {
