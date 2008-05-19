@@ -212,7 +212,7 @@ class TCPConnectionFactory(resource.Resource):
     def __init__(self):
         resource.Resource.__init__(self)
 #        print os.path.join(os.path.split(__file__)[0], 'static', 'tcp', 'bridge.html')
-        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static', 'build'))
+        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
 
 #        self.putChild('', self)
         self.connections = {}

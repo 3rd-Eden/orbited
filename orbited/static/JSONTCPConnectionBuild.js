@@ -1,3 +1,4 @@
+document.domain=document.domain
 // Browser detect by Frank Salim
 var browser = null;
 if (typeof(ActiveXObject) != "undefined") {
@@ -3385,6 +3386,7 @@ BaseTCPConnection = function() {
 
         else if (testUrl.isSameParentDomain(location.href)) {
 //            alert('using XSubdomainRequest')
+//            document.domain = document.domain
             xhr = new XSubdomainRequest(testUrl.domain, testUrl.port)
         }
         else {

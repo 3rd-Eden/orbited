@@ -1,3 +1,4 @@
+document.domain=document.domain
 // Browser detect by Frank Salim
 var browser = null;
 if (typeof(ActiveXObject) != "undefined") {

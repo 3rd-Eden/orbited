@@ -8,9 +8,9 @@ var topDomain = null;
 var id = parseInt(location.hash.slice(1));
 //var id = location.hash
 var parts = document.domain.split('.')
-//alert('parts: ' + parts + ', length: ' + parts.length)
+alert('parts: ' + parts + ', length: ' + parts.length)
 if (parts.length == 1) {
-//    alert('a')
+    alert('a')
     try {
         document.domain = document.domain
         parent.XSubdomainRequest.prototype
@@ -21,7 +21,7 @@ if (parts.length == 1) {
 }
 else {
     for (var i = 0; i < parts.length-1; ++i) {
-//        alert('try: ' + parts.slice(i).join("."))
+        alert('try: ' + parts.slice(i).join("."))
         document.domain = parts.slice(i).join(".")
         try {
             parent.XSubdomainRequest.prototype
@@ -29,7 +29,7 @@ else {
             break;
         }
         catch(e) {
-//            alert(e.name + ': ' + e.message)
+            alert(e.name + ': ' + e.message)
         }
     }
 }

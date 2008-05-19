@@ -1,7 +1,9 @@
 <html>
  <head>
   <script>document.domain = document.domain</script>
-  <script src="RawTCPConnection.js"></script>
+  <script src="URL.js"></script>
+  <script src="BaseTCPConnection.js"></script>
+  <script src="ServerSentEvents-Gecko.js"></script>
   <script>
    tcp = null;
    function print(s) {
@@ -10,10 +12,10 @@
        output.scrollTop = self.output.scrollHeight     
    }
    function connect() {
-        tcp = new RawTCPConnection("www.google.com", 80)
+        tcp = new BaseTCPConnection()
+        tcp.connect("http://test.local:7000/stock")
         tcp.onopen = function(evt) {
             print("Connection opened");
-            tcp.send("GET / HTTP/1.0\r\n\r\n");
         }
         tcp.onread = function(evt) { print("RECV: " + evt.data )}
         tcp.onclose = function(evt) { print("Connection closed") }

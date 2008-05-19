@@ -25,6 +25,7 @@ BaseTCPConnection = function() {
 
         else if (testUrl.isSameParentDomain(location.href)) {
 //            alert('using XSubdomainRequest')
+//            document.domain = document.domain
             xhr = new XSubdomainRequest(testUrl.domain, testUrl.port)
         }
         else {
