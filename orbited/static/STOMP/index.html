@@ -43,8 +43,9 @@
     <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value)">Send</button>
     <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value, document.getElementById('trans_pub_id').value)">Send with Transaction Id</button>
     
+    <input id="input" value="hello">
     channel:
-    <input id="input" value="hello"><input id="pub_channel" value="/topic/home">
+    <input id="pub_channel" value="/topic/home">
     transaction id:
     <input id="trans_pub_id" value="trans1">
     <br>
