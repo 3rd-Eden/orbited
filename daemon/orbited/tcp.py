@@ -108,7 +108,7 @@ class TCPConnection(resource.Resource):
         else:
             ack = request.received_headers.get('last-event-id', None)
             if not ack:
-                ack = request.args.get('id', [None])[0]
+                ack = request.args.get('ack', [None])[0]
             if ack:
                 self.ack(int(ack))
             self.conn = transports.create(request)
