@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="stylesheet" href="style.css">
     <title>JavaScript Stomp Test</title>
-    <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
+    <script src="http://192.168.1.2:7000/_/static/BinaryTCPConnectionBuild.js"></script>
     <script src="shell.js"></script>
      <script src="stomp.js"></script>
     <script>
@@ -14,11 +14,14 @@
             var output = document.getElementById('output')
             var s = new Shell(output)
             print = s.print
+            
+            
+            
             // the money:
             ORBITED_PORT = 7000
             stomp = new STOMPClient()
-            stomp.onmessage = function(msg) { print(msg) }
-            stomp.onerror = function(msg) { alert(msg) }
+            stomp.onmessage = function(msg) { print(msg.body) }
+            stomp.onerror = function(msg) { alert(msg.body) }
             stomp.onopen = function() { print("Connected to ActiveMQ as user " + document.getElementById('username').value)}
             
         }
@@ -38,7 +41,7 @@
     
     
     <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value)">Send</button>
-    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value, document.getElementById('trans_pub_id').value)">Send with Transaction Id</button>
+    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value, {transaction : document.getElementById('trans_pub_id').value})">Send with Transaction Id</button>
     
     <input id="input" value="hello">
     channel:

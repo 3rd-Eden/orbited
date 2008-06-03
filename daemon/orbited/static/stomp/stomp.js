@@ -19,58 +19,71 @@ STOMPClient = function() {
     self.onerror = null
     
     self.messageReceived = function(msg) {
-        var data = bytesToUTF8(msg.data)             // TCPConnn msg has data as a property
+        var data = bytesToUTF8(msg.data) // TCPConnn msg has data as a property
         self.buffer += data
         parse_buffer()
     }
 
     var parse_buffer = function () {
-        var msgs = self.buffer.split('\n\0')
+        var msgs = self.buffer.split('\0\n')
         self.buffer = msgs.splice(-1)[0]
 
         for (i=0; i<msgs.length; i++)
             dispatch(msgs[i])
     }
     
-    
     /* parse_message()
-     * FIXME:
      * STOMP frames consist of a type, 0 or more headers, and possibly a body
-     *
      */
-    var parse_message = function(msg) {
-        var parts = msg.split("\n")
+    var parse_frame = function(s) {
+        var headers_end = s.search("\n\n")
+        var headers = s.slice(0, headers_end)
+        var type = headers.slice(0, headers.search("\n"))
+        headers = headers.slice(headers.search("\n") +1)
+        var body = s.slice(headers_end + 2)
+
+        headers = parse_headers(headers)
         
-        var frame = []
+        var frame = {}
+        frame['type'] = type
+        frame['headers']= headers
+        frame['body'] = body
         
         return frame
     }
     
+    var parse_headers = function(s) {
+        var lines = s.split("\n")
+        var headers = {}
+        for (var i=0; i<lines.length; i++) {
+            var sep = lines[i].search(":")
+            var key = lines[i].slice(0,sep)
+            var value = lines[i].slice(sep+1)
+            
+            headers['key'] = value
+        }
+        return headers
+    }
+    
     var dispatch = function(msg) {
-        //parse message
-        var parts = msg.split("\n")
-
-        var frame = []
-        for (var i=0; i<parts.length; i++)
-            if(parts[i])
-                frame.push(parts[i])
         
-        switch (frame[0]) {
+        msg = parse_frame(msg)
+        
+        switch (msg.type) {
             case ('CONNECTED'):
                 self.onopen()
                 break
             case ('MESSAGE'):
-                // FIXME: handle messages with double newlines in the body
-                self.onmessage(msg.split("\n\n").slice(-1)[0])
+                self.onmessage(msg)
                 break
             case ('RECEIPT'):
-                
+                // TODO: receipts and acking modes
                 break
             case ('ERROR'):
                 self.onerror(msg)
                 break
             default:
-                throw("Unknown STOMP command " + frame[0])
+                throw("Unknown STOMP frame type " + frame[0])
         }
     
     }
@@ -78,17 +91,19 @@ STOMPClient = function() {
     /* Messaging methods
      *
      */
-     var send_frame = function(msg, headers, body) {
+     var send_frame = function(type, headers, body) {
         var frame = ""
-        frame += msg + "\n"
-        for (var i=0; i< headers.length; i++)
-            frame += headers[i][0] + ": " + headers[i][1] + "\n"
+        frame += type + "\n"
+        for (key in headers)
+            frame += key + ": " + headers[key] + "\n"
+        frame += "\n"                   // end of headers
 
         if (body)
-            frame += "\n" + body
-        frame += "\n\0"                 // frame delineator
+            frame += body
+        frame += "\0"                   // frame delineator
         conn.send(UTF8ToBytes(frame))
      }
+    self.send_frame = send_frame
 
     /* Client Actions
      *
@@ -111,41 +126,43 @@ STOMPClient = function() {
         send_frame("DISCONNECT", [])
     }
 
-    self.send = function(msg, destination, transaction_id) {
-        var headers = [["destination", destination]]
-        if (transaction_id)
-            headers.push(['transaction', transaction_id])
+    self.send = function(msg, destination, custom_headers) {
+        var headers = {"destination": destination}
+        if (custom_headers)
+            for (key in custom_headers)
+                headers[key] = custom_headers[key]
             
         send_frame("SEND", headers, msg)
     }
 
     self.subscribe = function(destination) {
-        send_frame("SUBSCRIBE", [["destination", destination]])
+        send_frame("SUBSCRIBE", {"destination": destination})
     }
     
     self.unsubscribe = function(destination) {
-        send_frame("UNSUBSCRIBE", [["destination", destination]])
+        send_frame("UNSUBSCRIBE", {"destination": destination})
     }
 
     /* Transactions and acking
      *
      */
     self.begin = function(id) {
-        send_frame("BEGIN", [["transaction", id]])
+        send_frame("BEGIN", {"transaction": id})
     }
 
     self.commit = function(id) {
-        send_frame("COMMIT", [["transaction", id]])
+        send_frame("COMMIT", {"transaction": id})
     }
 
     // Rolls back the given transaction
     self.abort = function(id) {
-        send_frame("ABORT", [["transaction", id]])
+        send_frame("ABORT", {"transaction": id})
     }
 
     self.ack = function(message_id, transaction_id) {
         //throw("ack: not implemented")
     }
+    
 
 }
 
