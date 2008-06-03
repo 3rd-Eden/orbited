@@ -142,12 +142,12 @@ CometTransport = function() {
                 source.addEventListener("TCPOpen", receiveTCPOpen, false)
                 source.addEventListener("TCPClose", receiveTCPClose, false)
                 source.addEventListener("TCPPing", receiveTCPPing, false)
-                source.addEventSource(url + "?transport=sse&woot=boot&a=b#0")
+                source.addEventSource(url + "?transport=sse#0")
                 document.body.appendChild(source)
                 break;
             default:
                 source = document.createElement("iframe")
-                source.src = url + "?transport=htmlfile&woot=boot&a=b#0"
+                source.src = url + "?transport=htmlfile#0"
                 document.body.appendChild(source)
                 break;
         }
