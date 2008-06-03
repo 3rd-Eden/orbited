@@ -16,7 +16,11 @@
    }
    function connect() {
         tcp = new BaseTCPConnection()
-        tcp.connect("http://www.test.local:7000/echo")
+        var connUrl = new URL(location.href)
+        connUrl.path = "/echo"
+        connUrl.qs = ""
+        connUrl.hash = ""
+        tcp.connect(connUrl.render())
         tcp.onopen = function(evt) {
             print("Connection opened");
         }
