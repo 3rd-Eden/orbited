@@ -33,6 +33,7 @@ URL = function(_url) {
     if (isNaN(this.port))
         throw new Error("Invalid _url")
     self.domain = domain.slice(0, portIndex)
+
     self.render = function() {
         var output = ""
         if (typeof(self.protocol) != "undefined")
@@ -47,7 +48,7 @@ URL = function(_url) {
             output += self.path
         if (self.qs.length > 0)
             output += '?' + self.qs
-        if (typeof(self.hash) != "undefined")
+        if (typeof(self.hash) != "undefined" && self.hash.length > 0)
             output += "#" + self.hash
         return output
     }
@@ -86,6 +87,42 @@ URL = function(_url) {
                 return true;
         }
         return false
+    }
+
+    var decodeQs = function(qs) {
+    //    alert('a')
+        if (qs.indexOf('=') == -1) return {}
+        var result = {}
+        var chunks = qs.split('&')
+        for (var i = 0; i < chunks.length; ++i) {
+            var cur = chunks[i]
+            pieces = cur.split('=')
+            result[pieces[0]] = pieces[1]
+        }
+        return result
+    }
+    var encodeQs = function(o) {
+            output = ""
+            for (key in o)
+                output += "&" + key + "=" + o[key]
+            return output.slice(1)
+        }
+    self.setQsParameter = function(key, val) {
+        var curQsObj = decodeQs(self.qs)
+        curQsObj[key] = val
+        self.qs = encodeQs(curQsObj)
+    }
+
+    self.mergeQs = function(qs) {
+        var newQsObj = decodeQs(qs)
+        for (key in newQsObj) {
+            curQsObj[key] = newQsObj[key]
+        }
+    }
+    self.removeQsParameter = function(key) {
+        var curQsObj = decodeQs(self.qs)
+        delete curQsObj[key]
+        self.qs = encodeQs(curQsObj)
     }
 
 }

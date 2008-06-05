@@ -1,11 +1,12 @@
-import sse
-import htmlfile
+#import sse
+#import htmlfile
+import xhrstream
+
 transports = {
-    'sse': sse.SSEConnection,
-    'htmlfile': htmlfile.HTMLFileConnection
+    'xhrstream': xhrstream.XHRStreamingTransport,
 }
 def create(request):
-    transport_name = request.args.get('transport', ['sse'])[0]
+    transport_name = request.args.get('transport', ['xhrstream'])[0]
     x = transports[transport_name]
     return x(request)
 

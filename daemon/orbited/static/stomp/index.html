@@ -18,7 +18,7 @@
             
             
             // the money:
-            ORBITED_PORT = 7000
+            ORBITED_PORT = 8000
             stomp = new STOMPClient()
             stomp.onmessage = function(msg) { print(msg.body) }
             stomp.onerror = function(msg) { alert(msg.body) }

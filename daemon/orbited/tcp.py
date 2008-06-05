@@ -6,16 +6,18 @@ import transports
 
 class TCPPing(object):
     pass    
-    
+
+
 class TCPConnection(resource.Resource):
     ping_timeout = 20
     ping_interval = 20
     retry = 50
+    
     def __init__(self, factory, id):
         resource.Resource.__init__(self)
         self.factory = factory
         self.id = id
-        self.conn = None
+        self.transport = None
         self.open = False
         self.msg_queue = []
         self.unack_queue = []
@@ -26,7 +28,7 @@ class TCPConnection(resource.Resource):
         self.reset_ping_timer()
         self.client_ip = None
         self.setup()
-        
+
     def setup(self):
         pass
         
@@ -41,10 +43,10 @@ class TCPConnection(resource.Resource):
         
     def loseConnection(self):
         self.close()
-
+        
     def getClientIP(self):
         return self.client_ip
-    
+
     def reset_ping_timer(self):
         if self.ping_timer:
             self.ping_timer.cancel()
@@ -59,104 +61,27 @@ class TCPConnection(resource.Resource):
         self.timeout_timer = reactor.callLater(self.ping_timeout, self.timeout)
         
     def timeout(self):
+        print 'TIMEOUT', self.id
         self.close()
         
     def close(self):
-        if self.conn:
-            # self.conn.close('timeout')
-            self.conn.write_event('TCPClose')
-            self.conn.write_data('timeout')
-            self.conn.write_dispatch()
-            self.conn.flush()
-            self.conn.finish()
+        if self.transport:
+            self.transport.send_packet('close', "", 'timeout')
+            self.transport.flush()
+            self.transport.close()
         self.factory.conn_closed(self)
-        self.conn = None
+        self.transport = None
         self.connectionLost()
         
-    def sse_closed(self, conn):
-        if conn is self.conn:
-            self.conn = None
-        
-    def render(self, request, creation=False):
-        if request.method == 'GET':
-            return self.get(request, creation)
-        if request.method == 'POST':
-            return self.post(request, creation)
-        return "Not Implemented Yet"
-
-    def get(self, request, creation):
-        print 'get', request
-        if not self.open:
-            self.open = True
-            self.conn = transports.create(request)
-            # self.conn.open(self.id, self.packet_id, self.retry)
-            self.conn.write_event('TCPOpen')
-            if creation:
-                self.conn.write_data(creation)
-            self.conn.write_id(self.packet_id)
-            self.conn.write_retry(self.retry)
-            self.conn.write_dispatch()
-            self.conn.flush()
-            self.client_ip = self.conn.getClientIP()
-            self.conn.onClose().addCallback(self.sse_closed)
-            self.connectionMade()
-            return server.NOT_DONE_YET
-#        elif ack == None:
+    def transport_closed(self, transport):
+        if transport is self.transport:
+            self.transport = None
             
-#            request.setResponseCode(409, 'Conflict')
-#            return ""
-        else:
-            ack = request.received_headers.get('last-event-id', None)
-            if not ack:
-                ack = request.args.get('ack', [None])[0]
-            if ack:
-                self.ack(int(ack))
-            self.conn = transports.create(request)
-            self.conn.onClose().addCallback(self.sse_closed)
-            self.conn.write_retry(self.retry)
-            self.resend_unack_queue()
-            self.send_msg_queue()
-            self.conn.flush()
-        return server.NOT_DONE_YET
 
-    def post(self, request, creation):
-        print 'post', request
-        stream = request.content.read()
-        request.write('OK')
-        request.finish()
-        event = "message"
-        id = None
-        data = ""
-        real_event = False
-        for line in stream.split('\r\n'):
-            if line:
-                real_event = True
-            if line.startswith('data:'):
-                if data != "":
-                    data += "\n"
-                data += line[5:]
-            elif line.startswith('id:'):
-                try:
-                    id = int(line[3:])
-                except ValueError:
-                    pass
-            elif line.startswith('event:'):
-                event = line[6:]
-            elif line == "" and real_event  : # dispatch
-                if event == "message":
-                    self.dataReceived(data)
-                elif event == "TCPAck":
-                    try:
-                        last_event_id = int(data)
-                    except ValueError:
-                        pass
-                    else:
-                         self.ack(last_event_id, True)
-                event = "message"
-                id = None
-                data = ""
-                real_event = False
-        return server.NOT_DONE_YET
+    
+    def close_transport(self):
+        self.transport.close()
+        self.transport = None
         
     def ack(self, ack_id, reset=False):
 #        print 'ACK:', ack_id, 'reset:', reset
@@ -170,38 +95,85 @@ class TCPConnection(resource.Resource):
         self.last_ack_id = ack_id
         
     def send_msg_queue(self):
-        while self.msg_queue and self.conn:
+        while self.msg_queue and self.transport:
             self.send(self.msg_queue.pop(0), flush=False)
         
+    
+        
     def send(self, data, flush=True):
-        if not self.conn:
+        if not self.transport:
             self.msg_queue.append(data)
         else:
             self.packet_id += 1
             self._send(data, self.packet_id)
             self.unack_queue.append(data)
             if flush:
-                self.conn.flush()
+                self.transport.flush()
                 
-    def _send(self, data, packet_id=None):
+    def _send(self, data, packet_id=""):
         if isinstance(data, TCPPing):
-            self.conn.write_event('TCPPing')
-#            print 'TCPPing: ' + str(packet_id)
+            self.transport.send_packet('ping', packet_id)
         else:
-            self.conn.write_data(data)
-        if packet_id != None:
-            self.conn.write_id(packet_id)
-        self.conn.write_dispatch()
-        
+            self.transport.send_packet('data', packet_id, data)
+            
     def resend_unack_queue(self):
         if not self.unack_queue:
             return
         for data in self.unack_queue:
             self._send(data)
         ack_id = self.last_ack_id + len(self.unack_queue)
-        self.conn.write_id(ack_id)
-        self.conn.write_dispatch()
+        self.transport.send_packet('id', ack_id)
         
+    def render(self, request):
+        print request
+        transport_name = request.args.get('transport', [None])[0]
+        if transport_name:
+            return self.render_downstream(request)
+        else:
+            return self.render_upstream(request)
+        
+        
+    def render_downstream(self, request):
+        if self.transport:
+            self.close_transport()
+        self.transport = transports.create(request)
+        if not self.open:
+            self.open = True
+            self.transport.send_packet('open', self.packet_id)
+            self.transport.send_packet('retry', '', self.retry)
+            self.transport.flush()
+            self.client_ip = self.transport.getClientIP()
+            self.transport.onClose().addCallback(self.transport_closed)
+            self.connectionMade()
+        else:
+            ack = request.args.get('ack', [None])[0]
+            if ack:
+                try:
+                    ack = int(ack)
+                    self.ack(int(ack))
+                except:
+                    pass
+            self.transport = transports.create(request)
+            self.transport.onClose().addCallback(self.transport_closed)
+            self.resend_unack_queue()
+            self.send_msg_queue()
+            self.transport.flush()
+        return server.NOT_DONE_YET
+            
+    def render_upstream(self, request):
+        stream = request.content.read()
+        ack = request.args.get('ack', [None])[0]
+        try:
+            ack = int(ack)
+            self.ack(ack)
+        except:
+            pass
+        encoding = request.received_headers.get('tcp-encoding', 'text')
+        request.write('OK')
+        request.finish()
+        if encoding == 'text':
+            self.dataReceived(stream)
+        return server.NOT_DONE_YET
         
 class TCPConnectionFactory(resource.Resource):
     protocol = TCPConnection
@@ -216,29 +188,8 @@ class TCPConnectionFactory(resource.Resource):
     
     
     def render(self, request):
-        id = request.args.get('id', [None])[0]
-        if id:
-            return self.connections[id].render(request)
-        
-        if request.method == 'POST':
-            return self.create_session(request)
-        elif request.method == 'GET':
-            id = self.create_session(request)
-            request.setResponseCode(201, 'Permanently Moved')
-            new_url = request.uri
-            if '?' in new_url:
-                new_url += '&id=' + id
-            else:
-                new_url += '?id=' + id
-            request.setHeader('location', new_url)
-            return self.connections[id].render(request, new_url)
-        else:
-            request.setResponseCode(404, 'Not Found')
-            return ""
-#        else:
-#            request.setResponseCode(302, 'Found')
-#            request.setHeader("Location", "/_/static/test-tcp.html")
-#            return ""
+        id = self.create_session(request)
+        return id
     
     def create_session(self, request):
         key = None

@@ -113,12 +113,14 @@ STOMPClient = function() {
         self.user = user
         
         var onsockopen = function() {
+            alert('connected')
             send_frame("CONNECT", [["login", user]])
         }
-
+        alert('new binary tcp connection')
         conn = new BinaryTCPConnection(domain, port)
         conn.onopen = onsockopen
         conn.onread = self.messageReceived
+        alert('okay...')
 
     }
 
