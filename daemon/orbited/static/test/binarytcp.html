@@ -1,0 +1,52 @@
+<html>
+ <head>
+  <script>document.domain = document.domain</script>
+  <!--script src="URL.js"></script>
+  <script src="BaseTCPConnection.js"></script>
+  <script src="XSubdomainRequest.js"></script>
+  <script src="ServerSentEvents.js"></script-->
+  <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
+  <script>
+   DATA = []
+   tcp = null;
+   initial = "CONNECT\r\nlogin:carn\r\npasscode:starwars\r\n\r\n\0"
+   initialBytes = UTF8ToBytes(initial)
+//   initialBytes.push(0)
+   function print(s) {
+       output = document.getElementById("shell")
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight
+   }
+   function connect() {
+        tcp = new BinaryTCPConnection("127.0.0.1", 61613)
+        tcp.onopen = function(evt) {
+            print("Connection opened");
+        }
+        tcp.onread = function(evt) { 
+            if (evt.data == "")
+                return
+            DATA.push(evt.data)
+            print("RECV: " + evt.data )
+        }
+        tcp.onclose = function(evt) { print("Connection closed") }
+   }
+   function send() {
+        if (tcp.readyState < 1)
+            print("ERR: Not Connected")
+        else if (tcp.readyState > 1) {
+            print("ERR: Disconnected")
+        }
+        else {
+            var d = document.getElementById("data").value
+            tcp.send(d)
+            print("SEND: " + d)
+        }
+   }
+  </script>
+ </head>
+ <body>
+  <button onClick=connect()>connect</button><br>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+ </body>
+</html>
