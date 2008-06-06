@@ -298,7 +298,7 @@ Orbited = {
 
   log: function (arg) {
     if (typeof window.console !== 'undefined') {
-      console.log(arg);
+//      console.log(arg);
     }
     else if (typeof window.opera !== 'undefined') {
       opera.postError(arg);

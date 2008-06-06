@@ -203,6 +203,7 @@ class Stream(object):
             self.next_received_id += 1
                 
     def send(self, type=None, payload=[], id=None):
+#        print 'send',type,' ||| ',payload,' ||| ',id
         if type == "ACK":
             if not isinstance(payload, int):
                 raise Exception("InvalidFrame")
@@ -224,5 +225,3 @@ class Stream(object):
     def __resend_timeout(self, id):
         self.send(id=id)
         return True
-    
-    

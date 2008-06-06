@@ -29,7 +29,7 @@ function extract_xss_domain(old_domain) {
 
 function reload() {
     if(console !== undefined) {
-        console.log("iframe reload");
+//        console.log("iframe reload fxcx");
     }
     // TODO: This doesn't actually reload, but comet streaming will stop
     // after the predefined Content-Length has been reached. Fix this.

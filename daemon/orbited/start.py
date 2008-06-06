@@ -23,6 +23,7 @@ def main():
     parser.add_option("-e", "--event", dest="event", default="pyevent", help="event notification method (%s)"%str(rel.supported_methods)[1:-1])
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="verbose output")
     parser.add_option("-r", "--report", action="store_true", dest="report", default=False, help="system status reporting")
+    parser.add_option("-t", "--threaded", action="store_true", dest="threaded", default=False, help="enable GIL hack to run threaded pyevent 0.3 application")
     options, args = parser.parse_args()
     try:
         rel_options = []
@@ -30,6 +31,8 @@ def main():
             rel_options.append("verbose")
         if options.report:
             rel_options.append("report")
+        if options.threaded:
+            rel_options.append("threaded")
         rel.initialize([options.event],rel_options)
     except ImportError:
         print "invalid event notification method specified"        

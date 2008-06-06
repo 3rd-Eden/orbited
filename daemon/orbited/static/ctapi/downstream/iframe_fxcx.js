@@ -45,7 +45,7 @@ CTAPITransports['downstream']['iframe_fxcx'] = function() {
 
     var attach = function(wnd) {
         wnd.location.e = message_cb
-        shell
+        //shell
         kill_load_bar()
     }
     var hide_iframe = function (ifr) {

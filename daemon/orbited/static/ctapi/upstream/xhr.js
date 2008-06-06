@@ -12,6 +12,7 @@ CTAPITransports['upstream']['xhr'] = function(url, id) {
     },
 
     self.send = function(s) {
+//        console.log('sending '+s);
         /* TODO, take multiple arguments?
          *  more robust JSON encode for multiple browsers
          *  and queued messages
