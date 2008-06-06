@@ -1,3 +1,4 @@
+import datetime
 import os
 import random
 from twisted.web import server, resource, static, error
@@ -78,22 +79,20 @@ class TCPConnection(resource.Resource):
         if conn is self.conn:
             self.conn = None
         
-    def render(self, request, creation=False):
+    def render(self, request):
         if request.method == 'GET':
-            return self.get(request, creation)
+            return self.get(request)
         if request.method == 'POST':
-            return self.post(request, creation)
+            return self.post(request)
         return "Not Implemented Yet"
 
-    def get(self, request, creation):
+    def get(self, request):
         print 'get', request
         if not self.open:
             self.open = True
             self.conn = transports.create(request)
             # self.conn.open(self.id, self.packet_id, self.retry)
             self.conn.write_event('TCPOpen')
-            if creation:
-                self.conn.write_data(creation)
             self.conn.write_id(self.packet_id)
             self.conn.write_retry(self.retry)
             self.conn.write_dispatch()
@@ -118,11 +117,16 @@ class TCPConnection(resource.Resource):
             self.resend_unack_queue()
             self.send_msg_queue()
             self.conn.flush()
+            expires = datetime.datetime.now() + datetime.timedelta(0, self.ping_timeout + self.ping_interval + 60*60*7)
+            request.addCookie('tcp', self.id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
+            
         return server.NOT_DONE_YET
 
-    def post(self, request, creation):
+    def post(self, request):
         print 'post', request
         stream = request.content.read()
+        expires = datetime.datetime.now() + datetime.timedelta(0, self.ping_timeout + self.ping_interval + 60*60*7)
+        request.addCookie('tcp', self.id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
         request.write('OK')
         request.finish()
         event = "message"
@@ -217,7 +221,13 @@ class TCPConnectionFactory(resource.Resource):
     
     
     def render(self, request):
-        id = request.args.get('id', [None])[0]
+#        print request.__dict__
+        print request.cookies
+        print request.received_headers.get('cookie', None)
+        print request.__module__
+        print request.getCookie('tcp')
+#        cookies = req
+        id = request.getCookie('tcp')
         if id:
             if id not in self.connections:
                 request.setResponseCode(404, 'Not Found')
@@ -228,14 +238,16 @@ class TCPConnectionFactory(resource.Resource):
             return self.create_session(request)
         elif request.method == 'GET':
             id = self.create_session(request)
-            request.setResponseCode(201, 'Permanently Moved')
-            new_url = request.uri
-            if '?' in new_url:
-                new_url += '&id=' + id
-            else:
-                new_url += '?id=' + id
-            request.setHeader('location', new_url)
-            return self.connections[id].render(request, new_url)
+#            request.setResponseCode(201, 'Permanently Moved')
+#            new_url = request.uri
+#            if '?' in new_url:
+#                new_url += '&id=' + id
+#            else:
+#                new_url += '?id=' + id
+#            request.setHeader('location', new_url)
+            expires = datetime.datetime.now() + datetime.timedelta(0, self.protocol.ping_timeout + self.protocol.ping_interval + 60*60*7)
+            request.addCookie('tcp', id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
+            return self.connections[id].render(request)#, new_url)
         else:
             request.setResponseCode(404, 'Not Found')
             return ""

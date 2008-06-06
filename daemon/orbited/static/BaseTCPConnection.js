@@ -139,13 +139,14 @@ BaseTCPConnection = function() {
         // TODO: use the EventListener interface if available (handleEvent)
         lastEventId = evt.lastEventId;
         self.readyState = 1
-        if (evt.data != null && evt.data.length > 0) {
+/*        if (evt.data != null && evt.data.length > 0) {
             var newUrl = new URL(evt.data);
             var oldUrl = new URL(tcpUrl);
             oldUrl.qs = newUrl.qs
             oldUrl.path = newUrl.path
             tcpUrl = oldUrl.render()
         }
+*/
         self.onopen(evt);
         resetPingTimer();
 //        window.setTimeout(tcp.onopen, 1000)

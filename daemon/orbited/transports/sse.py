@@ -17,9 +17,10 @@ class SSEConnection(resource.Resource):
             request.setHeader("content-type", "text/plain; charset=utf-8")            
         self.buffer = ""
         self.close_deferred = defer.Deferred()
-        self.timer = reactor.callLater(8   , self.close_timeout)
+        self.timer = reactor.callLater(30   , self.close_timeout)
         self.open = True
         self.request.notifyFinish().addCallback(self.finished)
+        
     def write_event(self, name):
         self.buffer += 'event:%s\r\n' % name
     def write_data(self, value):
