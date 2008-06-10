@@ -15,10 +15,10 @@ site = server.Site(root)
 def main():
     from echo import EchoFactory
 #    from jsonproxy import JsonProxyFactory
-#    from binaryproxy import BinaryProxyFactory
+    from binaryproxy import BinaryProxyFactory
     root.putChild('echo', EchoFactory())
 #    root.putChild('jsonproxy', JsonProxyFactory())
-#    root.putChild('binaryproxy', BinaryProxyFactory())
+    root.putChild('binaryproxy', BinaryProxyFactory())
     
     try:
         port = int(sys.argv[1])

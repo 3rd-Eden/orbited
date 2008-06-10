@@ -1,0 +1,40 @@
+<html>
+ <head>
+  <script>document.domain = document.domain</script>
+  <script src="/_/static/transports/XHRStream.js"></script>
+  <script src="/_/static/JSON.js"></script>
+  <script src="/_/static/URL.js"></script>
+  <script>
+   DATA = []
+   function print(s) {
+       output = document.getElementById("shell")
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight
+   }
+   console = { log: print}
+   function connect() {
+        transport = new XHRStream()
+        var connUrl = new URL(location.href)
+        connUrl.path = "/echo/ABC"
+        connUrl.qs = "transport=xhrstream"
+        connUrl.hash = ""
+        transport.onread = function(packet) { 
+            DATA.push(packet)
+            print("RECV: " + JSON.stringify(packet))
+        }
+        transport.connect(connUrl.render())
+   }
+   onunload = function() {
+        try {
+            transport.disconnect()
+        }
+        catch(e) { }
+    }
+
+  </script>
+ </head>
+ <body>
+  <button onClick=connect()>connect</button><br>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+ </body>
+</html>

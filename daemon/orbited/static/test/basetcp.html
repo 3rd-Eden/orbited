@@ -1,11 +1,10 @@
 <html>
  <head>
   <script>document.domain = document.domain</script>
-  <!--script src="URL.js"></script>
-  <script src="BaseTCPConnection.js"></script>
-  <script src="XSubdomainRequest.js"></script>
-  <script src="ServerSentEvents.js"></script-->
-  <script src="/_/static/BaseTCPConnectionBuild.js"></script>
+  <script src="/_/static/URL.js"></script>
+  <script src="/_/static/BaseTCPConnection.js"></script>
+  <script src="/_/static/XSubdomainRequest.js"></script>
+  <script src="/_/static/transports/XHRStream.js"></script>
   <script>
    DATA = []
    tcp = null;
@@ -14,7 +13,8 @@
        output.innerHTML += "&rarr; " + s + "<br>"
        output.scrollTop = self.output.scrollHeight
    }
-   console = { log: print}
+    if (typeof(console) == "undefined")
+       console = { log: print}
    function connect() {
         tcp = new BaseTCPConnection()
         var connUrl = new URL(location.href)
@@ -22,21 +22,19 @@
         connUrl.qs = ""
         connUrl.hash = ""
         tcp.connect(connUrl.render())
-        tcp.onopen = function(evt) {
+        tcp.onopen = function() {
             print("Connection opened");
         }
-        tcp.onread = function(evt) { 
-            if (evt.data == "")
-                return
-            DATA.push(evt.data)
-            print("RECV: " + evt.data )
+        tcp.onread = function(data) { 
+            DATA.push(data)
+            print("RECV: " + data )
         }
-        tcp.onclose = function(evt) { print("Connection closed") }
+        tcp.onclose = function() { print("Connection closed") }
    }
    function send() {
-        if (tcp.readyState < 1)
+        if (tcp.readyState < 2)
             print("ERR: Not Connected")
-        else if (tcp.readyState > 1) {
+        else if (tcp.readyState > 2 ) {
             print("ERR: Disconnected")
         }
         else {

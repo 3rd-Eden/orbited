@@ -19,7 +19,7 @@ STOMPClient = function() {
     self.onerror = null
     
     self.messageReceived = function(msg) {
-        var data = bytesToUTF8(msg.data) // TCPConnn msg has data as a property
+        var data = bytesToUTF8(msg) // TCPConnn msg has data as a property
         self.buffer += data
         parse_buffer()
     }
@@ -113,14 +113,11 @@ STOMPClient = function() {
         self.user = user
         
         var onsockopen = function() {
-            alert('connected')
             send_frame("CONNECT", [["login", user]])
         }
-        alert('new binary tcp connection')
         conn = new BinaryTCPConnection(domain, port)
         conn.onopen = onsockopen
         conn.onread = self.messageReceived
-        alert('okay...')
 
     }
 

@@ -2,8 +2,8 @@ from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet import reactor
 
 class EchoConnection(TCPConnection):
-    ping_timeout  = 60 # override default of 20.
-    ping_interval = 60 # override default of 20
+    ping_timeout  = 5 # override default of 20.
+    ping_interval = 5 # override default of 20
     
     def dataReceived(self, data):
         print "Echo Recv: " + data
@@ -25,6 +25,6 @@ class EchoConnection(TCPConnection):
 class EchoFactory(TCPConnectionFactory):
     protocol = EchoConnection
 
-    def __init__(self, *args, **kwargs):
-      TCPConnectionFactory.__init__(self, *args, **kwargs)
-      self.connections['ABC'] = EchoConnection(self, 'ABC')
+#    def __init__(self, *args, **kwargs):
+#      TCPConnectionFactory.__init__(self, *args, **kwargs)
+#      self.connections['ABC'] = EchoConnection(self, 'ABC')

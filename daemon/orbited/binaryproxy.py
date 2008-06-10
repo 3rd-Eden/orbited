@@ -17,11 +17,11 @@ class BinaryProxyProtocol(Protocol):
        
     def send(self, msg):
         bytes = hex_to_byte(msg)
-        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(bytes),  bytes.replace('\r', '\\r').replace('\n', '\\n'))
+#        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(bytes),  bytes.replace('\r', '\\r').replace('\n', '\\n'))
         self.transport.write(bytes)
         
     def dataReceived(self, data):
-        print "%s:%s (%s) <- %s" % (self.host, self.port, len(data), data)
+#        print "%s:%s (%s) <- %s" % (self.host, self.port, len(data), data)
         self.proxy_conn.send(byte_to_hex(data))
 
     def connectionLost(self, reason):
@@ -31,10 +31,10 @@ class ProxyClient(object):
   
     def __init__(self):
         self.c = ClientCreator(reactor, BinaryProxyProtocol)
-        
+    
     def connect(self, host, port):
         d = defer.Deferred()
-        print "opening remote connection to %s:%s" % (host, port)
+#        print "opening remote connection to %s:%s" % (host, port)
         self.c.connectTCP(host, port).addCallback(self.connected, d, host, port)
         return d
     
@@ -58,11 +58,11 @@ class BinaryProxyConnection(TCPConnection):
             self.remote_conn.send(item)
     
     def dataReceived(self, data):
-        print 'recv: ', data
+#        print 'recv: ', data
         getattr(self, 'state_' + self.state)(data)
     
     def state_initial(self, data):
-        print 'recv:', data
+#        print 'recv:', data
         try:
             host, port = data.split(':')
             self.host = host

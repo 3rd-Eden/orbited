@@ -61,7 +61,7 @@ class TCPConnection(resource.Resource):
         self.timeout_timer = reactor.callLater(self.ping_timeout, self.timeout)
         
     def timeout(self):
-        print 'TIMEOUT', self.id
+#        print 'TIMEOUT', self.id
         self.close()
         
     def close(self):
@@ -74,12 +74,16 @@ class TCPConnection(resource.Resource):
         self.connectionLost()
         
     def transport_closed(self, transport):
+#        print 'transport_closed'
         if transport is self.transport:
+#            print 'set to none'
             self.transport = None
             
 
     
     def close_transport(self):
+        
+#        print "Transport closing"
         self.transport.close()
         self.transport = None
         
@@ -102,8 +106,10 @@ class TCPConnection(resource.Resource):
         
     def send(self, data, flush=True):
         if not self.transport:
+#            print 'queue: ' + data
             self.msg_queue.append(data)
         else:
+#            print 'SEND: ' + str(data)
             self.packet_id += 1
             self._send(data, self.packet_id)
             self.unack_queue.append(data)
@@ -125,7 +131,14 @@ class TCPConnection(resource.Resource):
         self.transport.send_packet('id', ack_id)
         
     def render(self, request):
-        print request
+#        print '==='
+#        print request
+#        print request
+#        print request
+#        print request
+#        print request
+#        print request
+#        print '==='
         transport_name = request.args.get('transport', [None])[0]
         if transport_name:
             return self.render_downstream(request)
@@ -134,10 +147,12 @@ class TCPConnection(resource.Resource):
         
         
     def render_downstream(self, request):
+#        print "Render Downstream:", request
         if self.transport:
             self.close_transport()
         self.transport = transports.create(request)
         if not self.open:
+#            print 'not previously open'
             self.open = True
             self.transport.send_packet('open', self.packet_id)
             self.transport.send_packet('retry', '', self.retry)
@@ -146,14 +161,16 @@ class TCPConnection(resource.Resource):
             self.transport.onClose().addCallback(self.transport_closed)
             self.connectionMade()
         else:
-            ack = request.args.get('ack', [None])[0]
+#            print 'previously open'
+            ack = request.received_headers.get('ack', None)
             if ack:
                 try:
                     ack = int(ack)
-                    self.ack(int(ack))
+                    self.ack(ack, True)
+                    
                 except:
                     pass
-            self.transport = transports.create(request)
+#            print 'setting up new transport', self.id
             self.transport.onClose().addCallback(self.transport_closed)
             self.resend_unack_queue()
             self.send_msg_queue()
@@ -161,14 +178,19 @@ class TCPConnection(resource.Resource):
         return server.NOT_DONE_YET
             
     def render_upstream(self, request):
+#        print 'RENDER UPSTREAM'
+#        print request.received_headers
         stream = request.content.read()
-        ack = request.args.get('ack', [None])[0]
-        try:
-            ack = int(ack)
-            self.ack(ack)
-        except:
-            pass
-        encoding = request.received_headers.get('tcp-encoding', 'text')
+        ack = request.received_headers.get('ack', None)
+        if ack:
+            try:
+                ack = int(ack)
+                self.ack(ack, True)
+#                print 'worked with', ack
+            except:
+#                print 'COULD NOT ACK WITH', ack
+                pass
+        encoding = request.received_headers.get('tcp-encoding', None)
         request.write('OK')
         request.finish()
         if encoding == 'text':
