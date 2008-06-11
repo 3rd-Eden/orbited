@@ -5,7 +5,7 @@
  *
  * Frank Salim (frank.salim@gmail.com) (c) 2008 Orbited (orbited.org)
  */
-
+DATA = []
 STOMPClient = function() {
     var self = this
     var conn = null
@@ -20,6 +20,10 @@ STOMPClient = function() {
     
     self.messageReceived = function(msg) {
         var data = bytesToUTF8(msg) // TCPConnn msg has data as a property
+        var data2 = bytesToUTF82(msg)
+        console.log('compare:', data, '/', data2)
+        if (data != data2)
+            DATA.push(msg)
         self.buffer += data
         parse_buffer()
     }
@@ -101,6 +105,9 @@ STOMPClient = function() {
         if (body)
             frame += body
         frame += "\0"                   // frame delineator
+        var data = UTF8ToBytes(frame)
+        var data2 = UTF8ToBytes2(frame)
+        console.log('compareS:', data, '/', data2)
         conn.send(UTF8ToBytes(frame))
      }
     self.send_frame = send_frame
