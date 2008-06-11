@@ -28,6 +28,7 @@ class Application(object):
         httpconf = config['[http]']
         orbitconf = config['[op]']
         self.dispatcher = Dispatcher(self)
+        print "Starting server on port %s"%httpconf['port']
         self.http_server = HTTPApplication(
             httpconf['bind_addr'], 
             int(httpconf['port']), 
