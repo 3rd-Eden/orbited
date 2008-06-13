@@ -2,10 +2,8 @@
  <head>
   <script>document.domain = document.domain</script>
   <script src="/_/static/URL.js"></script>
-  <script src="/_/static/BaseTCPConnection.js"></script>
-  <script src="/_/static/XSubdomainRequest.js"></script>
-  <script src="/_/static/transports/XHRStream.js"></script>
-  <script src="/_/static/transports/HTMLFile.js"></script>
+  <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
+
   <script src="/_/static/protocols/irc/irc.js"></script>
   <script>
     irc = new IRCClient()
@@ -21,7 +19,7 @@
    function connect() {
         irc.onident = function() {
             print('onident!')
-            irc.nick('mcarterhttp')
+            irc.nick('mcarterhttp1')
             irc.ident('mcarter', '8 *', 'Michael Carter HTTP')
             irc.join('#orbited.dev')
             irc.privmsg("#orbited.dev", 'Hello World')
@@ -32,7 +30,7 @@
  </head>
  <body>
   <button onClick=connect()>connect</button><br>
-  <input type=text id=data> <button onClick=send()>send</button><br>
+  <input type=text id=data> <button onClick="irc.privmsg('#orbited.dev', document.getElementById('data').value )">send</button><br>
   <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
  </body>
 </html>

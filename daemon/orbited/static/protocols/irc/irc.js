@@ -1,6 +1,9 @@
 IRCClient = function() {
     var self = this;
     var conn = null;
+    
+    self.nickname = ""
+    
     self.onident = function() {
     }
     self.onconnect = function() {
@@ -14,19 +17,34 @@ IRCClient = function() {
         conn.onclose = close
     }
     self.nick = function(nickname) {
-        conn.send("NICK " + nickname + "\r\n")
+        self.nickname = nickname
+        send("NICK " + nickname + "\r\n")
     }
     self.ident = function(ident, modes, name) {
-        conn.send("USER " + ident + " " + modes + " :" + name + "\r\n")
+        send("USER " + ident + " " + modes + " :" + name + "\r\n")
     }
     self.join = function(channel) {
-        conn.send('JOIN ' + channel + '\r\n')
+        send('JOIN ' + channel + '\r\n')
     }
     self.privmsg = function(dest, message) {
-        conn.send('PRIVMSG ' + dest + ' :' + message + '\r\n')
+        print("<b>" + self.nickname + "</b>" + ":" + message)
+        send('PRIVMSG ' + dest + ' :' + message + '\r\n')    
     }
     var read = function(evt) {
-        print(evt.data)
+        var msg = bytesToUTF8(evt)
+        
+        var parts = msg.split(" ")
+        
+        if (parts[1] == "PING") {
+            //console.log(msg)
+            conn.send("PONG " + parts[1])
+        }
+        
+        if (parts[1] == "PRIVMSG" && parts[2] != self.nickname) {
+            var identity = parts[0].slice(1)
+            var ident_name = identity.split("!",1)[0]
+            print("<b>" + ident_name +"</b>" + parts.slice(3).join(" "))
+        }
     }
     var open = function(evt) {
         self.onident();
@@ -34,6 +52,10 @@ IRCClient = function() {
     var close = function(evt) {
 
     }
+
+    var send = function(s) {
+        conn.send(UTF8ToBytes(s))
+    }
 }
 
-IRCClient.prototype.transport = JSONTCPConnection
+IRCClient.prototype.transport = BinaryTCPConnection
