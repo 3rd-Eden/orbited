@@ -17,9 +17,12 @@
        output.scrollTop = self.output.scrollHeight     
    }
    function connect() {
+        irc.onmessage = print
+        irc.onnames = print
+   
         irc.onident = function() {
             print('onident!')
-            irc.nick('mcarterhttp5')
+            irc.nick('mcarterhttp9')
             irc.ident('mcarter', '8 *', 'Michael Carter HTTP')
             irc.join('#orbited.dev')
             irc.privmsg("#orbited.dev", 'Hello World')

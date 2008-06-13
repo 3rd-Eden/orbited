@@ -12,6 +12,7 @@ IRCClient = function() {
     self.onnames = function(names) {
         print(names)
     }
+    self.onmessage = function(msg) { print(msg) }
 
     self.connect = function(host, port) {
         conn = new self.transport(host, port)
