@@ -9,6 +9,9 @@ IRCClient = function() {
     self.onconnect = function() {
 
     }
+    self.onnames = function(names) {
+        print(names)
+    }
 
     self.connect = function(host, port) {
         conn = new self.transport(host, port)
@@ -26,18 +29,36 @@ IRCClient = function() {
     self.join = function(channel) {
         send('JOIN ' + channel + '\r\n')
     }
+    self.names = function(channel) {
+        send('WHO ' + channel)
+        console.log("who sent")
+    }
     self.privmsg = function(dest, message) {
         print("<b>" + self.nickname + "</b>" + ":" + message)
         send('PRIVMSG ' + dest + ' :' + message + '\r\n')    
     }
+    
     var read = function(evt) {
-        var msg = bytesToUTF8(evt)
-        
+        var s = bytesToUTF8(evt)
+        var msgs = s.split("\r\n")
+        for (var i=0; i<msgs.length; i++)
+            dispatch(msgs[i])
+    }
+    
+    var dispatch = function(msg) {
         var parts = msg.split(" ")
         
-        if (parts[1] == "PING") {
-            //console.log(msg)
-            conn.send("PONG " + parts[1])
+        console.log(msg)
+        
+        if (parts[3] == "@") {
+            var namelist = msg.split(":").slice(-1)[0].split(" ")
+            console.log(namelist)
+        
+            self.onnames(namelist)
+        }
+        
+        if (parts[0] == "PING") {
+            conn.send(msg.replace("PING","PONG"))
         }
         
         if (parts[1] == "PRIVMSG" && parts[2] != self.nickname) {
