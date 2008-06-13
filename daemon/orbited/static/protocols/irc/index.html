@@ -17,12 +17,14 @@
        output.scrollTop = self.output.scrollHeight     
    }
    function connect() {
-        irc.onmessage = print
+        irc.onmessage = function(ident_name, msg) {
+            print("<b style='color:red'>" + ident_name +"</b>" + msg)   
+        }
         irc.onnames = print
    
         irc.onident = function() {
             print('onident!')
-            irc.nick('mcarterhttp9')
+            irc.nick('mcarterhttp6')
             irc.ident('mcarter', '8 *', 'Michael Carter HTTP')
             irc.join('#orbited.dev')
             irc.privmsg("#orbited.dev", 'Hello World')
@@ -32,8 +34,9 @@
   </script>
  </head>
  <body>
-  <button onClick=connect()>connect</button><br>
+  <button onClick=connect()>connect</button><button onclick="irc.quit()">Quit</button><br>
   <input type=text id=data> <button onClick="irc.privmsg('#orbited.dev', document.getElementById('data').value )">send</button><br>
+
   <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
  </body>
 </html>

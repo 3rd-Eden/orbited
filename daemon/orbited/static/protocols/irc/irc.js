@@ -9,10 +9,14 @@ IRCClient = function() {
     self.onconnect = function() {
 
     }
-    self.onnames = function(names) {
-        print(names)
-    }
+    // DEFAULT CALLBACKS
+    self.onnames = function(names) { print(names) }
     self.onmessage = function(msg) { print(msg) }
+    self.onjoin = function(n) { print("<b>" + n + " has joined</b>") }
+    self.onpart = function(n) { print("<b>" + n + " has quit (parted)</b>") }
+    self.onquit = function(n) { print("<b>" + n + " has quit</b>") }
+    self.onaction = function(n,a) {}
+    self.onclose = function() {print("closed connection")}
 
     self.connect = function(host, port) {
         conn = new self.transport(host, port)
@@ -30,12 +34,17 @@ IRCClient = function() {
     self.join = function(channel) {
         send('JOIN ' + channel + '\r\n')
     }
+    self.quit = function() {
+        send('QUIT :leaving')
+        self.onclose()
+        //FIXME: clean up tcp connection
+    }
     self.names = function(channel) {
         send('WHO ' + channel)
         console.log("who sent")
     }
     self.privmsg = function(dest, message) {
-        print("<b>" + self.nickname + "</b>" + ":" + message)
+        self.onmessage(self.nickname, message)
         send('PRIVMSG ' + dest + ' :' + message + '\r\n')    
     }
     
@@ -46,12 +55,39 @@ IRCClient = function() {
             dispatch(msgs[i])
     }
     
+    var parse_name = function(identity) {
+        return identity.split("!",1)[0]
+    }
+    
     var dispatch = function(msg) {
         var parts = msg.split(" ")
         
         console.log(msg)
         
-        if (parts[3] == "@") {
+        //:franksalim!n=franksal@cpe-72-130-134-143.san.res.rr.com JOIN :#orbited.dev
+        if (parts[1] == "JOIN") {
+            var identity = parts[0].slice(1)
+            var ident_name = parse_name(identity)
+            self.onjoin(ident_name)
+        }
+        else if (parts[1] == "QUIT") {
+            var identity = parts[0].slice(1)
+            var ident_name = parse_name(identity)
+            self.onquit(ident_name)
+        }
+        else if (parts[1] == "PART") {
+            var identity = parts[0].slice(1)
+            var ident_name = parse_name(identity)
+            self.onpart(ident_name)
+        }
+        else if (parts[1] == "PRIVMSG" && parts[2] != self.nickname) {
+            var identity = parts[0].slice(1)
+            var ident_name = parse_name(identity)
+            self.onmessage(ident_name, parts.slice(3).join(" "))
+        }       
+        
+        
+        else if (parts[3] == "@") {
             var namelist = msg.split(":").slice(-1)[0].split(" ")
             console.log(namelist)
         
@@ -62,11 +98,7 @@ IRCClient = function() {
             conn.send(msg.replace("PING","PONG"))
         }
         
-        if (parts[1] == "PRIVMSG" && parts[2] != self.nickname) {
-            var identity = parts[0].slice(1)
-            var ident_name = identity.split("!",1)[0]
-            print("<b>" + ident_name +"</b>" + parts.slice(3).join(" "))
-        }
+
     }
     var open = function(evt) {
         self.onident();
