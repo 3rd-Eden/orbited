@@ -10,13 +10,13 @@ IRCClient = function() {
 
     }
     // DEFAULT CALLBACKS
-    self.onnames = function(names) { print(names) }
-    self.onmessage = function(msg) { print(msg) }
-    self.onjoin = function(n) { print("<b>" + n + " has joined</b>") }
-    self.onpart = function(n) { print("<b>" + n + " has quit (parted)</b>") }
-    self.onquit = function(n) { print("<b>" + n + " has quit</b>") }
+    self.onnames = function(names) {}// print(names) }
+    self.onmessage = function(n,msg) {}// print(msg) }
+    self.onjoin = function(n) {}// print("<b>" + n + " has joined</b>") }
+    self.onpart = function(n,msg) {}// print("<b>" + n + " has quit (parted)</b>") }
+    self.onquit = function(n,msg) {}// print("<b>" + n + " has quit</b>") }
     self.onaction = function(n,a) {}
-    self.onclose = function() {print("closed connection")}
+    self.onclose = function() {}//print("closed connection")}
 
     self.connect = function(host, port) {
         conn = new self.transport(host, port)
@@ -73,17 +73,20 @@ IRCClient = function() {
         else if (parts[1] == "QUIT") {
             var identity = parts[0].slice(1)
             var ident_name = parse_name(identity)
-            self.onquit(ident_name)
+            var message = parts.slice(2).join(' ').slice(1)
+            self.onquit(ident_name, message)
         }
         else if (parts[1] == "PART") {
             var identity = parts[0].slice(1)
             var ident_name = parse_name(identity)
-            self.onpart(ident_name)
+            var message = parts.slice(3).join(' ').slice(1)
+            self.onpart(ident_name, message)
         }
         else if (parts[1] == "PRIVMSG" && parts[2] != self.nickname) {
             var identity = parts[0].slice(1)
             var ident_name = parse_name(identity)
-            self.onmessage(ident_name, parts.slice(3).join(" "))
+            var message = parts.slice(3).join(" ").slice(1)
+            self.onmessage(ident_name, message)
         }       
         
         
@@ -95,7 +98,7 @@ IRCClient = function() {
         }
         
         if (parts[0] == "PING") {
-            conn.send(msg.replace("PING","PONG"))
+            send(msg.replace("PING","PONG") + '\r\n')
         }
         
 
