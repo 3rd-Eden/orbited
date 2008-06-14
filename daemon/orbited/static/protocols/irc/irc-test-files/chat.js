@@ -53,7 +53,7 @@ var connect = function () {
   };
   irc.onident = function() {
     irc.nick(nickname);
-    irc.ident('what_is_this_100', '8 *', 'nickname');
+    irc.ident(nickname, '8 *', nickname);
     irc.join(CHANNEL);
     
     // Once we have joined, don't leave without warning the user
