@@ -16,7 +16,6 @@ function startTimer() {
     timer = setInterval(doRead, TIMER_INCREMENT )
 }
 
-
 // How to use the parser Start
 var parser = new XMLStreamParser()
 parser.onread = function(node) {

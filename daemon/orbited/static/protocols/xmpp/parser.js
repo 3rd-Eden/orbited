@@ -30,5 +30,4 @@ XMLStreamParser = function() {
             self.onread(rootNode.childNodes[0]);
         }
     }
-
 }
