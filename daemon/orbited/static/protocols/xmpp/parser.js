@@ -21,6 +21,9 @@ XMLStreamParser = function() {
             
             var tagName = buffer.slice(tagOpenStartIndex+1, endTagNameIndex)
             var nodePayload = ""
+            // Allows detection of self contained tags like "<tag />"
+            // TODO: don't make whitespace count. allow "<tag /  >"
+            //       (is that valid xml?)
             if (buffer[tagOpenEndIndex-1] == '/') {
                 nodePayload = buffer.slice(tagOpenStartIndex, tagOpenEndIndex+1)
             }
