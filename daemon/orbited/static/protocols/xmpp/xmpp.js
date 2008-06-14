@@ -1,11 +1,20 @@
-ENDERS = ['>','</iq>']
-REPLIES = ["<iq type='get'><query xmlns='jabber:iq:auth'><username>mar</username></query></iq>","<iq type='set'><query xmlns='jabber:iq:auth'><username>mar</username><password>pass</password><resource>laptop</resource></query></iq>"]
-INTRO = "<stream:stream to='localhost' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"
+CONNECT = "<stream:stream to='localhost' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"
+UNAME = "<iq type='set'><query xmlns='jabber:iq:auth'><username>"
+PASS = "</username><password>"
+LOGIN = "</password><resource>someresource</resource></query></iq>"
+FROM = "<message from='"
+TO = "' to='"
+BODY = "' xml:lang='en'><body>"
+END = "</body></message>"
 XMPPClient = function() {
     var self = this
     var conn = null
+    self.user = null
     self.parser = new XMLStreamParser()
-
+    self.login = function(nick, pass) {
+        self.user = nick
+        send(UNAME + nick + PASS + pass + LOGIN)
+    }
     self.connect = function(host, port) {
         conn = new self.transport(host, port)
         conn.onread = read
@@ -13,23 +22,32 @@ XMPPClient = function() {
         conn.onclose = close
         self.parser.onread = nodeReceived
     }
+    self.msg = function(to, content) {
+        send(FROM + self.user + TO + to + BODY + content + END)
+    }
     var nodeReceived = function(node) {
         console.log("S: "+node)
     }
     var read = function(evt) {
         var s = bytesToUTF8(evt)
-        self.parser.receive(s)
+        console.log('received: '+s)
+        /////
+        // FOR NOW
+        if (s.indexOf("<?xml version='1.0'?>") == -1) {
+        // OBVIOUSLY, CHANGE
+        /////
+            self.parser.receive(s)
+        }
     }
     var open = function(evt) {
-        send(INTRO)
-        console.log("C: "+INTRO)
+        send(CONNECT)
     }
     var close = function(evt) {
         console.log("connection closed")
     }
     var send = function(s) {
         conn.send(UTF8ToBytes(s))
+        console.log("C: "+s)
     }
 }
 XMPPClient.prototype.transport = BinaryTCPConnection
-xmpp = new XMPPClient()

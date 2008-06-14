@@ -7,7 +7,24 @@
   <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
   <script src="/_/static/protocols/xmpp/parser.js"></script>
   <script src="/_/static/protocols/xmpp/xmpp.js"></script>
+  <script>
+    function login() {
+        xmpp.login(document.getElementById('nick').value,document.getElementById('pass').value)
+    }
+    function msg() {
+        xmpp.msg(document.getElementById('to').value,document.getElementById('msg').value)
+    }
+    xmpp = new XMPPClient()
+    xmpp.connect('localhost',5222)
+  </script>
 </head>
 <body>
+  <input id="nick">
+  <input id="pass">
+  <button onClick="login()">login</button>
+  <br>
+  <input id="to">
+  <input id="msg">
+  <button onClick="msg()">msg</button>
 </body>
 </html>
