@@ -1,30 +1,36 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Orbited In-browser XMPP</title>
-  <script src="/_/static/URL.js"></script>
-  <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
-  <script src="/_/static/protocols/xmpp/parser.js"></script>
-  <script src="/_/static/protocols/xmpp/xmpp.js"></script>
-  <script>
-    function login() {
-        xmpp.login(document.getElementById('nick').value,document.getElementById('pass').value)
-    }
-    function msg() {
-        xmpp.msg(document.getElementById('to').value,document.getElementById('msg').value)
-    }
+    <head>
+        <title>Orbited XMPP Demo</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/reset-fonts/reset-fonts.css" /> 
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/base/base-min.css" />
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/assets/skins/sam/skin.css" /> 
+    <!-- js --> 
+    <script type="text/javascript" src="yui/build/utilities/utilities.js"></script> 
+    <script type="text/javascript" src="yui/build/container/container-min.js"></script> 
+    <script type="text/javascript" src="yui/build/button/button-min.js"></script> 
+    <script type="text/javascript" src="yui/build/selector/selector-beta-min.js"></script> 
+    <script type="text/javascript" src="yui/build/resize/resize-beta-min.js"></script> 
+    <script type="text/javascript" src="yui/build/layout/layout-beta-min.js"></script> 
+    
+    <script src="chat.js"></script>
+    <script src="userlist.js"></script>
+    <script src="xmpp.js"></script>
+    <script src="/_/static/URL.js"></script>
+    <script src="/_/static/BinaryTCPConnectionBuild.js"></script>
+    <script src="parser.js"></script>
+    <script src="client.js"></script>
+    <script>
+    ////
+    // FOR NOW
     xmpp = new XMPPClient()
-    xmpp.connect('localhost',5222)
-  </script>
-</head>
-<body>
-  <input id="nick">
-  <input id="pass">
-  <button onClick="login()">login</button>
-  <br>
-  <input id="to">
-  <input id="msg">
-  <button onClick="msg()">msg</button>
-</body>
+    xmpp.connect('localhost', 5222)
+    setTimeout(function() {console.log('logging in');xmpp.login('frank','pass');console.log('logged in')}, 3000)
+    // OBVIOUSLY CHANGE
+    ////
+    </script>
+    <link rel="stylesheet" href="xmpp.css" type="text/css" media="screen" title="no title" charset="utf-8">
+    </head>
+    <body class="yui-skin-sam">
+    </body>
 </html>
