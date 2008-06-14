@@ -1,4 +1,5 @@
- <CD name='woot'>
+<tester name='yoho' /> 
+<CD name='woot'>
   <TITLE>Empire Burlesque</TITLE>
   <ARTIST>Bob Dylan</ARTIST>
   <COUNTRY>USA</COUNTRY>

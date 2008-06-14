@@ -18,16 +18,24 @@ XMLStreamParser = function() {
                 return
             }
             var endTagNameIndex = Math.min(buffer.indexOf(' ', tagOpenStartIndex), tagOpenEndIndex)
+            
             var tagName = buffer.slice(tagOpenStartIndex+1, endTagNameIndex)
-            var endTag = '</' + tagName + '>'
-            var endTagIndex = buffer.indexOf(endTag)
-            if (endTagIndex== -1) {
-                return
+            var nodePayload = ""
+            if (buffer[tagOpenEndIndex-1] == '/') {
+                nodePayload = buffer.slice(tagOpenStartIndex, tagOpenEndIndex+1)
             }
-            var nodePayload= buffer.slice(tagOpenStartIndex, endTagIndex + endTag.length)
+            else {
+                var endTag = '</' + tagName + '>'
+                var endTagIndex = buffer.indexOf(endTag)
+                if (endTagIndex== -1) {
+                    return
+                }
+                var nodePayload= buffer.slice(tagOpenStartIndex, endTagIndex + endTag.length)
+            }
             var rootNode =parser.parseFromString(nodePayload,"text/xml");
-            buffer = buffer.slice(endTagIndex + endTag.length+1)
+            buffer = buffer.slice(tagOpenStartIndex + nodePayload.length)
             self.onread(rootNode.childNodes[0]);
         }
     }
+
 }
