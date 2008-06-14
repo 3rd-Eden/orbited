@@ -27,6 +27,10 @@ XMPPClient = function() {
     }
     var nodeReceived = function(node) {
         console.log("S: "+node)
+        if (node.nodeName == "message") {
+            console.log("NEW MESSAGE: "+ node.getAttribute("type"))
+            console.log(node.getAttribute("to") + ": " + node.firstChild.textContent)
+        }
     }
     var read = function(evt) {
         var s = bytesToUTF8(evt)
