@@ -4,17 +4,19 @@ from twisted.internet import reactor
 from base import HTTPTransport
 
 class HTMLFileTransport(HTTPTransport):
-    
-    def opened(self):
-        # Force reconnect ever 30 seconds
-        self.close_timer = reactor.callLater(30, self.close_timeout)
-        self.request.write(format_block('''
+    initial_data = format_block('''
             <html>
              <head>
               <script src="/_/static/transports/HTMLFileFrame.js"></script>
              </head>
              <body>
-        '''))
+        ''')
+    initial_data += ' '*max(0, 256-len(initial_data)) + '\n'
+    def opened(self):
+        # Force reconnect ever 30 seconds
+        self.close_timer = reactor.callLater(5, self.close_timeout)
+        
+        self.request.write(self.initial_data)
         
     def close_timeout(self):
         self.close()

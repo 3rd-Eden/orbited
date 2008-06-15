@@ -25,7 +25,7 @@ XHRStream = function() {
                 xhr = new XMLHttpRequest();
             }
             else {
-                xhr = new XSubdomainRequest();
+                xhr = new XSubdomainRequest(url.domain, url.port);
             }
         }
         url.setQsParameter('transport', 'xhrstream')

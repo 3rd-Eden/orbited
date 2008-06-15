@@ -16,10 +16,10 @@ BaseTCPConnection = function() {
         }
         url = new URL(_url);
         if (url.isSameDomain(location.href)) {
-            xhr = new XMLHttpRequest();
+            xhr = createXHR();
         }
         else {
-            xhr = new XSubdomainRequest(url.domain);
+            xhr = new XSubdomainRequest(url.domain, url.port);
         }
         self.readyState = 1;
         getSession();
@@ -140,5 +140,14 @@ BaseTCPConnection = function() {
     var doRead = function(args) {
         var data = args[0]
         self.onread(data);
+    }
+
+    var createXHR = function () {
+        try { return new ActiveXObject('MSXML3.XMLHTTP'); } catch(e) {}
+        try { return new ActiveXObject('MSXML2.XMLHTTP.3.0'); } catch(e) {}
+        try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+        try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+        try { return new XMLHttpRequest(); } catch(e) {}
+        throw new Error('Could not find XMLHttpRequest or an alternative.');
     }
 }

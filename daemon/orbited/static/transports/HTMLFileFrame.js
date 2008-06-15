@@ -24,8 +24,10 @@ if (isNaN(lastEventId)) {
     lastEventId = 0
 }
 retry = parseInt(origForm['retry'])
+id = parseInt(origForm['frameID']);
+
 if (isNaN(retry))
-    retry = 3000;
+    retry = 50;
 function encodeQS(o) {
     output = ""
     for (key in o)
@@ -39,24 +41,23 @@ window.onload = function() {
         form['transport'] = 'htmlfile'
         form['retry'] = retry
         form['ack'] = lastEventId
+        form['frameID'] = id
         var r = parseInt(origForm['reload'])
         if (isNaN(r))
             form['reload'] = '0'
         else
             form['reload'] = r+1
-        var newUrl = base + '?' + encodeQS(form) + "#" + hash
+        var newUrl = base + '?' + encodeQS(form)
         location.href=newUrl;
      }, retry);
 }
-
 //alert(origDomain)
 var topDomain = null;
-var id = parseInt(location.hash.slice(1));
 var parts = document.domain.split('.')
 if (parts.length == 1) {
     try {
         document.domain = document.domain
-        parent.CometTransport
+        parent.HTMLFile
         topDomain = document.domain
     }
     catch(e) {
@@ -66,7 +67,7 @@ else {
     for (var i = 0; i < parts.length-1; ++i) {
         document.domain = parts.slice(i).join(".")
         try {
-            parent.XSubdomainRequest.prototype
+            parent.HTMLFile
             topDomain = document.domain
             break;
         }
@@ -75,10 +76,11 @@ else {
         }
     }
 }
-if (topDomain == null)
+if (topDomain == null) {
+    alert('invalid document.domain.')
     throw new Error("Invalid document.domain for cross-frame communication")
+}
 f = parent.HTMLFile.prototype.instances[id].receive;
-
 e = function(packets) {
     for (var i =0; i < packets.length; ++i) {
         var packet = packets[i]

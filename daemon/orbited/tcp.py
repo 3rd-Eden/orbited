@@ -163,6 +163,8 @@ class TCPConnection(resource.Resource):
         else:
 #            print 'previously open'
             ack = request.received_headers.get('ack', None)
+            if not ack:
+                ack = request.args.get('ack', [None])[0]
             if ack:
                 try:
                     ack = int(ack)
