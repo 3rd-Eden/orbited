@@ -12,6 +12,7 @@ if (typeof(ActiveXObject) != "undefined") {
 }
 
 @include(URL.js)@
+@include(transports/TransportChooser.js)@
 switch(browser) {
     case 'firefox': // this is also case 'safari'
         @include(transports/XHRStream.js)@
