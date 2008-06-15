@@ -1,0 +1,135 @@
+The State of Comet
+an Orbited presentation
+
+Michael Carter
+
+====
+Comet is...
+
+-asynchronous updates
+-minimal latency
+- implies an interaction model and app architecture, not specific technology
+
+====
+Transports 1 - Iframe streaming
+
+-first transport
+-advantages
+	- cross-browser
+	- cross-sub-domain
+	- streaming
+	- easy to implement
+- disadvantages
+	- loading bar
+	- hour glass
+	- clicking noises in IE
+- conclusion: Unacceptable for modern application usability requirements.
+
+Transport 2 - Long Polling
+
+-most popular transport
+-advantages
+	- cross-browser
+	- easy to implement
+-disadvantages
+	- 3x latency penalty
+	- up to 20x bandwidth usage
+conclusion: 
+    - Unacceptable latency for many applications
+    - Unacceptable bandwidth overhead for scalability for many applications
+    - We need something better
+
+Transport 3 - HTMLFile
+
+-ActiveXObject('htmlfile')
+-CollectGarbage();
+-advantages
+    - just like iframe streaming
+    - no usability issues
+-disadvantages
+    - IE5+ only
+
+Transport 4 - XHR Streaming
+
+- Use readyState 3 to know when new data arrives
+- Manually parse it out
+- advantages
+    - same latency/bandwidth contraints as iframe streaming
+    - no usability issues
+-disadvantages
+    - FF and Safari only
+
+Transport 5 - SSE
+
+- protocol defined by html5
+- deprecated version built into opera
+- we can use the deprecated version for streaming
+- advantages
+    - not a hack -- fully implemented by the browser
+    - same latency/bandwidth constraints as iframe streaming
+- disadvantages
+    - opera 8+ only
+    - moving target
+
+Transports Conclusion
+
+- Comet development is about using annoying hacks
+- Its very hard to get it all right
+- Browsers are a moving target
+- But Streaming Cross-browser, cross-domain is possible
+- Orbited covers all the bases
+
+Scalability - Vertical: On board
+
+- On-board Comet means that the web logic and Comet are in-process
+- Well known fact: Comet + Threads == !Scalable
+    - All major web frameworks are threaded (its a good api for web apps)
+    - So don't use a web framework for Comet
+- Emperically, On-board comet doesn't scale vertically (though it could..)
+
+Scalability - Vertical: Off Board
+- We can stop caring about the nice api threads provides web apps
+- What we need is event based network IO
+- move from Dozens to Thousands of concurrent users
+- zzzz.... This is the easy problem
+
+Scalability - Horizontal
+- Truly tough
+- Depends greatly on the application you are interested in
+- Some simple rules to start with:
+    - No shared state in the Comet Nodes
+    - Comet is hard enough. don't make the comet server also a load balancer
+    - Comet is hard enough. Don't make the Comet server also an xmpp/irc/pubsub server
+    - Comet is hard enough. Don't make the Comet server anything but a Comet server
+    - Treat the Comet server as the last leg of the journey
+
+Publish Subscribe
+- Most common desire is a simple "publish/subscribe" api
+    - Useful, yes
+    - Comet, no
+    - Hard hard hard to scale horizontally as well
+    - Even Harder to integrate with applications!
+
+- Yet all Comet servers seem to think it is part of Comet
+    - Orbited .3.x (with Revolved) (MIT)
+    - Bayeux / Cometd (
+    - Meteor server
+    - Lightstreamer / Caplin / etc.
+
+Publish Subscribe: Horizontally scaled
+- Difficult routing issue
+- Must share state
+- does not scale linearally
+
+Peer Messaging built on Publish Subscribe
+- Give each user their own channel
+- To message a user just publish to their channel
+- Don't do it!
+- Turns an O(1) routing algorithm into an O(hard+unscalable) routing problem
+
+The Future
+- Looks like SSE is coming along, thats nice
+- TCPConnection is very intriguing. A socket in the browser you say?
+    - firewalls? forward proxies? 
+    - security ?!
+
