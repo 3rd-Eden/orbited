@@ -1,8 +1,10 @@
-CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"]
-REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"]
-LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>Orbited</resource></query></iq>"]
-ROSTER = ["<iq from='","' type='get' id='get_roster'><query xmlns='jabber:iq:roster'/></iq>"]
-MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"]
+CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"];
+REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"];
+LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>Orbited</resource></query></iq>"];
+ROSTER = ["<iq from='","' type='get'><query xmlns='jabber:iq:roster'/></iq><presence/>"];
+MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"];
+CONFIRM = ["<presence from='","' to='","' type='subscribed'/>"];
+
 XMPPClient = function() {
     var self = this;
     var host = null;
@@ -54,17 +56,24 @@ XMPPClient = function() {
         }
         if (node.nodeName == "message") {
             var from = node.getAttribute("from");
-            var body = node.firstChild.textContent;
-            onMessage(from, from, body);
-        }
-        else if (node.getAttribute("id") == "get_roster") {
-            var r = node.firstChild.childNodes;
-            for (var x = 0; x < r.length; x++) {
-                console.log(r[x]);
-                if (r[x].getAttribute("subscription") == "to" || r[x].getAttribute("subscription") == "both") {
-                    var jid = r[x].getAttribute("jid");
-                    userList.onUserAvailable(jid, jid);
+            var c = node.childNodes;
+            for (var i = 0; i < c.length; i++) {
+                if (c[i].nodeName == "body") {
+                    onMessage(from, from, c[i].textContent);
                 }
+            }
+        }
+        else if (node.nodeName == "presence") {
+            var ntype = node.getAttribute("type");
+            var from = node.getAttribute("from");
+            if (! ntype) {
+                userList.onUserAvailable(from, from);
+            }
+            else if (ntype == "subscribe") {
+                self.send(construct(CONFIRM, [node.getAttribute("to"), from]));
+            }
+            else if (ntype == "unavailable") {
+                userList.onUserUnavailable(from);
             }
         }
     }
