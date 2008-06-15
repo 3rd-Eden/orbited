@@ -14,10 +14,11 @@ site = server.Site(root)
 
 def main():
     from echo import EchoFactory
+    from proxy import SimpleProxyFactory
 #    from jsonproxy import JsonProxyFactory
     from binaryproxy import BinaryProxyFactory
     root.putChild('echo', EchoFactory())
-#    root.putChild('jsonproxy', JsonProxyFactory())
+    root.putChild('proxy', SimpleProxyFactory())
     root.putChild('binaryproxy', BinaryProxyFactory())
     
     try:

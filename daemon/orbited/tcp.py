@@ -131,14 +131,14 @@ class TCPConnection(resource.Resource):
         self.transport.send_packet('id', ack_id)
         
     def render(self, request):
-#        print '==='
+        print '==='
 #        print request
 #        print request
 #        print request
+        print request
 #        print request
 #        print request
-#        print request
-#        print '==='
+        print '==='
         transport_name = request.args.get('transport', [None])[0]
         if transport_name:
             return self.render_downstream(request)
@@ -182,6 +182,8 @@ class TCPConnection(resource.Resource):
 #        print request.received_headers
         stream = request.content.read()
         ack = request.received_headers.get('ack', None)
+        if not ack:
+            ack = request.args.get('ack', [None])[0]
         if ack:
             try:
                 ack = int(ack)

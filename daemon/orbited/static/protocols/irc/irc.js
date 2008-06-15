@@ -48,7 +48,8 @@ IRCClient = function() {
     }
     
     var read = function(evt) {
-        var s = bytesToUTF8(evt)
+//        var s = bytesToUTF8(evt)
+        var s = evt;
         var msgs = s.split("\r\n")
         for (var i=0; i<msgs.length; i++)
             dispatch(msgs[i])
@@ -108,8 +109,9 @@ IRCClient = function() {
     }
 
     var send = function(s) {
-        conn.send(UTF8ToBytes(s))
+//        conn.send(UTF8ToBytes(s))
+        conn.send(s)
     }
 }
 
-IRCClient.prototype.transport = BinaryTCPConnection
+IRCClient.prototype.transport = TCPConnection

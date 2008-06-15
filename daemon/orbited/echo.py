@@ -25,6 +25,6 @@ class EchoConnection(TCPConnection):
 class EchoFactory(TCPConnectionFactory):
     protocol = EchoConnection
 
-#    def __init__(self, *args, **kwargs):
-#      TCPConnectionFactory.__init__(self, *args, **kwargs)
-#      self.connections['ABC'] = EchoConnection(self, 'ABC')
+    def __init__(self, *args, **kwargs):
+      TCPConnectionFactory.__init__(self, *args, **kwargs)
+      self.connections['ABC'] = EchoConnection(self, 'ABC')

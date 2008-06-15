@@ -7,7 +7,8 @@ ARG_DELIMITER = '_A'
 class XHRStreamingTransport(HTTPTransport):
     
     def opened(self):
-        self.close_timer = reactor.callLater(8, self.close_timeout)
+        # Force reconnect ever 30 seconds
+        self.close_timer = reactor.callLater(30, self.close_timeout)
 
     def close_timeout(self):
         self.close()
