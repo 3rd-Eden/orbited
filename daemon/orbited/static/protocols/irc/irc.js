@@ -41,7 +41,6 @@ IRCClient = function() {
     }
     self.names = function(channel) {
         send('WHO ' + channel)
-        console.log("who sent")
     }
     self.privmsg = function(dest, message) {
         self.onmessage(self.nickname, message)
@@ -62,7 +61,6 @@ IRCClient = function() {
     var dispatch = function(msg) {
         var parts = msg.split(" ")
         
-        console.log(msg)
         
         //:franksalim!n=franksal@cpe-72-130-134-143.san.res.rr.com JOIN :#orbited.dev
         if (parts[1] == "JOIN") {
@@ -92,7 +90,6 @@ IRCClient = function() {
         
         else if (parts[3] == "@") {
             var namelist = msg.split(":").slice(-1)[0].split(" ")
-            console.log(namelist)
         
             self.onnames(namelist)
         }

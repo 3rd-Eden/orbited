@@ -5,6 +5,9 @@
   <script src="/_/static/BaseTCPConnection.js"></script>
   <script src="/_/static/XSubdomainRequest.js"></script>
   <script src="/_/static/transports/XHRStream.js"></script>
+  <script src="/_/static/transports/HTMLFile.js"></script>
+  <script src="/_/static/transports/SSEAppXDom.js"></script>
+  <script src="/_/static/protocols/irc/irc-test-files/jquery.js"></script>
   <script>
    DATA = []
    tcp = null;
@@ -21,6 +24,7 @@
         connUrl.path = "/echo"
         connUrl.qs = ""
         connUrl.hash = ""
+//        connUrl.domain = "www.test.local"
         tcp.connect(connUrl.render())
         tcp.onopen = function() {
             print("Connection opened");

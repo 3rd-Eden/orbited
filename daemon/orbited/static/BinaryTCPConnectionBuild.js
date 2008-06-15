@@ -16,10 +16,12 @@ if (typeof(ActiveXObject) != "undefined") {
 URL = function(_url) {
     var self = this;
     var protocolIndex = _url.indexOf("://")
-    if (protocolIndex != -1)
-        self.protocol = _url.slice(0,protocolIndex)
-    else
+    if (protocolIndex == -1) {
         protocolIndex = -3
+        self.protocol = ""
+    }
+    else
+        self.protocol = _url.slice(0,protocolIndex)
     var domainIndex = _url.indexOf('/', protocolIndex+3)
     if (domainIndex == -1)
         domainIndex=_url.length
@@ -51,7 +53,7 @@ URL = function(_url) {
 
     self.render = function() {
         var output = ""
-        if (typeof(self.protocol) != "undefined")
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0)
             output += self.protocol + "://"
         output += self.domain
         if (self.port != 80 && typeof(self.port) != "undefined" && self.port != null)
@@ -139,12 +141,23 @@ URL = function(_url) {
         delete curQsObj[key]
         self.qs = encodeQs(curQsObj)
     }
-
+    self.merge = function(targetUrl) {
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0) {
+            self.protocol = targetUrl.protocol
+        }
+        if (targetUrl.domain.length > 0) {
+            self.domain = targetUrl.domain
+            self.port = targetUrl.port
+        }
+        self.path = targetUrl.path
+        self.qs = targetUrl.qs
+        self.hash = targetUrl.hash
+    }
 }
 // end @include(URL.js)
 
 switch(browser) {
-    case 'firefox':
+    case 'firefox': // this is also case 'safari'
         
 // start @include(transports/XHRStream.js)
 // Requires: URL.js
@@ -179,15 +192,10 @@ XHRStream = function() {
         }
         url.setQsParameter('transport', 'xhrstream')
         self.readyState = 1
-        self.open()
+        open()
     }
-    self.open = function() {
-            if (url.isSameDomain(location.href)) {
-                xhr = new XMLHttpRequest();
-            }
-            else {
-                xhr = new XSubdomainRequest();
-            }
+    open = function() {
+
         xhr.open('GET', url.render(), true)
         if (typeof(ackId) == "number")
             xhr.setRequestHeader('ack', ackId)
@@ -201,6 +209,7 @@ XHRStream = function() {
                         case 200:
                             process();
                             reconnect();
+                            break;
                         default:
                             self.disconnect();
                     }
@@ -216,7 +225,7 @@ XHRStream = function() {
     }
     var reconnect = function() {
         offset = 0;
-        setTimeout(self.open, self.retry)
+        setTimeout(open, self.retry)
     }
     var process = function() {
         var stream = xhr.responseText;
@@ -247,6 +256,98 @@ XHRStream = function() {
 // end @include(transports/XHRStream.js)
 
         break;
+    case 'ie':
+        
+// start @include(transports/HTMLFile.js)
+HTMLFile = function() {
+    var self = this;
+//    HTMLFile.prototype.i +=1 
+    HTMLFile.prototype.instances[HTMLFile.prototype.i] = self
+
+    self.onread = function(packet) { }
+
+    self.connect = function(_url) {
+        if (self.readyState == 1) {
+            throw new Error("Already Connected")
+        }
+        url = new URL(_url)
+        url.setQsParameter('transport', 'htmlfile')
+        url.hash = "0"
+        self.readyState = 1
+        open()
+    }
+
+    open = function() {
+        source = document.createElement("iframe")
+        source.src = url.render()
+        document.body.appendChild(source)
+    }
+
+    self.receive = function(id, name, args) {
+        packet = {
+            id: id,
+            name: name,
+            args: args
+        }
+        self.onread(packet)
+    }
+}
+
+HTMLFile.prototype.i = 0
+HTMLFile.prototype.instances = {}
+// end @include(transports/HTMLFile.js)
+
+        break;
+    case 'opera':
+        
+// start @include(transports/SSEAppXDom.js)
+SSE = function() {
+    var self = this;
+    self.onread = function(packet) { }
+    var source = null
+    var url = null;
+    self.connect = function(_url) {
+        if (self.readyState == 1) {
+            throw new Error("Already Connected")
+        }
+        url = new URL(_url)
+        url.setQsParameter('transport', 'sse')
+        self.readyState = 1
+        open()
+    }
+
+    open = function() {
+        var source = document.createElement("event-source");
+//      TODO: uncomment this line to work in opera 8 - 9.27.
+//            there should be some way to make this work in both.
+//        document.body.appendChild(source);
+        source.setAttribute('src', url.render());
+        source.addEventListener('orbited', receiveSSE, false);
+    }
+    var receiveSSE = function(event) {
+        var data = eval(event.data);
+        if (typeof(data) != 'undefined') {
+            for (var i = 0; i < data.length; ++i) {
+                var packet = data[i]
+                receive(packet[0], packet[1], packet[2]);
+            }
+        }
+    
+    }
+                
+    var receive = function(id, name, args) {
+        packet = {
+            id: id,
+            name: name,
+            args: args
+        }
+        self.onread(packet)
+    }
+}
+
+// end @include(transports/SSEAppXDom.js)
+
+        break;
 }
 
 // start @include(BaseTCPConnection.js)
@@ -271,7 +372,7 @@ BaseTCPConnection = function() {
             xhr = new XMLHttpRequest();
         }
         else {
-            xhr = new XSubdomainRequest();
+            xhr = new XSubdomainRequest(url.domain);
         }
         self.readyState = 1;
         getSession();
@@ -347,7 +448,9 @@ BaseTCPConnection = function() {
     }
     
     var connectTransport = function()  {
-        transport = new XHRStream()
+//        transport = new HTMLFile()
+//        transport = new XHRStream()
+        transport = new SSE()
         transport.connect(url.render())
         transport.onread = packetReceived
     }
@@ -356,7 +459,6 @@ BaseTCPConnection = function() {
         if (!isNaN(packet.id) && packet.id > ackId) {
             ackId = packet.id
         }
-        console.log(packet)
         switch(packet.name) {
             case 'open':
                 doOpen();
@@ -374,14 +476,11 @@ BaseTCPConnection = function() {
     }
 
     var doOpen = function() {
-        console.log('doOpen1')
         if (self.readyState != 1) {
             throw new Error("Received invalid open")
         }
-        console.log('doOpen2')
         self.readyState = 2;
         self.onopen();
-        console.log('doOpen3')
     }
     var doClose = function() {
         if (self.readyState == 3) {
@@ -608,7 +707,10 @@ bytesToHex = function(bytes) {
 // You should have received a copy of the GNU Lesser General Public License along with
 // this library; if not, write to the Free Software Foundation, Inc., 59 Temple Place,
 // Suite 330, Boston, MA 02111-1307 USA
+<<<<<<< .mine
+=======
 
+>>>>>>> .r249
 function bytesToUTF8(bytes) {    
     var ret = [];
     
@@ -701,7 +803,6 @@ BinaryTCPConnection = function(domain, port) {
         self.onclose();
     }
     conn.onopen = function() {
-        console.log('onopen!')
         self.readyState = conn.readyState
         conn.send(domain + ":" + port)
         self.onopen()

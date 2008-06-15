@@ -1,4 +1,4 @@
-BinaryTCPConnection = function(domain, port) {
+TCPConnection = function(domain, port) {
     var self = this;
     self.onopen = function() { }
     self.onclose = function() { }
@@ -8,10 +8,10 @@ BinaryTCPConnection = function(domain, port) {
     var conn = new BaseTCPConnection()
 
     self.send = function(data) {
-        conn.send(bytesToHex(data));
+        conn.send(data);
     }
     conn.onread = function(data) {
-        self.onread(hexToBytes(data));
+        self.onread(data);
     }
     conn.onclose = function() {
         self.readyState = conn.readyState
@@ -30,7 +30,7 @@ BinaryTCPConnection = function(domain, port) {
         connUrl.port = ORBITED_PORT
 //    else
 //        connUrl.port = connUrl.port
-    connUrl.path = "/binaryproxy"
+    connUrl.path = "/proxy"
     connUrl.qs = ""
 //    alert('connecting to: ' + connUrl.render())
     conn.connect(connUrl.render())

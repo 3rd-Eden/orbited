@@ -19,7 +19,7 @@ BaseTCPConnection = function() {
             xhr = new XMLHttpRequest();
         }
         else {
-            xhr = new XSubdomainRequest();
+            xhr = new XSubdomainRequest(url.domain);
         }
         self.readyState = 1;
         getSession();
@@ -95,7 +95,9 @@ BaseTCPConnection = function() {
     }
     
     var connectTransport = function()  {
+//        transport = new HTMLFile()
         transport = new XHRStream()
+//        transport = new SSE()
         transport.connect(url.render())
         transport.onread = packetReceived
     }
@@ -104,7 +106,6 @@ BaseTCPConnection = function() {
         if (!isNaN(packet.id) && packet.id > ackId) {
             ackId = packet.id
         }
-        console.log(packet)
         switch(packet.name) {
             case 'open':
                 doOpen();
@@ -122,14 +123,11 @@ BaseTCPConnection = function() {
     }
 
     var doOpen = function() {
-        console.log('doOpen1')
         if (self.readyState != 1) {
             throw new Error("Received invalid open")
         }
-        console.log('doOpen2')
         self.readyState = 2;
         self.onopen();
-        console.log('doOpen3')
     }
     var doClose = function() {
         if (self.readyState == 3) {

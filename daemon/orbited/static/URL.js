@@ -1,10 +1,12 @@
 URL = function(_url) {
     var self = this;
     var protocolIndex = _url.indexOf("://")
-    if (protocolIndex != -1)
-        self.protocol = _url.slice(0,protocolIndex)
-    else
+    if (protocolIndex == -1) {
         protocolIndex = -3
+        self.protocol = ""
+    }
+    else
+        self.protocol = _url.slice(0,protocolIndex)
     var domainIndex = _url.indexOf('/', protocolIndex+3)
     if (domainIndex == -1)
         domainIndex=_url.length
@@ -36,7 +38,7 @@ URL = function(_url) {
 
     self.render = function() {
         var output = ""
-        if (typeof(self.protocol) != "undefined")
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0)
             output += self.protocol + "://"
         output += self.domain
         if (self.port != 80 && typeof(self.port) != "undefined" && self.port != null)
@@ -124,5 +126,16 @@ URL = function(_url) {
         delete curQsObj[key]
         self.qs = encodeQs(curQsObj)
     }
-
+    self.merge = function(targetUrl) {
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0) {
+            self.protocol = targetUrl.protocol
+        }
+        if (targetUrl.domain.length > 0) {
+            self.domain = targetUrl.domain
+            self.port = targetUrl.port
+        }
+        self.path = targetUrl.path
+        self.qs = targetUrl.qs
+        self.hash = targetUrl.hash
+    }
 }

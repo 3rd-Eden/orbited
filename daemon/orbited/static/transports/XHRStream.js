@@ -30,15 +30,10 @@ XHRStream = function() {
         }
         url.setQsParameter('transport', 'xhrstream')
         self.readyState = 1
-        self.open()
+        open()
     }
-    self.open = function() {
-            if (url.isSameDomain(location.href)) {
-                xhr = new XMLHttpRequest();
-            }
-            else {
-                xhr = new XSubdomainRequest();
-            }
+    open = function() {
+
         xhr.open('GET', url.render(), true)
         if (typeof(ackId) == "number")
             xhr.setRequestHeader('ack', ackId)
@@ -52,6 +47,7 @@ XHRStream = function() {
                         case 200:
                             process();
                             reconnect();
+                            break;
                         default:
                             self.disconnect();
                     }
@@ -67,7 +63,7 @@ XHRStream = function() {
     }
     var reconnect = function() {
         offset = 0;
-        setTimeout(self.open, self.retry)
+        setTimeout(open, self.retry)
     }
     var process = function() {
         var stream = xhr.responseText;

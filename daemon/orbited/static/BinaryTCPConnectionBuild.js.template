@@ -13,8 +13,14 @@ if (typeof(ActiveXObject) != "undefined") {
 
 @include(URL.js)@
 switch(browser) {
-    case 'firefox':
+    case 'firefox': // this is also case 'safari'
         @include(transports/XHRStream.js)@
+        break;
+    case 'ie':
+        @include(transports/HTMLFile.js)@
+        break;
+    case 'opera':
+        @include(transports/SSEAppXDom.js)@
         break;
 }
 @include(BaseTCPConnection.js)@
