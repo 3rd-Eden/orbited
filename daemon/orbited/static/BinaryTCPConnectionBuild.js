@@ -449,8 +449,8 @@ BaseTCPConnection = function() {
     
     var connectTransport = function()  {
 //        transport = new HTMLFile()
-//        transport = new XHRStream()
-        transport = new SSE()
+        transport = new XHRStream()
+//        transport = new SSE()
         transport.connect(url.render())
         transport.onread = packetReceived
     }
@@ -707,10 +707,7 @@ bytesToHex = function(bytes) {
 // You should have received a copy of the GNU Lesser General Public License along with
 // this library; if not, write to the Free Software Foundation, Inc., 59 Temple Place,
 // Suite 330, Boston, MA 02111-1307 USA
-<<<<<<< .mine
-=======
 
->>>>>>> .r249
 function bytesToUTF8(bytes) {    
     var ret = [];
     
