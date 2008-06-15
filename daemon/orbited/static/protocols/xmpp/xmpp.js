@@ -145,25 +145,25 @@ function onSendMessage(toJid, toUsername, text) {
 
 /// SAMPLE DATA
 
-setTimeout(function() {
-    onMessage("foo@foo", "ASDFSADF", "Hello There");
-}, 3000);
+//setTimeout(function() {
+//    onMessage("foo@foo", "ASDFSADF", "Hello There");
+//}, 3000);
 
-setTimeout(function(){
-    userList.onUserAvailable("marcus@jid.com", "Marcus Cavanaugh");
-    userList.onUserAvailable("asdf@asdf.com", "Michael Carter");
-}, 2000);
-setTimeout(function(){
-    userList.onUserUnavailable("marcus@jid.com");
-    userList.onUserAvailable("ggggg@ggggg.com", "Mario Balibrera");
-}, 4000);
-setTimeout(function(){
-    userList.onUserAvailable("marcus@jid.com", "Marcus Cavanaugh");
-    userList.onUserAvailable("steve@apple.com", "Steve Jobs");
-}, 5000);
-setTimeout(function(){
-    userList.onUserUnavailable("asdf@asdf.com");
-}, 7000);
+//setTimeout(function(){
+//    userList.onUserAvailable("marcus@jid.com", "Marcus Cavanaugh");
+//    userList.onUserAvailable("asdf@asdf.com", "Michael Carter");
+//}, 2000);
+//setTimeout(function(){
+//    userList.onUserUnavailable("marcus@jid.com");
+//    userList.onUserAvailable("ggggg@ggggg.com", "Mario Balibrera");
+//}, 4000);
+//setTimeout(function(){
+//    userList.onUserAvailable("marcus@jid.com", "Marcus Cavanaugh");
+//    userList.onUserAvailable("steve@apple.com", "Steve Jobs");
+//}, 5000);
+//setTimeout(function(){
+//    userList.onUserUnavailable("asdf@asdf.com");
+//}, 7000);
 
 // END SAMPLE DATA
 
