@@ -280,5 +280,32 @@ Slide: Victory march picture, maybe the planting of the american flag in some ba
 - Standards save the day.
 - HTML5 has specified a TCPConnection standard for the browser
 Slide: TCPConnection (word)
-- I've been working closely with the community to put together a scal
+- I've been working closely with whatwg/w3c to specify a protocol and api that solves all of our problems
+- It will 
+    -traverse forward proxies
+    - speak ssl
+    - include cookies (auth integration)
+    - use a single socket for both directions
+    - revolutionize web applications
+- Think about it -- tcp connections revolutionized network programming in the 70s.
+Slide: Iron Man screenshot during test sequence
+- tcp/ip. Thats how dad did it, thats how america does it, and its worked out pretty well so far
+- And whats more, the future is now
+
+Slide: The future is now (sci-fi-ish picture + words?)
+- Orbited provides a TCPConnection to all browsers, today.
+
+Slide: Browser < - > Comet Proxy < - > Jabber diagram
+- Orbited speaks comet transports on the front
+- and plain old tcp on the back
+- So you put it in front of ANY tcp server
+- and the browsers can interact as if they'd connected directly to the server over tcp.
+- and the server doesn't need to be altered at all.
+- No need for a bridge or dispatch protocol
+- but we can simplify this picture still
+
+Slide: Browser < - > ( comet Proxy + Jabber Diagram single machine)
+- Treat the comet proxy as part of the server
+- One comet proxy per backend server
+- Implement the protocol in one spot -- the browser
 
