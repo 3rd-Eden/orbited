@@ -251,4 +251,34 @@ Slide: Two Comet servers (sharded by user) doing pub sub (ajaxworld slide)
 - Developers like it, great.
 - But it was already a hard problem before Browser's existed
 - And the people solving the problem, RabbitMQ/ActiveMQ, aren't part of the comet community.
+- Integrating comet would real publish/subscribe message queues would be great
+- But, thats just a specific case of a larger issue
+- And really, integrating comet with existing technologies would allow us to solve the horizontal scaling problem however these existing technologies already solve it.
+- So How do you integrate comet servers with X?
+
+Slide: Offboard Comet integrated with Jabber
+- This is an example of how a typical comet server is integrated with jabber.
+- the browser maintains a connection with the comet server and the "bridge"
+- The bridge is an http server (hopefully event based as well!)
+- and also an xmpp client
+- and also a "Comet client" (dispatch protocol)
+- Message flow goes browser -> bridge -> jabber -> bridge -> comet -> browser
+
+Slide: A lolcat tangled up
+- This is a bit of a mess
+- complex systems are hard to scale
+
+Slide: previous slide (Offbard comet integrated with jabber)
+- you can't scale this with your typical web load balancer
+- the mapping between comet servers, bridges, and xmpp servers are almost certainly not giong to be 1-1
+- so you have the complex task of figuring out load balancing between each part
+- and then you have to implement each client twice
+- once for the bridge, once for the browser
+- the bridge speaks xmpp to the jabber server, but json-chat (made up protocol) to the browser
+
+Slide: Victory march picture, maybe the planting of the american flag in some battle
+- Standards save the day.
+- HTML5 has specified a TCPConnection standard for the browser
+Slide: TCPConnection (word)
+- I've been working closely with the community to put together a scal
 
