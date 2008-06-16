@@ -3,7 +3,7 @@ REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</use
 LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>Orbited</resource></query></iq>"];
 ROSTER = ["<iq from='","' type='get'><query xmlns='jabber:iq:roster'/></iq><presence/>"];
 MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"];
-CONFIRM = ["<presence from='","' to='","' type='subscribed'/>"];
+PRESENCE = ["<presence from='","' to='","' type='","'/>"];
 
 XMPPClient = function() {
     var self = this;
@@ -12,6 +12,8 @@ XMPPClient = function() {
     var conn = null;
     var user = null;
     var domain = null;
+    var bare_jid = null;
+    var full_jid = null;
     var parser = new XMLStreamParser();
     self.connect = function(h, p) {
         host = h;
@@ -21,9 +23,20 @@ XMPPClient = function() {
     self.msg = function(to, content) {
         self.send(construct(MSG, [user, to, content]));
     }
+    self.remove = function(buddy) {
+        self.send(construct(PRESENCE, [bare_jid, buddy.slice(0, buddy.indexOf('/')), "unsubscribe"]));
+        userList.onUserUnavailable(buddy);
+    }
+    self.add = function(buddy) {
+        self.send(construct(PRESENCE, [bare_jid, buddy, "subscribe"]));
+        alert("Buddy request sent.");
+    }
     self.send = function(s) { // only self for testing
         conn.send(UTF8ToBytes(s));
         console.log("sent: "+s);
+    }
+    self.quit = function() {
+        self.send(PRESENCE[0] + full_jid + PRESENCE[2] + "unavailable" + PRESENCE[3]);
     }
     var construct = function(list1, list2) {
         var return_str = "";
@@ -42,10 +55,14 @@ XMPPClient = function() {
     }
     var register = function(nick, pass) {
         user = nick;
+        bare_jid = nick + "@" + domain;
+        full_jid = bare_jid + "/Orbited";
         self.send(construct(REGISTER, [user, pass]));
     }
     var login = function(nick, pass) {
         user = nick;
+        bare_jid = nick + "@" + domain;
+        full_jid = bare_jid + "/Orbited";
         self.send(construct(LOGIN, [user, pass]));
     }
     var nodeReceived = function(node) {
@@ -69,10 +86,16 @@ XMPPClient = function() {
             if (! ntype) {
                 userList.onUserAvailable(from, from);
             }
-            else if (ntype == "subscribe") {
-                self.send(construct(CONFIRM, [node.getAttribute("to"), from]));
-            }
             else if (ntype == "unavailable") {
+                userList.onUserUnavailable(from);
+            }
+            else if (ntype == "subscribe") {
+                self.send(construct(PRESENCE, [node.getAttribute("to"), from, "subscribed"]));
+            }
+            else if (ntype == "subscribed") {
+                alert(from + " added to your buddy list!");
+            }
+            else if (ntype == "unsubscribed") {
                 userList.onUserUnavailable(from);
             }
         }
@@ -141,7 +164,7 @@ XMPPClient = function() {
         }
         else {
             conn.onread = read;
-            self.send(construct(ROSTER, [user+"@"+domain+"/Orbited"]));
+            self.send(construct(ROSTER, [bare_jid]));
         }
     }
     var open = function(evt) {

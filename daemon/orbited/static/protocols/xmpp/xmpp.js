@@ -143,6 +143,18 @@ function onSendMessage(toJid, toUsername, text) {
     xmpp.msg(toJid, text);
 }
 
+/** Called when the user wants to add that contact */
+function onAddContact(jid) {
+    xmpp.add(jid);
+}
+
+/** Called when the user clicks the user list's remove contact button */
+function onRemoveContact(jid, username) {
+    xmpp.remove(jid);
+}
+
+
+
 /// SAMPLE DATA
 
 //setTimeout(function() {
@@ -201,6 +213,10 @@ UserListWindow.prototype.render = function () {
     this.layout = new YAHOO.widget.Layout(this.panel.body, {
         height: 300,
         units: [
+            {
+                position: 'top',
+                height: 35
+            },
             { // User List
                 position: 'center',
                 gutter: '0'
@@ -210,6 +226,42 @@ UserListWindow.prototype.render = function () {
 
     // rendering
     this.layout.on('render', function () {
+        
+        var topUnit = this.layout.getUnitByPosition('top').get('wrap');
+        
+        var addButton = new YAHOO.widget.Button({
+                                id: "add",
+                                type: "push",
+                                label: "Add",
+                                container: topUnit
+                            });
+        var removeButton = new YAHOO.widget.Button({
+                                id: "remove",
+                                type: "push",
+                                label: "Remove",
+                                container: topUnit
+                            });
+        
+        addButton.get("element").firstChild.firstChild.hideFocus = true; 
+        removeButton.get("element").firstChild.firstChild.hideFocus = true; 
+        
+        addButton.on("click", function (e) {
+            addButton.blur();
+            var jid = window.prompt("Enter the JID of the contact to add:", "");
+            if(jid) {
+                onAddContact(jid);
+            }
+        }, this, true);
+        
+        removeButton.on("click", function (e) {
+            removeButton.blur();
+            for(var i in this.userList.users) {
+                var user = this.userList.users[i];
+                if (user.selected) {
+                    onRemoveContact(user.user_id, user.username);
+                }
+            }
+        }, this, true);
 
         var centerUnit = this.layout.getUnitByPosition('center').get('wrap');
         this.userList = new gp.UserList(centerUnit);
@@ -232,8 +284,7 @@ UserListWindow.prototype.render = function () {
        var bodyHeight = (panelHeight - headerHeight);
         
         if(!IE_QUIRKS) { bodyHeight -= 20; }
-        YAHOO.util.Dom.setStyle(this.panel.header, 'width', 
-                                args.width-20+ 'px');
+        YAHOO.util.Dom.setStyle(this.panel.header, 'width', args.width-20+ 'px');
         YAHOO.util.Dom.setStyle(this.panel.body, 'height', bodyHeight + 'px');
         if (IE_SYNC) {
             this.panel.sizeUnderlay(); 

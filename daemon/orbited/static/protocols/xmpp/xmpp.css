@@ -23,6 +23,10 @@ body {
 
 /* @group User List */
 
+.selectedUsername {
+    background-color: #39F !important;
+    color: white !important;
+}
 .userlist {
     background-color: white;
     border: 1px solid #333;
@@ -40,8 +44,15 @@ body {
 }
 
 .userlist div.username:hover {
-	background-color: #39F;
+	background-color: #ACF;
 	color: white;
+}
+
+.userlist .yui-button button,
+.userlist .yui-button a {
+
+    outline: none;
+    
 }
 
 /* @end */

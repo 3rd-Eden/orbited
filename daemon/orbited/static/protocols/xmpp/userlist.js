@@ -10,7 +10,8 @@ var gp = YAHOO.namespace("gp");
 */
 gp.User = function (jid, username) {
     this.username = username;
-this.user_id = jid;
+    this.user_id = jid;
+    this.selected = false;
 };
 
 /** Used for sorting the username. */
@@ -105,6 +106,23 @@ gp.UserList.prototype = {
     */
     onUsernameClicked: function (user) {
         //alert("Username Clicked: " + user.username + " (" + user.user_id + ")");
+        // Unselect the others
+        for(var i in this.users) {
+            if (this.users[i].selected) {
+                this.users[i].selected = false;
+                YAHOO.util.Dom.removeClass('userlist_'+this.users[i].user_id, 'selectedUsername');
+            }
+        }
+        user.selected = true;
+        if (user.selected) {
+            YAHOO.util.Dom.addClass('userlist_'+user.user_id, 'selectedUsername');
+        } else {
+            YAHOO.util.Dom.removeClass('userlist_'+user.user_id, 'selectedUsername');
+        }
+    },
+    
+    onUsernameDoubleClicked: function (user) {
+        //alert("Username Clicked: " + user.username + " (" + user.user_id + ")");
         // Call the global function for now, cause it's easiest
         onUsernameClicked(user);
     },
@@ -128,8 +146,14 @@ gp.UserList.prototype = {
             div.id = "userlist_" + user.user_id;
             div.alt = user.user_id;
             div.innerHTML = user.username;
+            if (user.selected) {
+                YAHOO.util.Dom.addClass(div, 'selectedUsername');
+            }
             YAHOO.util.Event.on(div, "click", function (e, userObj) {
                 this.onUsernameClicked(userObj);
+            }, user, this);
+            YAHOO.util.Event.on(div, "dblclick", function (e, userObj) {
+                this.onUsernameDoubleClicked(userObj);
             }, user, this);
             elems.push(div);
             this.container.appendChild(div);
