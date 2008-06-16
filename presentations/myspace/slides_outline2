@@ -1,0 +1,190 @@
+Slide: Comet
+
+-My name is Michael Carter
+- Founder Lead developer of Orbited
+- Lead architect of Kaazing's Enterprise Comet Server offering
+- Here to tell you about Comet
+
+- You probably already know what Comet is. But i'll say it again just in case.
+
+Slide: What is Comet
+
+- Its about asynchronous updates in the browser (Pushing data)
+- Not necessarily about a particular technology
+    - could be flash
+    - polling
+    - javascript hacks (streaming)
+- Its about an interaction model -- user is notified asap with new data
+- Its about the applications that you can build with that interaction model
+    - Chat, clearly
+    - Financials
+    - Gaming
+    - Auctions
+    - Sports reporting
+    - Election Monitoring (Andrew Betts / London Paper)
+    - Collaborative Editing
+    - Air traffic control (no joke)
+    - Network monitor reporting / system administration
+    - To name a few
+- In practice though, everyone wants Comet without the need for flash
+- Just plain old js and html
+- Which brings us to Transports
+
+Slide: Transports 12.27.20
+- These are the actual mechanisms for delivering data
+- There are many
+
+Slide: Iframe
+
+- Originally we had script tag streaming
+- but it made sense to put it in an iframe
+- So we refer to it now as iframe streaming
+
+Slide: Iframe Diagram
+
+- Parent page has a callback "receive"
+- Finishes loading, creates and iframe
+- Iframe causes an HTTP request to the server
+- the server sends headers
+- (transfer-encoding chunked for http 1.1)
+- And then stops
+- The key to this transport is incremental rendering
+- Browser will try to display any open/close tag pair that it receives
+- This includes displaying invisible elements, like script tags
+- So the server can cause the browser to execute arbitrary javascript
+- <script>parent.receive("payload!");</script>
+
+Slide: Iframe Code
+- Easy to implement
+- Works in all browsers with the same code
+- Suffers from..
+
+Slide: Iframe Usability
+- Loading Bars
+- Hour glasses
+- clicking noises?! (wtf mate ^^)
+
+Slide: Iframe Unacceptable
+- Modern applications can't have clicking noises and hour glasses. 
+- The users would get too confused
+- So Iframe streaming isn't that popular
+- Instead, the winner is...
+
+Slide: XHR Long polling
+
+- Long polling is what the cool kids do.
+- (Meebo and Facebook, for instance)
+
+Slide: XHR diagram
+
+- Browser says, 'Give me an event'
+- Server says, '...'
+- Server says, 'event.'
+- Browser says, 'Give me an event'
+- server says '...'
+- Its cross-browser
+
+Slide: Long polling code
+- still easy to implement
+- and no usability issues!
+- but how does long polling performance compare to iframe streaming?
+- Consider an island off the coast
+- its surrounded by water
+
+Slide: Island
+- We want to send conveys to the island, so we build a bridge
+
+Slide: Bridge
+- Conveys can now go to the island as they please
+- But maybe a big ugly bridge is not what we wanted... its too unsightly
+- So instead we build a boat
+
+Slide: A boat
+- The convey arrives at the boat, and the boat takes it to the island
+- no problem
+- But what about the second convey that arrived just after the boat leaves?
+- It waits for the boat to go to the island
+- It waits for the boat to come back
+- It gets on, and waits for the boat to go to the island
+- Well Iframe streaming is the bridge, and the boat is long polling
+- Meaning, long polling suffers from a 3x latency performance hit
+- But thats not all
+Slide: Bandwidth comparison
+- You also have to send headers all the time
+- Your buddy says 'how's it hanging'
+- But the browser says 'GET /some/url HTTP/1.1\r\nUser-Agent: ...etc'
+- And the server says 'HTTP/1.1 200 ok\r\nContent-type....'
+- your 15 byte message can easily incur 300 bytes of headers
+- thats a 20x bandwidth increase in that case
+
+Slide: Long polling unacceptable
+- 3x latency is too much
+- 20x bandwidth is too much
+
+Slide: Strike 2, you're out
+- Strike 2, you're out
+- or so we thought
+
+Slide: Htmlfile Object
+- htmlfile object to the rescue
+
+Slide: ActiveX!
+- but safe for scripting
+- hides usability issues
+
+Slide: Garbage crossout
+- leaks live connections on navigations
+- But we can fix that by explicitly calling the garbage collector
+
+Slide: Htmlfile works great
+- Streaming
+- But No side effects
+Slide: Explorer only
+- partial solution
+Slide: Xhr Streaming
+- transport for ff and safari
+Slide: ready state 3
+- ready state 3 saves the day
+- callbacks for download progress from server
+- responseText is just plain text without any inherent meaning
+
+Slide: Manually parse
+- So invent our own format
+- parse it manually
+- And we're set for firefox and safari
+- Without loading bars or anything
+- and the same bandwidth and latency constraints of iframe streaming
+- So we've got all the browsers
+- Except opera
+
+Slide: SSE - 12.36.20
+
+- Opera goes above and beyond the call of duty
+- I don't ask that browser's make my life easy
+- They can keep their nasty forest of terrible hacks
+- All I ever asked from browsers is that they make it possible to do comet
+- But Opera actually makes comet a first class citizen of the browser
+- Create an event source, name a url, add a listener. The end.
+
+Slide: Html5
+
+- Then they went on to propose that the this be included in HTML5
+- after discussions with other vendors, a new spec came up
+
+Slide: deprecated
+
+- so the new one isn't implemented
+- but thats okay
+- we can use the deprecated one in opera 8+
+
+Slide: Transport Conclusions
+- You've seen the prettier side of Comet
+- Ten minutes to explain 
+- Years to discover
+
+Slide: hacks
+- And yes, its hacks, hacks hacks
+
+
+
+
