@@ -1,10 +1,18 @@
-Slide: Comet
+<!-- (Part I - what is Comet + transports: 10 minutes) -->
+Slide: Orbited Logo + Michael Carter
 
 -My name is Michael Carter
 - Founder Lead developer of Orbited
+    - 2 years in development
+    - countless architectures tested
+    - now we've found the best
 - Lead architect of Kaazing's Enterprise Comet Server offering
-- Here to tell you about Comet
+    - coming soon (to theatres everywhere...)
 
+Slide: Comet
+
+- Here to tell you about Comet
+- Everything I've learned in two years of Comet work
 - You probably already know what Comet is. But i'll say it again just in case.
 
 Slide: What is Comet
@@ -30,7 +38,7 @@ Slide: What is Comet
 - Just plain old js and html
 - Which brings us to Transports
 
-Slide: Transports 12.27.20
+Slide: Transports
 - These are the actual mechanisms for delivering data
 - There are many
 
@@ -157,7 +165,7 @@ Slide: Manually parse
 - So we've got all the browsers
 - Except opera
 
-Slide: SSE - 12.36.20
+Slide: SSE
 
 - Opera goes above and beyond the call of duty
 - I don't ask that browser's make my life easy
@@ -185,6 +193,62 @@ Slide: Transport Conclusions
 Slide: hacks
 - And yes, its hacks, hacks hacks
 
+Slide: aim carefully
+- Developing these transports is like trying to throw darts at a board
+
+Slide: moving target
+- but the board moves after you've thrown the dart
+- That is to say, just imagine the most frustrating game you can
+- That game is twice as fun as building transports
+- But in the end
+
+Slide: sleek bridge
+- We can avoid the boat transport (long polling)
+- And provide great user experience
+
+Slide: sleek bridge image with orbited logo superimosed
+- And orbited does just that
 
 
+Slide: Scalability
+- Once you have a way to do comet, you need to scale it
+- where transports are frustrating, scaling is hard
+- Step 1,
+
+Slide: Vertical Scalability
+- How do you put lots of users on one machine?
+- Seems like such a hard problem, but really there's a simple trick
+- And once you know the trick, its easy
+- Don't use threads.
+- People  have tried this with servers like apache
+- So a reasonable thread count, of 20, will service 20 users
+- A better user count is a 1000 though
+- But a 1000 threads brings a system to its knees with context switches
+- No comet, just thrashing
+- So use the little trick of omitting threads, and you're golden
+- Build event-based servers
+- Your comet apps won't have to be like nature preserves
+- You don't want your app to be a lonely desert with the occasional wanderer
+- it should be a riot, with users tearing down the walls, sucking your resources dry, demanding more...
+
+Slide: desert -> riot
+- So use event based programming for your comet server
+
+Slide: zzzz
+This is the easy problem
+The harder problem is the other "half" of scaling,
+
+Slide: Horizontal Scalability
+- This is a truly tough problem
+- Really though, it depends on the application
+- But a few core rules are in order
+- 1. Don't share state between comet servers
+- 2. Only do Comet in the Comet server. no Pub/sub, no jabber/game server, just comet
+- 3. Treat comet as the last leg of the journey
+
+Slide: Two Comet servers (sharded by user) doing pub sub (ajaxworld slide)
+- For some reason, comet servers are all trying to provide a pub/sub api
+- Developers like it, great.
+- But it was already a hard problem before Browser's existed
+- And the people solving the problem, RabbitMQ/ActiveMQ, aren't part of the comet community.
 
