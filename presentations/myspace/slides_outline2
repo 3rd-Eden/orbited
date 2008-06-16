@@ -209,6 +209,7 @@ Slide: sleek bridge
 Slide: sleek bridge image with orbited logo superimosed
 - And orbited does just that
 
+<!-- (Part II - Scaling Comet - 8 Minutes) -->
 
 Slide: Scalability
 - Once you have a way to do comet, you need to scale it
@@ -256,6 +257,8 @@ Slide: Two Comet servers (sharded by user) doing pub sub (ajaxworld slide)
 - And really, integrating comet with existing technologies would allow us to solve the horizontal scaling problem however these existing technologies already solve it.
 - So How do you integrate comet servers with X?
 
+<!-- (Part III - Integrating Comet - 10 Minutes) -->
+
 Slide: Offboard Comet integrated with Jabber
 - This is an example of how a typical comet server is integrated with jabber.
 - the browser maintains a connection with the comet server and the "bridge"
@@ -279,6 +282,8 @@ Slide: previous slide (Offbard comet integrated with jabber)
 Slide: Victory march picture, maybe the planting of the american flag in some battle
 - Standards save the day.
 - HTML5 has specified a TCPConnection standard for the browser
+
+
 Slide: TCPConnection (word)
 - I've been working closely with whatwg/w3c to specify a protocol and api that solves all of our problems
 - It will 
