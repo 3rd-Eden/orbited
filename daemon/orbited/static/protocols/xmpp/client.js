@@ -31,9 +31,12 @@ XMPPClient = function() {
         self.send(construct(PRESENCE, [bare_jid, buddy, "subscribe"]));
         alert("Buddy request sent.");
     }
-    self.send = function(s) { // only self for testing
+    self.send = function(s) {
+        /////////
+        // send raw xml to jabber server with this function
+        /////////
         conn.send(UTF8ToBytes(s));
-        console.log("sent: "+s);
+//        console.log("sent: "+s);
     }
     self.quit = function() {
         self.send(PRESENCE[0] + full_jid + PRESENCE[2] + "unavailable" + PRESENCE[3]);
@@ -51,7 +54,7 @@ XMPPClient = function() {
         conn.onopen = open;
         conn.onclose = close;
         parser.onread = nodeReceived;
-        console.log("connection opened");
+//        console.log("connection opened");
     }
     var register = function(nick, pass) {
         user = nick;
@@ -66,10 +69,10 @@ XMPPClient = function() {
         self.send(construct(LOGIN, [user, pass]));
     }
     var nodeReceived = function(node) {
-        console.log("received node: "+node.nodeName);
+//        console.log("received node: "+node.nodeName);
         var a = node.attributes;
         for (var i = 0; i < a.length; i++) {
-            console.log("   " + a[i].localName + ": " + a[i].value);
+//            console.log("   " + a[i].localName + ": " + a[i].value);
         }
         if (node.nodeName == "message") {
             var from = node.getAttribute("from");
@@ -120,12 +123,12 @@ XMPPClient = function() {
     }
     var read = function(evt) {
         var s = bytesToUTF8(evt);
-        console.log('received: '+s);
+//        console.log('received: '+s);
         parser.receive(s);
     }
     var setDomain = function(evt) {
         var s = bytesToUTF8(evt);
-        console.log('setDomain received: '+s);
+//        console.log('setDomain received: '+s);
         if (s.indexOf("<?xml version='1.0'?>") == 0) {
             s = s.slice(s.indexOf("'>")+2);
         }
@@ -139,7 +142,7 @@ XMPPClient = function() {
     }
     var regUser = function(evt) {
         var s = bytesToUTF8(evt);
-        console.log('regUser received: '+s);
+//        console.log('regUser received: '+s);
         if (s.indexOf("conflict") != -1) {
             if (confirm("That user name is taken. Try again?")) {
                 prompt_register();
@@ -152,7 +155,7 @@ XMPPClient = function() {
     }
     var setUser = function(evt) {
         var s = bytesToUTF8(evt);
-        console.log('setUser received: '+s);
+//        console.log('setUser received: '+s);
         if (s.indexOf("not-authorized") != -1) {
             if (confirm("Login failed. Register a new user account?")) {
                 conn.onread = regUser;
@@ -174,7 +177,7 @@ XMPPClient = function() {
         }
     }
     var close = function(evt) {
-        console.log("connection closed");
+//        console.log("connection closed");
         reconnect();
     }
 }
