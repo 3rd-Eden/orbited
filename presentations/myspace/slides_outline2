@@ -290,10 +290,10 @@ Slide: TCPConnection (word)
 - Think about it -- tcp connections revolutionized network programming in the 70s.
 Slide: Iron Man screenshot during test sequence
 - tcp/ip. Thats how dad did it, thats how america does it, and its worked out pretty well so far
-- And whats more, the future is now
+- And we don't even have to wait for browser vendors
 
 Slide: The future is now (sci-fi-ish picture + words?)
-- Orbited provides a TCPConnection to all browsers, today.
+- Orbited provides a TCPConnection to all major browsers, today.
 
 Slide: Browser < - > Comet Proxy < - > Jabber diagram
 - Orbited speaks comet transports on the front
@@ -307,5 +307,31 @@ Slide: Browser < - > Comet Proxy < - > Jabber diagram
 Slide: Browser < - > ( comet Proxy + Jabber Diagram single machine)
 - Treat the comet proxy as part of the server
 - One comet proxy per backend server
-- Implement the protocol in one spot -- the browser
+- Now you can all sigh in relief
+
+Slide: Sigh of relief
+- Because Comet isn't going to get in the way anymore
+- Scaling Comet applications isn't a twofold problem anymore
+- If you know how to scale a network application, then you can scale a comet application.
+
+Slide: Jabber server cloud with half Comet proxies, half normal
+- And whats more, there's no difference between the browser and the desktop
+- You get to 
+
+
+Slide: Auth + persistence (a pair of keys and some kind of storage)
+- There are a couple of details: authentication and persistence
+
+Slide: Jabber server with comet proxy on left, web app on the right, sql server behind both
+- Just have the network server and the web app coordinate on the back end
+- And your problems are over.
+
+Slide:Conclusion  (Bullseye (with orbited logo somewhere))
+- Transports are frustrating, but Orbited implements them (indeed, many projects take our implementation directly)
+- Vertical Scalability and threads don't mix. Orbited use event-based network IO.
+- Horizontal scalability is tough because you have two problems.
+- If you can solve integration, then you can get a handle on horizontal scalability
+- TCPConnection is the perfect integration point. It works with all past, present, and future tcp/ip servers. Out of the box.
+- Orbited provides that functionality today.
+
 
