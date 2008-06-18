@@ -62,8 +62,6 @@ IRCClient = function() {
     var dispatch = function(msg) {
         var parts = msg.split(" ")
         
-        
-        //:franksalim!n=franksal@cpe-72-130-134-143.san.res.rr.com JOIN :#orbited.dev
         if (parts[1] == "JOIN") {
             var identity = parts[0].slice(1)
             var ident_name = parse_name(identity)
