@@ -48,8 +48,8 @@ IRCClient = function() {
     }
     
     var read = function(evt) {
-//        var s = bytesToUTF8(evt)
-        var s = evt;
+        var s = bytesToUTF8(evt)
+        //var s = evt;
         var msgs = s.split("\r\n")
         for (var i=0; i<msgs.length; i++)
             dispatch(msgs[i])
@@ -87,7 +87,7 @@ IRCClient = function() {
         }       
         
         
-        else if (parts[3] == "@") {
+        else if (parts[3] == "@" || parts[3] == "=") {
             var namelist = msg.split(":").slice(-1)[0].split(" ")
         
             self.onnames(namelist)
@@ -107,9 +107,9 @@ IRCClient = function() {
     }
 
     var send = function(s) {
-//        conn.send(UTF8ToBytes(s))
-        conn.send(s)
+        conn.send(UTF8ToBytes(s))
+        //conn.send(s)
     }
 }
 
-IRCClient.prototype.transport = TCPConnection
+IRCClient.prototype.transport = BinaryTCPConnection
