@@ -12,7 +12,7 @@ var print = function(s) {
     if (typeof(arguments[1]) != undefined)
         color = arguments[1]
     shell.innerHTML += "&rarr;<span style='color:"+color+ "'> " + htmlescape(s) + "</span><br>"
-    output.scrollTop = self.output.scrollHeight
+    shell.scrollTop = shell.scrollHeight
 }
 
 var client = new TelnetClient()
