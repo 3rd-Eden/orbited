@@ -14,7 +14,7 @@ No Longer. I am excited to announce that the HTML5 specification now offers WebS
     - Allow duly authorized cross-domain communication
     - Integrate well with cookie-based authentication
     - Integrate with existing HTTP load balancers
-    - 
+    
 
 The API of WebSocket is very straightforward. You create a WebSocket and point it at a url:
 
@@ -67,12 +67,13 @@ JSnap
 
 Once you have a tcp socket in the browser, No application architecture is impossible, or even hard. Only now though, is it apparent how far javascript is behind all other programming languages for networking support. We need to make all haste in developing every major protocol in javascript. The Orbited project ships with example STOMP and IRC implementations, but this is only the beginning. We plan on shipping a Daemon capable of serving implementations of all major web protocols. But this project is not specific to the Orbited daemon. As more innovation is made in the realm of raw tcp connections to the browser, we want our protocol implementations to still be useful.
 
-I am pleased to announce the launch of a brand new Open Source project JSnap. The JSnap project will be upstream of the Orbited project, though Orbited will ship with a compiled version of the protocols. Orbited 0.6 (expected mid-July) should ship with the first release of JSnap. We are initially targetting the following four protocols:
+I am pleased to announce the launch of a brand new Open Source project, JSnap. The JSnap project will be seperate from the core Orbited daemon project, though Orbited will ship with a compiled version of the protocols. Orbited 0.6 (expected late-July) should ship with the first release of JSnap. We are initially targetting the following four protocols:
 
 - XMPP (Jabber)
 - STOMP (ActiveMQ and RabbitMQ)
 - IRC
 - IMAP (IDLE command makes webmail push incredibly simple)
+
 
 The Future
 ----------
