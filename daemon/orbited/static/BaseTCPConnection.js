@@ -95,9 +95,6 @@ BaseTCPConnection = function() {
     }
     
     var connectTransport = function()  {
-//        transport = new HTMLFile()
-//        transport = new XHRStream()
-//        transport = new SSE()
         transport = TransportChooser.create();
         transport.connect(url.render())
         transport.onread = packetReceived

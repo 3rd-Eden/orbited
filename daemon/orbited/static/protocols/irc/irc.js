@@ -47,10 +47,10 @@ IRCClient = function() {
         send('PRIVMSG ' + dest + ' :' + message + '\r\n')    
     }
     
-    var read = function(evt) {
-        var s = bytesToUTF8(evt)
-        //var s = evt;
-        var msgs = s.split("\r\n")
+    var read = function(data) {
+        //data = bytesToUTF8(data)
+        
+        var msgs = data.split("\r\n")
         for (var i=0; i<msgs.length; i++)
             dispatch(msgs[i])
     }
@@ -107,9 +107,9 @@ IRCClient = function() {
     }
 
     var send = function(s) {
-        conn.send(UTF8ToBytes(s))
-        //conn.send(s)
+        //conn.send(UTF8ToBytes(s))
+        conn.send(s)
     }
 }
 
-IRCClient.prototype.transport = BinaryTCPConnection
+IRCClient.prototype.transport = TCPConnection
