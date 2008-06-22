@@ -296,7 +296,6 @@ HTMLFile = function() {
     self.onread = function(packet) { }
 
     self.connect = function(_url) {
-        alert('xdomaintest')
         if (self.readyState == 1) {
             throw new Error("Already Connected")
         }
@@ -316,7 +315,6 @@ HTMLFile = function() {
     }
 
     var doOpen = function() {
-        alert('connect: ' + url.render())
         htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
         htmlfile.open();
         htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
@@ -698,7 +696,7 @@ WebSocket = function(url) {
     var self = this;
     self.onopen = function() { }
     self.onclose = function() { }
-    self.onread = function(data) { console.log(data) }
+    self.onread = function() { }
     self.readyState = 0
 
     var conn = new BaseTCPConnection()

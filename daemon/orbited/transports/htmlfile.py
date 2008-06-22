@@ -7,7 +7,7 @@ class HTMLFileTransport(HTTPTransport):
     initial_data = format_block('''
             <html>
              <head>
-              <script src="/_/static/transports/HTMLFileFrame.js"></script>
+              <script src="/static/transports/HTMLFileFrame.js"></script>
              </head>
              <body>
         ''')
