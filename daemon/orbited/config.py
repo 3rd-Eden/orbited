@@ -4,8 +4,9 @@ map = {
         'log.enabled': '0'
     },
     '[access]': [
-        ('127.0.0.1', 9998), # Allow WebSocket test daemon
+        ('localhost', 9998), # Allow WebSocket test daemon
         ('irc.freenode.net', 6667), # Allow chat demo
+        ('www.google.com', 80)
     ],
 
     '[logging]': {

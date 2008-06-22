@@ -133,7 +133,7 @@ class TCPConnection(resource.Resource):
     def render(self, request):
 #        print '==='
 #        print request
-#        print request
+        print request
 #        print request
 #        print request
 #        print request
