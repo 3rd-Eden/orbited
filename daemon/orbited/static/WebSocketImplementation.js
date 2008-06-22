@@ -2,7 +2,7 @@ WebSocket = function(url) {
     var self = this;
     self.onopen = function() { }
     self.onclose = function() { }
-    self.onread = function(data) { console.log(data) }
+    self.onread = function() { }
     self.readyState = 0
 
     var conn = new BaseTCPConnection()
