@@ -2,6 +2,9 @@ from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientCreator
 
+from logger import get_logger
+log = get_logger("BinaryTCPConnection")
+
 # Based on code from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/510399
 
 def byte_to_hex( byteStr ):
@@ -67,6 +70,7 @@ class BinaryProxyConnection(TCPConnection):
             host, port = data.split(':')
             self.host = host
             self.port = int(port)
+            log.access(self.getClientIP(), "TCP/bin", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
             self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
             self.state = 'proxy'
         except Exception, x:

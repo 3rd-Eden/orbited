@@ -1,11 +1,14 @@
+from config import map as config
 from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientCreator
+from logger import get_logger
 
+log = get_logger("TCPConnection")
 class ProxyProtocol(Protocol):
        
     def send(self, msg):
-        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
+#        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
         self.transport.write(msg)
         
     def dataReceived(self, data):
@@ -21,7 +24,7 @@ class ProxyClient(object):
         
     def connect(self, host, port):
         d = defer.Deferred()
-        print "opening remote connection to %s:%s" % (host, port)
+#        print "opening remote connection to %s:%s" % (host, port)
         self.c.connectTCP(host, port).addCallback(self.connected, d, host, port)
         return d
     
@@ -54,10 +57,14 @@ class ProxyConnection(TCPConnection):
             host, port = data.split(':')
             self.host = host
             self.port = int(port)
+            if (self.host, self.port) not in config['[access]']:
+                print 'unauthorized', data
+                raise (Exception("Unauthorized"), "(host, port) pair not authorized for proxying")
+            log.access(self.getClientIP(), "TCP/raw", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
             self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
             self.state = 'proxy'
         except Exception, x:
-            self.send("Invalid handhsake: " + str(x) + "(payload: %s)" % data)
+            self.send("Invalid handshake: " + str(x) + " (payload: %s)" % data)
             self.loseConnection()
             
     def state_proxy(self, data):

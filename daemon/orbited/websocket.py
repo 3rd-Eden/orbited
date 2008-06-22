@@ -2,11 +2,14 @@ import urlparse
 from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientCreator
+from logger import get_logger
 
+log = get_logger("WebSocket")
 class ProxyProtocol(Protocol):
        
     def send(self, msg):
-        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
+
+#        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
         self.transport.write('\x00' + msg + '\x00')
         self.transport.write(msg)
         
@@ -73,7 +76,7 @@ class ProxyClient(object):
         
     def connect(self, host, port, url):
         d = defer.Deferred()
-        print "opening remote connection to %s:%s" % (host, port)
+#        print "opening remote connection to %s:%s" % (host, port)
         self.c.connectTCP(host, port).addCallback(self.connected, d, host, port, url)
         return d
     
@@ -114,10 +117,12 @@ class WebSocketConnection(TCPConnection):
             self.url += (url.fragment and '#' + url.fragment)
             self.host = url.hostname
             self.port = url.port
+            log.access(self.getClientIP(), 
+                "WebSocket", " -> ", data, " [ ", self.getClientIP(), " ]")
             self.factory.client.connect(self.host, self.port, self.url).addCallback(self.connected_remote).addErrback(self.failed_handshake)
             self.state = 'proxy'
         except Exception, x:
-            print "Invalid handhsake: " + str(x) + "(payload: %s)" % data
+#            print "Invalid handshake: " + str(x) + "(payload: %s)" % data
             self.loseConnection()
             
     def state_proxy(self, data):

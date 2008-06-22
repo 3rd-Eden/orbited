@@ -1,0 +1,31 @@
+document.domain=document.domain
+// Browser detect by Frank Salim
+var browser = null;
+if (typeof(ActiveXObject) != "undefined") {
+    browser = 'ie'
+} else if (navigator.product == 'Gecko' && window.find && !navigator.savePreferences) {
+    browser = 'firefox'
+} else if((typeof window.addEventStream) === 'function') {
+    browser = 'opera'
+} else {
+    throw new Error("couldn't detect browser")
+}
+
+@include(URL.js)@
+@include(transports/TransportChooser.js)@
+switch(browser) {
+    case 'firefox': // this is also case 'safari'
+        @include(transports/XHRStream.js)@
+        break;
+    case 'ie':
+        @include(transports/HTMLFile.js)@
+        break;
+    case 'opera':
+        @include(transports/SSEAppXDom.js)@
+        break;
+}
+@include(BaseTCPConnection.js)@
+@include(XSubdomainRequest.js)@
+@include(hex.js)@
+@include(unicode.js)@
+@include(BinaryTCPConnectionImplementation.js)@
