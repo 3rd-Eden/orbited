@@ -5,10 +5,8 @@ from twisted.web import server, resource, static
 #from revolved import RevolvedConnection
 
 root = resource.Resource()
-system = resource.Resource()
-root.putChild('_', system)
 static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
-system.putChild('static', static_files)
+root.putChild('static', static_files)
 site = server.Site(root)
 
 
@@ -17,10 +15,11 @@ def main():
     from proxy import SimpleProxyFactory
 #    from jsonproxy import JsonProxyFactory
     from binaryproxy import BinaryProxyFactory
+    from websocket import WebSocketFactory
     root.putChild('echo', EchoFactory())
     root.putChild('proxy', SimpleProxyFactory())
     root.putChild('binaryproxy', BinaryProxyFactory())
-    
+    root.putChild('websocket', WebSocketFactory())
     try:
         port = int(sys.argv[1])
     except:

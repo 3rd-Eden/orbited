@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>JavaScript Stomp Test</title>
+    <script src="/static/BinaryTCPConnection.js"></script>
+    <script src="shell.js"></script>
+     <script src="stomp.js"></script>
+    <script>
+        onload = function() {
+            document.domain = document.domain
+            // set up shell
+            var output = document.getElementById('output')
+            var s = new Shell(output)
+            print = s.print
+            ORBITED_PORT = 7000
+            stomp = new STOMPClient()
+            stomp.onmessage = function(msg) { print(msg.body) }
+            stomp.onerror = function(msg) { alert(msg.body) }
+            stomp.onopen = function() { print("Connected to ActiveMQ as user " + document.getElementById('username').value)}
+        }
+    </script>
+</head>
+<body>
+    <h1>STOMP Test</h1>
+    <div id="output" style="background-color: #eee; overflow-y: scroll; height : 200px;"></div>
+
+    
+    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value)">Connect</button>Name: <input id="username" value="frank">
+    <br>    
+    <button onclick="stomp.subscribe(document.getElementById('sub_channel').value)">Subscribe</button>
+    <button onclick="stomp.unsubscribe(document.getElementById('sub_channel').value)">Unsubscribe</button>
+    channel:
+    <input id="sub_channel" value="/topic/home"><br>
+    
+    
+    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value)">Send</button>
+    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value, {transaction : document.getElementById('trans_pub_id').value})">Send with Transaction Id</button>
+    
+    <input id="input" value="hello">
+    channel:
+    <input id="pub_channel" value="/topic/home">
+    transaction id:
+    <input id="trans_pub_id" value="trans1">
+    <br>
+    
+    
+    <br>
+    <button onclick="stomp.begin(document.getElementById('trans_id').value)">Begin Transaction</button>
+    <button onclick="stomp.commit(document.getElementById('trans_id').value)">Commit</button>
+    <button onclick="stomp.abort(document.getElementById('trans_id').value)">Abort</button>
+    transaction id:
+    <input id="trans_id" value="trans1">
+
+</body>
+</html>
+
