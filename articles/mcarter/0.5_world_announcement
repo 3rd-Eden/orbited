@@ -4,17 +4,16 @@ Title
 WebSocket
 ---------
 
-A recent flurry of exciting developments are taking place with the HTML5 specification. First, a recap. With long-polling we set the bar to cross-browser push. With XHR streaming and ActiveXObject('htmlfile') we raised it to cross-browser streaming. With SSE we've been trying to raise the bar to native, cross-browser streaming. And there we've sat, screaming for native Comet until we're blue in the face. (Kudos to Opera for paying attention)
+A recent set of HTML5 discussions are changing the course of Comet. First, a recap: With long-polling we set the bar to cross-browser push. With XHR streaming and ActiveXObject('htmlfile') we raised it to cross-browser streaming. With SSE we've been trying to raise the bar to native, cross-browser streaming. And there we've sat, hoping that browser vendors actually implement the latest SSE spec.
 
-I say we've been selling ourselves short. We're still missing client->server streaming, and anything resembling a standard transport for bi-directional comunication. The Holy Grail of Comet development has always been native browser support of a full-duplex, single-connection communication's channel, otherwise known as a tcp socket. But we've been mired down in hacks so long that we've lost the vision.
+I say we've been selling ourselves short. All this time pushing for a native server->client streaming transpor, but we still lack client->server streaming, and anything resembling a standard transport for bi-directional comunication. The Holy Grail of Comet development has always been native browser support of a full-duplex, single-connection communication's channel, otherwise known as a TCP socket. But we've been mired down in hacks so long that we've lost the vision.
 
-No Longer. I am excited to announce that the HTML5 specification now offers WebSocket, a full-duplex communications channel that operates over a single socket. I have been working closely with the specification authors to ensure that WebSocket will:
+No Longer. I am excited to announce that the HTML5 specification now offers [WebSocket](http://), a full-duplex communications channel that operates over a single socket. I have been working closely with the specification authors to ensure that WebSocket will:
 
     - Seamlessly traverses firewalls and routers
     - Allow duly authorized cross-domain communication
     - Integrate well with cookie-based authentication
     - Integrate with existing HTTP load balancers
-    
 
 The API of WebSocket is very straightforward. You create a WebSocket and point it at a url:
 
@@ -32,50 +31,37 @@ conn.sendText("Hello World")
 
 The browser will perform an HTTP handshake with the target web server to determine support, and then a direct stream will be exposed via the onread and send functions.
 
-While the HTML5 specification is not in a finalized stage, the first public draft was published by the W3C in January 2008 and browser vendors have already began targetting features in the specification. The idea of putting a duplex channel into the spec is not a new one; the TCPConnection api was initially drafted more than two years ago. Unfortunately there were many signifigant problems with TCPConnection that held back browser adoption. Ian Hickson, the editor of the HTML5 specification, confronted these problems head on and under his guidance the standard has evolved to a usable state with WebSocket. I've asked him a couple of questions about the WebSocket interface for this article.
+While the HTML5 specification is not in a finalized stage, the first public draft was published by the W3C in January 2008, and browser vendors have already began targetting features in the specification. The idea of putting a duplex channel into the spec is not a new one; the TCPConnection API and protocol was initially drafted more than two years ago. Unfortunately there were many signifigant problems with TCPConnection that held back browser adoption. Ian Hickson, the editor of the HTML5 specification, confronted these problems head on and under his guidance the standard has evolved to a usable state with WebSocket. I've asked him a few questions about the WebSocket interface for this article.
 
 Q: How do you see WebSocket changing the nature of the web?
 
 Q: Do you see the WebSocket substantially changing web application architecture?
 
-Q: Is there planned support for Binary data transport once javascript2 includes native byte data types?
+Q: Is there planned support for Binary data transport once future javascript specifications include native byte data types?
 
+WebSocket in a browser is terrific because it drastically cuts down the complexity of the Comet server by an order of magnitude. Whats more though, it provides a straightforward, understandable API to javascript developers. The most important part of the specification is that *developers can wrap their heads around the api in about five seconds.* Thats because it looks so much like a socket.
 
-
-WebSocket in a browser is terrific because it drastically cuts down the complexity of the Comet server (by a factor of ten, easily.) Whats more though, it provides a straightforward, understandable API to javascript developers. The most important part of the specification is that *developers can wrap their heads around the api in about five seconds.* Thats because it looks so much like a socket.
-
-If the future prospect of a native WebSocket isn't enough, I am proud to announce that the Orbited project, with generous contributions from Kaazing, has implemented WebSocket for all major browsers, today. We do this by speaking various Comet transports to the browsers, then performing the WebSocket handshake with the remote server, and proxying data in between. This means that today you can write a WebSocket server and application, start Orbited up, and be on your way. Tomorrow, you won't need to change any of your server or client code whatsoever. Your application will fall forward to the native implementation of WebSocket for improved performance.
+If the future prospect of a native WebSocket isn't enough, I am proud to announce that the Orbited project, with generous contributions from Kaazing, has implemented WebSocket for all major browsers, today. We do this by communicating over various Comet transports with the browsers, then performing the WebSocket handshake with the remote server, and proxying data in between. This means that today you can write a WebSocket server and application, start Orbited up, and be on your way. Tomorrow, you won't need to change any of your server or client code whatsoever. Your application will fall forward to the native implementation of WebSocket for improved performance.
 
 TCPSocket
 ---------
 
-The single most voiced criticism to this specification has been that a WebSocket isn't quite the same as a raw TCP socket, and as such a WebSocket can't connect to existing servers. This is very deliberate though, because otherwise there is a major security hole. A malicious site could cause any visitors to open up a tcp connection to an smtp server, for instance, turning a casual web visitor into a spambot. There are many variations on this scenario, but the general problem is that browsers have been historically unable to connect to arbitrary servers. We need to therefore make this an opt-in process or we'll catch existing servers off-guard. Furthermore, very few protocols have any kind of cross-domain authorization or security mechansisms built in. If we were to allow raw TCP, then we would be opening all manner of cross-site security holes. We could fix these by limiting TCP connections to the origin domain and port, (meaning a direct sockets back to the webserver only) but that would limit any usefulness the TCP socket could provide.
+The single most voiced criticism to this specification has been that a WebSocket isn't quite the same as a raw TCP socket, and as such a WebSocket can't connect to existing servers. This is very deliberate though, as it secures an otherwise major security hole. A malicious site could cause any visitors to open up a tcp connection to an smtp server, for instance, turning a casual web visitor into a spambot. There are many variations on this scenario, but the general problem is that browsers have been historically unable to connect to arbitrary servers. We need to therefore make this an opt-in process or we'll catch existing servers off-guard. Furthermore, very few protocols have any kind of cross-domain authorization or security mechansisms built in. If we were to allow raw TCP, then we would be opening all manner of cross-site security holes. We could fix these by limiting TCP connections to the origin domain and port, (meaning a direct sockets back to the webserver only) but that would limit any usefulness the TCP socket could provide.
 
 
-I fully understand the criticism though; if we could use existing network servers in browser applications, formerly difficult problems are a snap. Lets take Gmail as a brief case study. The gmail application features a nice gui that clearly took some time to build. The real trouble with building Gmail is figuring out a way to bridge email notification to the browser. You could create a server that uses IMAP to discover the new messages, then use a Comet transport to push those messages to the browser. You also need to write a similar bridge for XMPP. That means you'll need a server that acts as an XMPP client for each user and transcodes the XMPP protocol to something JSON-based for easy access in the browser. While this isn't rocket science, its damn hard.
+I fully understand the criticism though; if we could use existing network servers in browser applications, formerly difficult problems are a snap to solve. Lets take Gmail as a brief case study. The gmail application features a nice gui that clearly took some time to build. The real trouble with building Gmail is figuring out a way to bridge email notification to the browser. You could create a server that uses IMAP to discover the new messages, then use a Comet transport to push those messages to the browser. You also need to write a similar bridge for XMPP. That means you'll need a server that acts as an XMPP client for each user and transcodes the XMPP protocol to something JSON-based for easy access in the browser. While this isn't rocket science, its damn hard.
 
 On the other hand, assume that your base tools include an IMAP and XMPP client in the browser. On page load the browser can ask the IMAP server directly for the 20 most recent emails, including their send times, read status, and subject. Next, the browser can issue an IDLE command which will cause the IMAP server to send immediate notification of any new mail. The browser also can connect to the XMPP server and send/receive presence information to/from the user's buddy list. Message dialogs and typing notifications are all handled by callbacks attached the XMPP client, and sending messages to buddies is a trivial one-liner. There's not a whole lot else to do besides make a great GUI, which can take as much time as you can give.
 
-I'm not trying to cast a shadow on the engineering behind Gmail -- its a brilliantly engineered product. We've been stuck with web application servers (read, jumped up HTTP servers) for so long though, that we take complicated architecture for granted. I'm just pointing out that you don't need to be a brilliant engineer to create gmail if you have the write tools. The right tools aren't web application servers, they're sockets and clients, and with those tools we could put together a tutorial titled "How to write your own Email/Chat application in 20 minutes."
+I'm not trying to cast a shadow on the engineering behind Gmail -- its a brilliantly engineered product. We've been stuck with web application servers (read, jumped up HTTP servers) for so long though, that we take complicated architecture for granted. I'm just pointing out that you don't need to be a brilliant engineer to create gmail if you have the right tools. The right tools aren't web application servers, they're sockets and clients, and with those tools we could put together a tutorial titled "How to write your own Email/Chat application in 20 minutes."
 
 We have a clear problem then: Direct access to existing network servers could greatly simplify application architecture, but due to security restrictions its a non-starter; we absolutely must retrofit each network server with the new WebSocket protocol first. I hope that happens, but we can't count on it, at least not for years. What we really need is a way to allow the server to opt-in without putting it in the protocol, a way to seamlessly layer access control in front of the back-end server. What we really need is a firewall that can speak WebSocket protocol to the browser, enforce access control, then speak tcp to the back-end.
 
 I am again proud to announce that Orbited supports this feature under the api name TCPSocket. Orbited is the firewall that sits between the back-end server and the browser. It understands WebSocket protocol for browser communication, and uses whitelist security to accept or reject requests to proxy tcp data to and from a back-end server. Thats right, you can fire up a stock XMPP server, and Orbited, and write the XMPP client entirely in javascript. This works cross-browser this very day. We also offer a BinaryTCPSocket that uses an intermediate encoding to allow the browser to read raw bytes (in the form of javascript integer arrays) from a remote server.
 
-JSnap
------
-
-Once you have a tcp socket in the browser, No application architecture is impossible, or even hard. Only now though, is it apparent how far javascript is behind all other programming languages for networking support. We need to make all haste in developing every major protocol in javascript. The Orbited project ships with example STOMP and IRC implementations, but this is only the beginning. We plan on shipping a Daemon capable of serving implementations of all major web protocols. But this project is not specific to the Orbited daemon. As more innovation is made in the realm of raw tcp connections to the browser, we want our protocol implementations to still be useful.
-
-I am pleased to announce the launch of a brand new Open Source project, JSnap. The JSnap project will be seperate from the core Orbited daemon project, though Orbited will ship with a compiled version of the protocols. Orbited 0.6 (expected late-July) should ship with the first release of JSnap. We are initially targetting the following four protocols:
-
-- XMPP (Jabber)
-- STOMP (ActiveMQ and RabbitMQ)
-- IRC
-- IMAP (IDLE command makes webmail push incredibly simple)
-
-
 The Future
 ----------
 
-I see these developments transforming the way we think about the web. Its conceivable to write a fully featured browser application with no web application server whatsoever. All the applications that use the complicated architectures to bridge various protocols to the browser over HTTP are simplified by an order of magnitude. Javascript-only developers are now able to create complex application without any server-side programming whatsoever. (INSERT STRONG FINISH)
+Once you have a tcp socket in the browser, no web application architecture is impossible, or even that hard. Only now its apparent how far javascript is behind all other programming languages for networking support. We need to start developing every major protocol in javascript. For now, Orbited ships with STOMP, IRC, and XMPP implementations, but we plan on soon shipping a Daemon capable of serving implementations of all major communication protocols.
+
+These developments will transform the way we think about the web. Many thick-client systems don't have to be re-engineered for the web -- its just a matter of writing a GUI. Its conceivable to write a fully featured browser application with no web application server whatsoever. All the applications that use the complicated architectures to bridge various protocols to the browser over HTTP are simplified many times over. Javascript developers are now able to create complex application without any server-side programming whatsoever. 
