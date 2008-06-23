@@ -1,8 +1,10 @@
 Orbited = {
     connect: function (event_cb /* args 1-3 are token parts */) {
         var tokens = Array.prototype.slice.call(arguments, 1)
-        var token = tokens.join(', ')
-        console.log(token)
+        if (tokens.length == 3)
+            var token = tokens[0] + ", " + tokens[2] + ', ' + tokens[1]
+        else
+            var token = tokens[0]
     
         var conn = new BaseTCPConnection()
         var connUrl = new URL(location.href)

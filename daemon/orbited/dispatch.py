@@ -108,8 +108,14 @@ class DispatchProtocol(Protocol):
             return
         data, self.buffer = self.buffer.split('\r\n\r\n', 1)
         protocol, raw_headers = data.split('\r\n', 1)
+        
+        #remove frame type
+        frame_type, raw_headers = raw_headers.split('\r\n', 1)
+        
+        logger.info(raw_headers)
         header_fields =[ d.split(': ') for d in raw_headers.split('\r\n') ]
         headers = { 'recipients': [ ] }
+
         for (key, val) in header_fields:
             key = key.lower()
             if key == 'recipient':
@@ -121,6 +127,7 @@ class DispatchProtocol(Protocol):
                 headers['length'] = int(val)
             else:
                 headers[key] = val
+
         self.current_headers = headers
         self.state = 'body'
         self.read_body()

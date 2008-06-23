@@ -694,7 +694,10 @@ XSubdomainRequest.prototype._event = function(id, payload) {
 Orbited = {
     connect: function (event_cb /* args 1-3 are token parts */) {
         var tokens = Array.prototype.slice.call(arguments, 1)
-        var token = tokens.join(', ')
+        if (tokens.length == 3)
+            var token = tokens[0] + ", " + tokens[2] + ', ' + tokens[1]
+        else
+            var token = tokens[0]
         console.log(token)
     
         var conn = new BaseTCPConnection()
