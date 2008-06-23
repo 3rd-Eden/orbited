@@ -23,7 +23,9 @@ def main():
     root.putChild('proxy', SimpleProxyFactory())
     root.putChild('binaryproxy', BinaryProxyFactory())
     root.putChild('websocket', WebSocketFactory())
-    root.putChild('legacy', DispatchFactory())
+    if config['[global]']['dispatch.enabled'] == '1':
+        root.putChild('legacy', DispatchFactory())
+        
     for addr in config['[listen]']:
         url = urlparse.urlparse(addr)
         hostname = url.hostname

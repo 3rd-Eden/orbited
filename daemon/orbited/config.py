@@ -23,6 +23,10 @@ map = {
 }
 
 defaults = {
+    '[global]': {
+        'dispatch.enabled': '1',
+        'dispatch.port': '9000'
+    },
     '[access]': [
         ('localhost', 9998), # Allow WebSocket test daemon
         ('irc.freenode.net', 6667), # Allow chat demo

@@ -1,8 +1,10 @@
 from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
+from config import map as config
+from logger import get_logger
 
-
+logger = get_logger('Dispatch')
 
 class DispatchConnection(TCPConnection):
     ping_timeout = 30
@@ -35,10 +37,12 @@ class DispatchFactory(TCPConnectionFactory):
     protocol = DispatchConnection
 
     def __init__(self, *args, **kwargs):
-      TCPConnectionFactory.__init__(self, *args, **kwargs)
-      self.dispatch_connections = {}
-      self.factory = DispatchProtocolFactory(self)
-      reactor.listenTCP(9000, self.factory)
+        TCPConnectionFactory.__init__(self, *args, **kwargs)
+        self.dispatch_connections = {}
+        self.factory = DispatchProtocolFactory(self)
+        port = int(config['[global]']['dispatch.port'])
+        logger.info('Listening Orbit@%s (legacy dispatch protocol)' % port)
+        reactor.listenTCP(port, self.factory)
       
     def receive_frame(self, conn, headers, body):
         response = ['Success', {
@@ -69,7 +73,9 @@ class DispatchProtocolFactory(Factory):
     def __init__(self, root):
         self.root = root
         self.protocol = DispatchProtocol
+        
     def buildProtocol(self, addr):
+        logger.access('Dispatch [ %s ] ' % (addr,))
         return DispatchProtocol(self.root.receive_frame)
     
 class DispatchProtocol(Protocol):
