@@ -1,3 +1,6 @@
+// to enable cross-port Orbited:
+ORBITED_PORT = 8000
+
 // we set the ie_nocache variable to avoid caching issues in IE
 
 var ie_nocache = 0;
