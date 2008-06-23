@@ -34,6 +34,7 @@ setup(
     entry_points = '''    
         [console_scripts]
         orbited = orbited.start:main
+        orbitedctl = orbited.control:main
     ''',
     
     classifiers = [

@@ -39,7 +39,6 @@ class LoggerRoot(object):
         self.overrides = overrides
         self.loggers = {}
         
-        
     def create_logger(self, name):
         defaults = {}
         if name in self.overrides:
@@ -146,6 +145,7 @@ class Logger(object):
         if kwargs.get('tb', False):
             exception, instance, tb = traceback.sys.exc_info()
             output += "".join(traceback.format_tb(tb))
+            self.debug(output)
         if kwargs.get('stack', False):
             output += "".join(traceback.format_stack()[:-1])
         
@@ -154,11 +154,18 @@ class Logger(object):
 
 class ScreenLog(object):
     def __init__(self):
+        self.enabled = True
         pass
     
     def log(self, data):
-        sys.stdout.write(data)
-
+        if not self.enabled:
+            return
+        # Something weird was happening with the daemonization stuff
+        # that made this just break.
+        try:
+            sys.stdout.write(data)
+        except:
+            self.enabled = False
     def open(self):
         pass
     

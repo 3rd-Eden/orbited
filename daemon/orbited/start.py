@@ -1,3 +1,4 @@
+import urlparse
 import sys
 import os
 from twisted.internet import reactor, ssl
@@ -15,18 +16,35 @@ site = server.Site(root)
 def main():
     from echo import EchoFactory
     from proxy import SimpleProxyFactory
-#    from jsonproxy import JsonProxyFactory
     from binaryproxy import BinaryProxyFactory
     from websocket import WebSocketFactory
     root.putChild('echo', EchoFactory())
     root.putChild('proxy', SimpleProxyFactory())
     root.putChild('binaryproxy', BinaryProxyFactory())
     root.putChild('websocket', WebSocketFactory())
-    port = int(config['[global]']['http.port'])
-    logger.info('Listening HTTP@%s' % port)
-    reactor.listenTCP(port, site)
-    # Listen on SSL port
-#    reactor.listenSSL(8043, site, ssl.DefaultOpenSSLContextFactory("orbited.key", "orbited.crt"))
+    for addr in config['[listen]']:
+        url = urlparse.urlparse(addr)
+        hostname = url.hostname
+        if hostname == None:
+            hostname = ''
+        if url.scheme == 'http':
+            logger.info('Listening http@%s' % url.port)
+            reactor.listenTCP(url.port, site, interface=hostname)
+        elif url.scheme == 'https':
+            crt = config['[ssl]']['crt']
+            key = config['[ssl]']['key']
+            try:
+                ssl_context = ssl.DefaultOpenSSLContextFactory(key, crt)
+            except ImportError:
+                raise
+            except:
+                logger.error("Error opening key or crt file: %s, %s" % (key, crt))
+                sys.exit(0)
+            logger.info('Listening https@%s (%s, %s)' % (url.port, key, crt))
+            reactor.listenSSL(url.port, site, ssl_context)
+        else:
+            logger.error("Invalid Listen URI: %s" % addr)
+            sys.exit(0)
     reactor.run()
 
 

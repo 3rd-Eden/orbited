@@ -2,6 +2,7 @@ import os
 import random
 from twisted.web import server, resource, static, error
 from twisted.internet import reactor, defer
+from logger import get_logger
 import transports
 
 class TCPPing(object):
@@ -9,6 +10,7 @@ class TCPPing(object):
 
 
 class TCPConnection(resource.Resource):
+    logger = get_logger("TCPConnection")
     ping_timeout = 20
     ping_interval = 20
     retry = 50
@@ -131,14 +133,7 @@ class TCPConnection(resource.Resource):
         self.transport.send_packet('id', ack_id)
         
     def render(self, request):
-#        print '==='
-#        print request
-        print request
-#        print request
-#        print request
-#        print request
-#        print request
-#        print '==='
+        self.logger.debug(request)
         transport_name = request.args.get('transport', [None])[0]
         if transport_name:
             return self.render_downstream(request)
@@ -203,6 +198,7 @@ class TCPConnection(resource.Resource):
         
 class TCPConnectionFactory(resource.Resource):
     protocol = TCPConnection
+    logger = get_logger("TCPConnectionFactory")
     def __init__(self):
         resource.Resource.__init__(self)
         self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
@@ -214,6 +210,7 @@ class TCPConnectionFactory(resource.Resource):
     
     
     def render(self, request):
+        self.logger.debug(request)
         id = self.create_session(request)
         return id
     

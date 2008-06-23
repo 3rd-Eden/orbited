@@ -4,14 +4,14 @@ from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientCreator
 from logger import get_logger
 
-log = get_logger("TCPConnection")
+logger = get_logger("Proxy")
 class ProxyProtocol(Protocol):
-       
     def send(self, msg):
-#        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n'))
+        logger.debug("%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n')))
         self.transport.write(msg)
         
     def dataReceived(self, data):
+        logger.debug("%s:%s (%s) <- %s" % ( self.host, self.port, len(data),  data.replace('\r', '\\r').replace('\n', '\\n\n')))
         self.proxy_conn.send(data)
 
     def connectionLost(self, reason):
@@ -24,7 +24,7 @@ class ProxyClient(object):
         
     def connect(self, host, port):
         d = defer.Deferred()
-#        print "opening remote connection to %s:%s" % (host, port)
+        logger.debug("opening remote connection to %s:%s" % (host, port))
         self.c.connectTCP(host, port).addCallback(self.connected, d, host, port)
         return d
     
@@ -58,12 +58,13 @@ class ProxyConnection(TCPConnection):
             self.host = host
             self.port = int(port)
             if (self.host, self.port) not in config['[access]']:
-                print 'unauthorized', data
+                logger.warn('unauthorized', data)
                 raise (Exception("Unauthorized"), "(host, port) pair not authorized for proxying")
-            log.access(self.getClientIP(), "TCP/raw", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
+            logger.access(self.getClientIP(), "TCP/raw", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
             self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
             self.state = 'proxy'
         except Exception, x:
+            logger.warn("Invalid handshake: " + str(x) + " (payload: %s)" % data)
             self.send("Invalid handshake: " + str(x) + " (payload: %s)" % data)
             self.loseConnection()
             
