@@ -698,7 +698,6 @@ Orbited = {
             var token = tokens[0] + ", " + tokens[2] + ', ' + tokens[1]
         else
             var token = tokens[0]
-        console.log(token)
     
         var conn = new BaseTCPConnection()
         var connUrl = new URL(location.href)
