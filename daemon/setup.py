@@ -10,27 +10,29 @@ static_types = [
     '*.jpg', 
     '*.png', 
     '*.txt*',
+    '*.py',
+    '*.template'
 ]
 
 setup(
     name='orbited',
-    version='0.5.0alpha1',
+    version='0.5.3',
     author='Michael Carter',
     author_email='CarterMichael@gmail.com',
     url='http://www.orbited.org',
     download_url='http://www.orbited.org/download',
     license='MIT License',
-    description='A twisted-based comet server',
+    description='A browser->tcp bridge; Comet is used to emulate TCP connections in the browser; Allows you to connect a web browser directly to an IRC or XMPP server, for instance.',
     long_description='',
     packages= find_packages(),
     package_data = {'': reduce(list.__add__, [ '.svn' not in d and [ os.path.join(d[len('orbited')+1:], e) for e in
             static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
         ]) },
     zip_safe = False,
-    install_requires = [
-        # "event >= 0.3"
+    install_requires=[
+        "demjson",
+#        "Twisted"
     ],
-    
     entry_points = '''    
         [console_scripts]
         orbited = orbited.start:main
