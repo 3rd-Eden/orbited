@@ -121,6 +121,88 @@ function openMessageWindow(jid, username) {
     messageWindows[jid].panel.show();
 }
 
+////
+// create xmpp client
+// register callbacks
+// connect to xmpp server
+xmpp = new XMPPClient();
+xmpp.onPresence = function(ntype, from, to) {
+    if (! ntype) {
+        userList.onUserAvailable(from, from);
+    }
+    else if (ntype == "unavailable") {
+        userList.onUserUnavailable(from);
+    }
+    else if (ntype == "subscribe") {
+        xmpp.sendSubscribed(from, to);
+    }
+    else if (ntype == "subscribed") {
+        alert(from + " added to your buddy list!");
+    }
+    else if (ntype == "unsubscribed") {
+        userList.onUserUnavailable(from);
+    }
+}
+xmpp.onMessage = onMessage;
+xmpp.onSocketConnect = function() {
+    domain = prompt("Domain","localhost");
+    if (domain) {
+        xmpp.connectServer(domain, connectSuccess, connectFailure);
+    }
+}
+////
+// 'localhost' IS A PLACEHOLDER
+xmpp.connect('localhost', 5222);
+// (CHANGE TO ADDRESS OF PHYSICAL MACHINE)
+////
+// success / failure callbacks
+function registerSuccess() {
+    alert("Welcome!");
+}
+function registerFailure() {
+    if (confirm("That user name is taken. Try again?")) {
+        prompt_register();
+    }
+}
+function loginSuccess() {
+    alert("Welcome!");
+}
+function loginFailure() {
+    if (confirm("Login failed. Register a new user account?")) {
+        prompt_register();
+    }
+    else {
+        prompt_login();
+    }
+}
+function connectSuccess() {
+    prompt_login();
+}
+function connectFailure() {
+    alert("Unknown domain");
+}
+////
+// helpers
+function prompt_login() {
+    var u = prompt("User name","frank");
+    if (u) {
+        var p = prompt("Password","pass");
+        if (p) {
+            xmpp.login(u, p, loginSuccess, loginFailure);
+        }
+    }
+}
+function prompt_register() {
+    var u = prompt("New user name","ariel");
+    if (u) {
+        var p = prompt("New password","pass");
+        if (p) {
+            xmpp.register(u, p, registerSuccess, registerFailure);
+        }
+    }
+}
+////
+
 /** Used to track the open message windows, keyed by JID */
 var messageWindows = {};
 
@@ -145,15 +227,15 @@ function onSendMessage(toJid, toUsername, text) {
 
 /** Called when the user wants to add that contact */
 function onAddContact(jid) {
-    xmpp.add(jid);
+    xmpp.subscribe(jid);
+    alert("Buddy request sent.");
 }
 
 /** Called when the user clicks the user list's remove contact button */
 function onRemoveContact(jid, username) {
-    xmpp.remove(jid);
+    xmpp.unsubscribe(jid);
+    userList.onUserUnavailable(jid);
 }
-
-
 
 /// SAMPLE DATA
 
