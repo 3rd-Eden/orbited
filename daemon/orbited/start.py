@@ -1,7 +1,7 @@
 import urlparse
 import sys
 import os
-from twisted.internet import reactor, ssl
+from twisted.internet import reactor
 from twisted.web import server, resource, static
 from logger import get_logger
 from config import map as config
@@ -35,6 +35,7 @@ def main():
             logger.info('Listening http@%s' % url.port)
             reactor.listenTCP(url.port, site, interface=hostname)
         elif url.scheme == 'https':
+            from twisted.internet import ssl
             crt = config['[ssl]']['crt']
             key = config['[ssl]']['key']
             try:

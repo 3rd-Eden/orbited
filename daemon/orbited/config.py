@@ -3,6 +3,7 @@ import sys
 
 map = {
     '[global]': {
+        'dispatch.enabled': '0'
     },
     '[logging]': {
         'debug': 'SCREEN',
