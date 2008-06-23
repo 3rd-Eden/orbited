@@ -18,10 +18,12 @@ def main():
     from proxy import SimpleProxyFactory
     from binaryproxy import BinaryProxyFactory
     from websocket import WebSocketFactory
+    from dispatch import DispatchFactory
     root.putChild('echo', EchoFactory())
     root.putChild('proxy', SimpleProxyFactory())
     root.putChild('binaryproxy', BinaryProxyFactory())
     root.putChild('websocket', WebSocketFactory())
+    root.putChild('legacy', DispatchFactory())
     for addr in config['[listen]']:
         url = urlparse.urlparse(addr)
         hostname = url.hostname

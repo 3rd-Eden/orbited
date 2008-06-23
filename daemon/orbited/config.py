@@ -75,7 +75,6 @@ def load(f):
     section = None
     try:
         for (i, line) in enumerate(lines):
-            print i, line
             # ignore comments
             if '#' in line:
                 line, comment = line.split('#', 1)
