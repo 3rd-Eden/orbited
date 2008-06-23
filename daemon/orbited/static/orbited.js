@@ -551,7 +551,7 @@ XSubdomainRequest = function(bridgeDomain, bridgePort, bridgePath, markedHeaders
     if (!Boolean(bridgeDomain))
         throw new Error("Invalid bridge domain")
     if (!Boolean(bridgePath))
-        bridgePath = "/_/static/XSubdomainBridge.html"
+        bridgePath = "/static/XSubdomainBridge.html"
     if (!Boolean(markedHeaders))
         markedHeaders = [
             'Location',
@@ -692,7 +692,11 @@ XSubdomainRequest.prototype._event = function(id, payload) {
 
 // start @include(OrbitedLegacyWrapper.js)
 Orbited = {
-    connect: function (event_cb, token) {
+    connect: function (event_cb /* args 1-3 are token parts */) {
+        var tokens = Array.prototype.slice.call(arguments, 1)
+        var token = tokens.join(', ')
+        console.log(token)
+    
         var conn = new BaseTCPConnection()
         var connUrl = new URL(location.href)
         if (typeof(ORBITED_DOMAIN) != "undefined") 
@@ -706,7 +710,18 @@ Orbited = {
             conn.send(token);
         }
         conn.connect(connUrl.render())
-    }
+    },
+
+    create_xhr: function () {
+        try { return new ActiveXObject('MSXML3.XMLHTTP'); } catch(e) {}
+        try { return new ActiveXObject('MSXML2.XMLHTTP.3.0'); } catch(e) {}
+        try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+        try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+        try { return new XMLHttpRequest(); } catch(e) {}
+        throw new Error('Could not find XMLHttpRequest or an alternative.');
+  }
+
+    
 }
 
 // end @include(OrbitedLegacyWrapper.js)

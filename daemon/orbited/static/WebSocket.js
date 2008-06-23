@@ -552,7 +552,7 @@ XSubdomainRequest = function(bridgeDomain, bridgePort, bridgePath, markedHeaders
     if (!Boolean(bridgeDomain))
         throw new Error("Invalid bridge domain")
     if (!Boolean(bridgePath))
-        bridgePath = "/_/static/XSubdomainBridge.html"
+        bridgePath = "/static/XSubdomainBridge.html"
     if (!Boolean(markedHeaders))
         markedHeaders = [
             'Location',
