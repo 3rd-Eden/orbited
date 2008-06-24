@@ -4,7 +4,7 @@ Title
 WebSocket
 ---------
 
-A recent set of HTML5 discussions are changing the course of Comet. First, a recap: With long-polling we set the bar to cross-browser push. With XHR streaming and ActiveXObject('htmlfile') we raised it to cross-browser streaming. With SSE we've been trying to raise the bar to native, cross-browser streaming. And there we've sat, hoping that browser vendors actually implement the latest SSE spec.
+A recent set of HTML5 discussions are changing the course of Comet. First, a recap of the last two years of Comet: With long-polling we set the bar to cross-browser push. With XHR streaming and ActiveXObject('htmlfile') we raised it to cross-browser streaming. With SSE we've been trying to raise the bar to native, cross-browser streaming. And there we've sat, hoping that browser vendors actually implement the latest SSE spec.
 
 I say we've been selling ourselves short. All this time pushing for a native server->client streaming transpor, but we still lack client->server streaming, and anything resembling a standard transport for bi-directional comunication. The Holy Grail of Comet development has always been native browser support of a full-duplex, single-connection communication's channel, otherwise known as a TCP socket. But we've been mired down in hacks so long that we've lost the vision.
 
