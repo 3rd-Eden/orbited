@@ -116,7 +116,7 @@ STOMPClient = function() {
         var onsockopen = function() {
             send_frame("CONNECT", [["login", user]])
         }
-        conn = new BinaryTCPConnection(domain, port)
+        conn = new BinaryTCPSocket(domain, port)
         conn.onopen = onsockopen
         conn.onread = self.messageReceived
 

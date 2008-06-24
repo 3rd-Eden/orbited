@@ -195,4 +195,4 @@ XMPPClient = function() {
         reconnect();
     }
 }
-XMPPClient.prototype.transport = BinaryTCPConnection;
+XMPPClient.prototype.transport = BinaryTCPSocket;

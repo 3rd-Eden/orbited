@@ -58,4 +58,4 @@ TelnetClient = function() {
     }
 }
 
-TelnetClient.prototype.transport = TCPConnection
+TelnetClient.prototype.transport = TCPSocket

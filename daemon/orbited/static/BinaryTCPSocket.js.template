@@ -26,4 +26,6 @@ switch(browser) {
 }
 @include(BaseTCPConnection.js)@
 @include(XSubdomainRequest.js)@
-@include(TCPConnectionImplementation.js)@
+@include(hex.js)@
+@include(unicode.js)@
+@include(BinaryTCPSocketImplementation.js)@

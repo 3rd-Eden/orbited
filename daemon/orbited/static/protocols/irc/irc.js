@@ -112,4 +112,4 @@ IRCClient = function() {
     }
 }
 
-IRCClient.prototype.transport = TCPConnection
+IRCClient.prototype.transport = TCPSocket
