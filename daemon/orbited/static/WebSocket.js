@@ -117,7 +117,7 @@ URL = function(_url) {
         return result
     }
     var encodeQs = function(o) {
-            output = ""
+            var output = ""
             for (key in o)
                 output += "&" + key + "=" + o[key]
             return output.slice(1)

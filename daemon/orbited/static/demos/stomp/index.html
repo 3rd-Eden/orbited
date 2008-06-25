@@ -13,12 +13,12 @@
             // set up shell
             var output = document.getElementById('output')
             var s = new Shell(output)
-            print = s.print
+            shellprint = s.print
 //            ORBITED_PORT = 8000
             stomp = new STOMPClient()
-            stomp.onmessage = function(msg) { print(msg.body) }
+            stomp.onmessage = function(msg) { shellprint (msg.body) }
             stomp.onerror = function(msg) { alert(msg.body) }
-            stomp.onopen = function() { print("Connected to ActiveMQ as user " + document.getElementById('username').value)}
+            stomp.onopen = function() { shellprint ("Connected to ActiveMQ as user " + document.getElementById('username').value) }
         }
     </script>
 </head>

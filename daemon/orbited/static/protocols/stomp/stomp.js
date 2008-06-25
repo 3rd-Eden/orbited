@@ -26,9 +26,8 @@ STOMPClient = function() {
 
     var parse_buffer = function () {
         var msgs = self.buffer.split('\0\n')
-        self.buffer = msgs.splice(-1)[0]
-
-        for (i=0; i<msgs.length; i++)
+        self.buffer = msgs[msgs.length-1]
+        for (i=0; i<msgs.length-1; i++)
             dispatch(msgs[i])
     }
     
@@ -112,7 +111,6 @@ STOMPClient = function() {
     self.connect = function(domain, port, user, password) {
         buffer = ""                     // reset buffer state
         self.user = user
-        
         var onsockopen = function() {
             send_frame("CONNECT", [["login", user]])
         }

@@ -22,6 +22,10 @@ map = {
     ],
     '[access]': [
     ],
+    '[static]': {
+    
+    }
+    
 }
 
 defaults = {
