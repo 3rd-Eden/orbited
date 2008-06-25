@@ -5,10 +5,14 @@ import time
 import signal
 from start import logger
 from start import main as orbited_main
+from config import map as config
+
+pid_location = config['[global]']['pid.location']
 
 def start():
     print "Starting Orbited Daemon"
-    checkpidfile = open('/tmp/orbited.pid', 'a')
+    
+    checkpidfile = open(pid_location, 'a')
     try:
         fcntl.lockf(checkpidfile , fcntl.LOCK_EX|fcntl.LOCK_NB)
         fcntl.lockf(checkpidfile , fcntl.LOCK_UN)
@@ -52,7 +56,7 @@ def start():
         os.chdir('/tmp')
         # Try to get an exclusive lock on the file.  This will fail
         # if another process has the file locked.
-        pidfile = open('/tmp/orbited.pid', 'w')    
+        pidfile = open(pid_location, 'w')    
         logger.debug('d3')
         fcntl.lockf(pidfile, fcntl.LOCK_EX|fcntl.LOCK_NB)
         
@@ -66,21 +70,21 @@ def start():
         
 def stop():
     print "Stopping Orbited Daemon"
-    wpidfile = open('/tmp/orbited.pid', 'a')  
+    checkpidfile = open(pid_location, 'a')  
     try:
-        fcntl.lockf(wpidfile, fcntl.LOCK_EX|fcntl.LOCK_NB)
-        fcntl.lockf(wpidfile, fcntl.LOCK_UN)
+        fcntl.lockf(checkpidfile, fcntl.LOCK_EX|fcntl.LOCK_NB)
+        fcntl.lockf(checkpidfile, fcntl.LOCK_UN)
     except IOError:
         pass
     else:
         print "\tOrbited Daemon is not running"
         raise SystemExit
       
-    rpidfile = open('/tmp/orbited.pid', 'r')
+    rpidfile = open(pid_location, 'r')
     try:
         pid = int(rpidfile.read())
     except ValueError:
-        print "Invalid pid file: /tmp/orbited.pid"
+        print "Invalid pid file: %s" % (pid_location,)
         raise SystemExit
     
     os.kill(pid, signal.SIGKILL)
@@ -94,7 +98,7 @@ def restart():
     start()
 
 def status():
-    wpidfile = open('/tmp/orbited.pid', 'a')  
+    wpidfile = open(pid_location, 'a')  
     try:
         fcntl.lockf(wpidfile, fcntl.LOCK_EX|fcntl.LOCK_NB)
         fcntl.lockf(wpidfile, fcntl.LOCK_UN)

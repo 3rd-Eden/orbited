@@ -7,11 +7,23 @@ from logger import get_logger
 from config import map as config
 #from revolved import RevolvedConnection
 logger = get_logger('Daemon')
+#if 'INDEX' in config['[static]']:
+#    print 'index found', config['[static]']['INDEX']
+#    root = static.File(config['[static]']['INDEX'])
+#else:
 root = resource.Resource()
 static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
 root.putChild('static', static_files)
 site = server.Site(root)
 
+def setup_static(taken):
+    for key, val in config['[static]'].items():
+        if key in taken:
+            logger.error("cannot mount static directory with reserved name %s" % key)
+            sys.exit(0)
+        if key == 'INDEX':
+            key = ''
+        root.putChild(key, static.File(val))
 
 def main():
     from echo import EchoFactory
@@ -25,7 +37,7 @@ def main():
     root.putChild('websocket', WebSocketFactory())
     if config['[global]']['dispatch.enabled'] == '1':
         root.putChild('legacy', DispatchFactory())
-        
+    setup_static(['echo', 'proxy', 'binaryproxy', 'websocket'])
     for addr in config['[listen]']:
         url = urlparse.urlparse(addr)
         hostname = url.hostname

@@ -1,4 +1,4 @@
-if True:
+if False:
     import log
     config = {
         '[logging]': {
@@ -10,7 +10,7 @@ if True:
             'enabled.default': '1',
         },
         '[loggers]': {
-            'access': 1,
+            'ACCESS': 1,
             'HTTPDaemon': '2',
         }
     }

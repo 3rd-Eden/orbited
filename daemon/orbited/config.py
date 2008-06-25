@@ -3,7 +3,8 @@ import sys
 
 map = {
     '[global]': {
-        'dispatch.enabled': '0'
+        'dispatch.enabled': '0',
+        'pid.location': '/tmp/orbited.pid'
     },
     '[logging]': {
         'debug': 'SCREEN',
@@ -26,7 +27,7 @@ map = {
 defaults = {
     '[global]': {
         'dispatch.enabled': '1',
-        'dispatch.port': '9000'
+        'dispatch.port': '9000',
     },
     '[access]': [
         ('localhost', 9998), # Allow WebSocket test daemon
@@ -72,6 +73,11 @@ def setup():
     except:
         pass
     print "Could not locate configuration file. Using default configuration"
+    for key, val in defaults.items():
+        if isinstance(map.get(key), dict):
+            map[key].update(val)
+        else:
+            map[key] = val
     map.update(defaults)
     
 def load(f):
