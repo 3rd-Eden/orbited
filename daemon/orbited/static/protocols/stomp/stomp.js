@@ -27,7 +27,7 @@ STOMPClient = function() {
     var parse_buffer = function () {
         var msgs = self.buffer.split('\0\n')
         self.buffer = msgs[msgs.length-1]
-        for (i=0; i<msgs.length-1; i++)
+        for (var i=0; i<msgs.length-1; i++)
             dispatch(msgs[i])
     }
     
@@ -91,13 +91,16 @@ STOMPClient = function() {
      var send_frame = function(type, headers, body) {
         var frame = ""
         frame += type + "\n"
-        for (key in headers)
+        console.log("A: " + frame)
+        for (var key in headers)
             frame += key + ": " + headers[key] + "\n"
+        console.log("B: " + frame)
         frame += "\n"                   // end of headers
-
         if (body)
             frame += body
         frame += "\0"                   // frame delineator
+        console.log(JSON.stringify([type,headers,body]))
+        console.log(frame)
         var data = UTF8ToBytes(frame)
         conn.send(UTF8ToBytes(frame))
      }
@@ -107,7 +110,7 @@ STOMPClient = function() {
      *
      */
     self.connect = function(domain, port, user, password) {
-        buffer = ""                     // reset buffer state
+        self.buffer = ""                     // reset buffer state
         self.user = user
         var onsockopen = function() {
             send_frame("CONNECT", [["login", user]])
@@ -115,17 +118,17 @@ STOMPClient = function() {
         conn = new BinaryTCPSocket(domain, port)
         conn.onopen = onsockopen
         conn.onread = self.messageReceived
-
+        console.log('connect to ' + domain + ', ' + port + ', ' + user)
     }
 
     self.disconnect = function() {
-        send_frame("DISCONNECT", [])
+        send_frame("DISCONNECT", {})
     }
 
     self.send = function(msg, destination, custom_headers) {
         var headers = {"destination": destination}
         if (custom_headers)
-            for (key in custom_headers)
+            for (var key in custom_headers)
                 headers[key] = custom_headers[key]
             
         send_frame("SEND", headers, msg)
