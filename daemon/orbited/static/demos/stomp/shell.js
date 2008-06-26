@@ -7,14 +7,14 @@ Shell = function(output){
     self.print = function(s) {
         var s = self.format(s)
         self.output.innerHTML += "&rarr; " + s + "<br>"
-    	self.output.scrollTop = self.output.scrollHeight     
+        self.output.scrollTop = self.output.scrollHeight     
     }
     
     
     self.format = function(expr)
     {
         var s = prettyprint(expr)
-		s = htmlescape(s)
+        s = htmlescape(s)
         return s
     }
 
@@ -24,22 +24,22 @@ Shell = function(output){
         s = s.replace(">", "&gt;", "g")
         s = s.replace(" ", "&nbsp;", "g")
         s = s.replace("\n", "<br>", "g")
-    	return s
+        return s
     }
 
     var prettyprint = function(s) {
-    	var q = "("
-    	if(typeof(s) == "string")
-    		return s
+        var q = "("
+        if(typeof(s) == "string")
+            return s
         for (var i=0; i<s.length; i++) {
             if (typeof(s[i]) != "object")
                 q += s[i]
             else
                 q += prettyprint(s[i])
             if (i < s.length -1)
-            	q += " "
+                q += " "
         }
-    	q += ")"
-    	return q
+        q += ")"
+        return q
     }
 }
