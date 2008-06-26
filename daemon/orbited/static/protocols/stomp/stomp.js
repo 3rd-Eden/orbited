@@ -80,7 +80,7 @@ STOMPClient = function() {
                 self.onerror(msg)
                 break
             default:
-                throw("Unknown STOMP frame type " + frame[0])
+                throw("Unknown STOMP frame type " + msg.type)
         }
     
     }
@@ -91,16 +91,12 @@ STOMPClient = function() {
      var send_frame = function(type, headers, body) {
         var frame = ""
         frame += type + "\n"
-        console.log("A: " + frame)
         for (var key in headers)
             frame += key + ": " + headers[key] + "\n"
-        console.log("B: " + frame)
         frame += "\n"                   // end of headers
         if (body)
             frame += body
         frame += "\0"                   // frame delineator
-        console.log(JSON.stringify([type,headers,body]))
-        console.log(frame)
         var data = UTF8ToBytes(frame)
         conn.send(UTF8ToBytes(frame))
      }
@@ -113,7 +109,7 @@ STOMPClient = function() {
         self.buffer = ""                     // reset buffer state
         self.user = user
         var onsockopen = function() {
-            send_frame("CONNECT", [["login", user]])
+            send_frame("CONNECT", {"login": user})
         }
         conn = new BinaryTCPSocket(domain, port)
         conn.onopen = onsockopen
