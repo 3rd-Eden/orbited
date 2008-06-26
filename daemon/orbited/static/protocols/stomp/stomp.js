@@ -114,7 +114,6 @@ STOMPClient = function() {
         conn = new BinaryTCPSocket(domain, port)
         conn.onopen = onsockopen
         conn.onread = self.messageReceived
-        console.log('connect to ' + domain + ', ' + port + ', ' + user)
     }
 
     self.disconnect = function() {
