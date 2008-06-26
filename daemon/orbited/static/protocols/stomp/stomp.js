@@ -40,9 +40,7 @@ STOMPClient = function() {
         var type = headers.slice(0, headers.search("\n"))
         headers = headers.slice(headers.search("\n") +1)
         var body = s.slice(headers_end + 2)
-
         headers = parse_headers(headers)
-        
         var frame = {}
         frame['type'] = type
         frame['headers']= headers
@@ -59,7 +57,7 @@ STOMPClient = function() {
             var key = lines[i].slice(0,sep)
             var value = lines[i].slice(sep+1)
             
-            headers['key'] = value
+            headers[key] = value
         }
         return headers
     }
