@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-import os
+import os, sys
 
 static_types = [
     '*.js', 
@@ -13,6 +13,11 @@ static_types = [
     '*.py',
     '*.template'
 ]
+
+_install_requires = [ "demjson" ]
+
+if sys.platform != "win32":
+    _install_requires.append("Twisted")
 
 setup(
     name='orbited',
@@ -29,10 +34,7 @@ setup(
             static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
         ]) },
     zip_safe = False,
-    install_requires=[
-        "demjson",
-#        "Twisted"
-    ],
+    install_requires = _install_requires,
     entry_points = '''    
         [console_scripts]
         orbited = orbited.start:main
