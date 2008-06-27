@@ -145,15 +145,14 @@ xmpp.onPresence = function(ntype, from, to) {
 }
 xmpp.onMessage = onMessage;
 xmpp.onSocketConnect = function() {
-    domain = prompt("Domain","localhost");
+    domain = prompt("Domain","marionet");
     if (domain) {
         xmpp.connectServer(domain, connectSuccess, connectFailure);
     }
 }
 ////
-// 'localhost' IS A PLACEHOLDER
-xmpp.connect('localhost', 5222);
-// (CHANGE TO ADDRESS OF PHYSICAL MACHINE)
+// 'mariobalibrera.com' is the machine running the ejabberd server
+xmpp.connect('mariobalibrera.com', 5222);
 ////
 // success / failure callbacks
 function registerSuccess() {
