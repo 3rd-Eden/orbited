@@ -118,7 +118,7 @@ class TCPConnection(resource.Resource):
             self.send_msg_queue()
             self.conn.flush()
             expires = datetime.datetime.now() + datetime.timedelta(0, self.ping_timeout + self.ping_interval + 60*60*7)
-            request.addCookie('tcp', self.id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
+            request.addCookie('tcp', self.id, path='/echo', expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
             
         return server.NOT_DONE_YET
 
@@ -126,7 +126,7 @@ class TCPConnection(resource.Resource):
         print 'post', request
         stream = request.content.read()
         expires = datetime.datetime.now() + datetime.timedelta(0, self.ping_timeout + self.ping_interval + 60*60*7)
-        request.addCookie('tcp', self.id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
+        request.addCookie('tcp', self.id, path='/echo', expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
         request.write('OK')
         request.finish()
         event = "message"
@@ -221,20 +221,9 @@ class TCPConnectionFactory(resource.Resource):
     
     
     def render(self, request):
-#        print request.__dict__
-        print request.cookies
-        print request.received_headers.get('cookie', None)
-        print request.__module__
-        print request.getCookie('tcp')
 #        cookies = req
-        id = request.getCookie('tcp')
-        if id:
-            if id not in self.connections:
-                request.setResponseCode(404, 'Not Found')
-                return ""
-            return self.connections[id].render(request)
-        
         if request.method == 'POST':
+            request.setResponseCode(201, 'Created')
             return self.create_session(request)
         elif request.method == 'GET':
             id = self.create_session(request)
@@ -246,7 +235,7 @@ class TCPConnectionFactory(resource.Resource):
 #                new_url += '?id=' + id
 #            request.setHeader('location', new_url)
             expires = datetime.datetime.now() + datetime.timedelta(0, self.protocol.ping_timeout + self.protocol.ping_interval + 60*60*7)
-            request.addCookie('tcp', id, expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
+            request.addCookie('tcp', id, path='/echo', expires=expires.strftime('%a, %d-%h-%Y %H:%M:%S GMT'))
             return self.connections[id].render(request)#, new_url)
         else:
             request.setResponseCode(404, 'Not Found')

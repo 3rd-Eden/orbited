@@ -140,7 +140,20 @@ URL = function(_url) {
         self.qs = encodeQs(curQsObj)
     }
 
+    self.merge = function(targetUrl) {
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0) {
+            self.protocol = targetUrl.protocol
+        }
+        if (targetUrl.domain.length > 0) {
+            self.domain = targetUrl.domain
+            self.port = targetUrl.port
+        }
+        self.path = targetUrl.path
+        self.qs = targetUrl.qs
+        self.hash = targetUrl.hash
+    }
 }
+
 // end @include(URL.js)
 
 
@@ -184,7 +197,6 @@ CometTransport = function() {
                 connUrl.setQsParameter('transport', 'sse')
 //                connUrl.hash = "0"
                 url = connUrl.render()
-                console.log('addEventsource: ' + url)
                 source.addEventSource(url)
                 document.body.appendChild(source)
                 break;
@@ -275,7 +287,6 @@ window.addEventListener("load", function() {
     document.createElement = function(name) {
         var obj = createElement.call(this, name)
         if (name == "event-source") {
-            alert('createElehttp://operawiki.info/OperaPerformancement')
             var SSEHandler = new FxSSE(obj);
         }
         return obj
@@ -358,7 +369,6 @@ FxSSE = function(source) {
         else {
         }
         xhr.onreadystatechange = function() {
-            console.log(xhr.readyState)
             switch (xhr.readyState) {
                 case 4: // disconnect case
                     switch(xhr.status) {
@@ -398,12 +408,10 @@ FxSSE = function(source) {
                     break
             }
         }
-        console.log('setting timer and sending');
         operaTimer = setInterval(process, 50)
         xhr.send(null);
     }
     var reconnect = function() {
-        console.log('reconnect!')
         clearInterval(operaTimer)
         operaTimer = null;
         // TODO: reuse this xhr connection
@@ -527,44 +535,61 @@ BaseTCPConnection = function() {
     var numSendPackets = null;
 
     self.connect = function(_url) {
-        console.log('url: ' + _url)
         if (self.readyState != -1 && self.readyState != 2)
             throw new Error("connect may only be called on a closed socket");
         self.readyState = 0
-        var testUrl = new URL(_url);
+        url = new URL(_url);
         
-        if (testUrl.isSameDomain(location.href)) {
-            alert('same domain');
+        if (url.isSameDomain(location.href)) {
             xhr = createXHR();
         }
 
-        else if (testUrl.isSameParentDomain(location.href)) {
-//            alert('using XSubdomainRequest')
-//            document.domain = document.domain
-            var path = testUrl.path
+        else if (url.isSameParentDomain(location.href)) {
+            var path = url.path
             if (path[path.length-1] != '/')
                 path += '/'
             path += 'static/XSubdomainBridge.html'
-            console.log('xdr path: ' + path)
-            xhr = new XSubdomainRequest(testUrl.domain, testUrl.port, path)
+            xhr = new XSubdomainRequest(url.domain, url.port, path)
         }
         else {
             throw new Error("Invalid domain. BaseTCPConnection instances may only connect to same-domain or sub-domain hosts.")
         }
-        url = testUrl.render()
-        attachTransport();
+        getSession();
     }
-    
 
+   var getSession = function() {
+       xhr.open('POST', url.render(), true);
+       xhr.onreadystatechange = function() {
+            switch(xhr.readyState) {
+                case 4:
+                    switch(xhr.status) {
+                        case 201:
+                            var newUrl = new URL(xhr.getResponseHeader('Location'))
+                            tcpUrl = newUrl.render()
+                            attachTransport();
+                            break;
+                        // 200 "redirect" is Untested
+                        case 200:
+                            var newUrl = new URL(xhr.getResponseHeader('Location'))
+                            var curUrl = new URL(url)
+                            curUrl.merge(newUrl)
+                            tcpUrl = curUrl.render()
+                            getSession();
+                            break;
+                        default:
+                            doClose();
+                            break;
+                    }
+            }
+        }
+        xhr.send(null)
+    }
     var attachTransport = function() {
-        alert('attach transport')
-        tcpUrl = url
         transport = new CometTransport()
         transport.receivePayload = receivePayload;
         transport.receiveTCPOpen = receiveTCPOpen;
         transport.receiveTCPClose = receiveTCPClose;
         transport.receiveTCPPing = receiveTCPPing;
-        console.log('transport.connect: ' + tcpUrl)
         transport.connect(tcpUrl);
     }
 
@@ -628,7 +653,6 @@ BaseTCPConnection = function() {
 
     var onTimeout = function() {
         doClose();
-        self.onclose(null);
     }
     var resetPingTimer = function() {
         if (pingTimer != null) {
@@ -643,32 +667,22 @@ BaseTCPConnection = function() {
         self.ack_only();
     }
     var receiveTCPOpen = function(evt) {
-//        console.log('receiveTCPOpen');
-//        console.log(evt.data);
         // TODO: use the EventListener interface if available (handleEvent)
         lastEventId = evt.lastEventId;
         self.readyState = 1
-        if (evt.data != null && evt.data.length > 0) {
-            var newUrl = new URL(evt.data);
-            var oldUrl = new URL(tcpUrl);
-            oldUrl.qs = newUrl.qs
-            oldUrl.path = newUrl.path
-            tcpUrl = oldUrl.render()
-        }
         self.onopen(evt);
         resetPingTimer();
-//        window.setTimeout(tcp.onopen, 1000)
-//        window.setTimeout("tcp.onopen()", 0)//function() { self.onopen(evt) }, 0)
     }
     var receiveTCPClose = function(evt) {
         // TODO: use the EventListener interface if available (handleEvent)
         lastEventId = evt.lastEventId;
-        doClose();
-        self.onclose(evt)
+        doClose(evt);
     }
-    var doClose = function() {
+    var doClose = function(evt) {
         self.readyState = 2
-        transport.destroy();
+        if (transport != null)
+            transport.destroy();
+        self.onclose(evt)
     }
     var receivePayload = function(evt) {
         // TODO: use the EventListener interface if available (handleEvent)

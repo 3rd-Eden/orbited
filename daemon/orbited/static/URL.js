@@ -125,4 +125,16 @@ URL = function(_url) {
         self.qs = encodeQs(curQsObj)
     }
 
+    self.merge = function(targetUrl) {
+        if (typeof(self.protocol) != "undefined" && self.protocol.length > 0) {
+            self.protocol = targetUrl.protocol
+        }
+        if (targetUrl.domain.length > 0) {
+            self.domain = targetUrl.domain
+            self.port = targetUrl.port
+        }
+        self.path = targetUrl.path
+        self.qs = targetUrl.qs
+        self.hash = targetUrl.hash
+    }
 }

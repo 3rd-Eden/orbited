@@ -19,7 +19,6 @@ CometTransport = function() {
     self.receiveTCPPing = function(evt) { }
     var url = null;
     var receivePayload = function(evt)  { self.receivePayload(evt)  }
-    var receiveTCPOpen = function(evt)  { self.receiveTCPOpen(evt)  }
     var receiveTCPClose = function(evt) { self.receiveTCPClose(evt) }
     var receiveTCPPing = function(evt)  { self.receiveTCPPing(evt)  }
     var lastEventId = 0;
@@ -31,13 +30,11 @@ CometTransport = function() {
             default:
                 source = document.createElement("event-source")
                 source.addEventListener("message", receivePayload, false)
-                source.addEventListener("TCPOpen", receiveTCPOpen, false)
                 source.addEventListener("TCPClose", receiveTCPClose, false)
                 source.addEventListener("TCPPing", receiveTCPPing, false)
-                connUrl.setQsParameter('transport', 'sse')
+//                connUrl.setQsParameter('transport', 'sse')
 //                connUrl.hash = "0"
                 url = connUrl.render()
-                console.log('addEventsource: ' + url)
                 source.addEventSource(url)
                 document.body.appendChild(source)
                 break;

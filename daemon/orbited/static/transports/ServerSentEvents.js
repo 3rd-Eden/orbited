@@ -15,7 +15,6 @@ window.addEventListener("load", function() {
     document.createElement = function(name) {
         var obj = createElement.call(this, name)
         if (name == "event-source") {
-            alert('createElehttp://operawiki.info/OperaPerformancement')
             var SSEHandler = new FxSSE(obj);
         }
         return obj
@@ -98,7 +97,6 @@ FxSSE = function(source) {
         else {
         }
         xhr.onreadystatechange = function() {
-            console.log(xhr.readyState)
             switch (xhr.readyState) {
                 case 4: // disconnect case
                     switch(xhr.status) {
@@ -138,12 +136,10 @@ FxSSE = function(source) {
                     break
             }
         }
-        console.log('setting timer and sending');
         operaTimer = setInterval(process, 50)
         xhr.send(null);
     }
     var reconnect = function() {
-        console.log('reconnect!')
         clearInterval(operaTimer)
         operaTimer = null;
         // TODO: reuse this xhr connection
