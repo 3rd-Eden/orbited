@@ -6,6 +6,7 @@ Slide: Orbited Logo + Michael Carter
     - 2 years in development
     - countless architectures tested
     - now we've found the best
+    - javascript work
 - Lead architect of Kaazing's Enterprise Comet Server offering
     - coming soon (to theatres everywhere...)
 
@@ -29,13 +30,13 @@ Slide: What is Comet
     - Gaming
     - Auctions
     - Sports reporting
-    - Election Monitoring (Andrew Betts / London Paper)
     - Collaborative Editing
-    - Air traffic control (no joke)
     - Network monitor reporting / system administration
+    - Election Monitoring (Andrew Betts / London Paper)
+    - Air traffic control (no joke)
     - To name a few
-- In practice though, everyone wants Comet without the need for flash
-- Just plain old js and html
+- In practice though, everyone wants Comet without the need for flash or bad performance of polling
+- Just plain old js and html, low latency
 - Which brings us to Transports
 
 Slide: Transports
@@ -50,7 +51,7 @@ Slide: Iframe
 
 Slide: Iframe Diagram
 
-- Parent page has a callback "receive"
+- Application page has a callback "receive"
 - Finishes loading, creates and iframe
 - Iframe causes an HTTP request to the server
 - the server sends headers
@@ -70,13 +71,13 @@ Slide: Iframe Code
 Slide: Iframe Usability
 - Loading Bars
 - Hour glasses
-- clicking noises?! (wtf mate ^^)
+- clicking noises?!
 
 Slide: Iframe Unacceptable
 - Modern applications can't have clicking noises and hour glasses. 
 - The users would get too confused
-- So Iframe streaming isn't that popular
-- Instead, the winner is...
+- So Iframe streaming isn't the most popular transport
+- Instead, the most popular transport is...
 
 Slide: XHR Long polling
 
@@ -95,6 +96,7 @@ Slide: XHR diagram
 Slide: Long polling code
 - still easy to implement
 - and no usability issues!
+- seems like a big win
 - but how does long polling performance compare to iframe streaming?
 - Consider an island off the coast
 - its surrounded by water
@@ -114,15 +116,16 @@ Slide: A boat
 - It waits for the boat to go to the island
 - It waits for the boat to come back
 - It gets on, and waits for the boat to go to the island
+- 3x travel duration
 - Well Iframe streaming is the bridge, and the boat is long polling
 - Meaning, long polling suffers from a 3x latency performance hit
 - But thats not all
 Slide: Bandwidth comparison
 - You also have to send headers all the time
-- Your buddy says 'how's it hanging'
+- Your buddy says 'hows it hanging'
 - But the browser says 'GET /some/url HTTP/1.1\r\nUser-Agent: ...etc'
 - And the server says 'HTTP/1.1 200 ok\r\nContent-type....'
-- your 15 byte message can easily incur 300 bytes of headers
+- your 15 byte message can easily incur 300 bytes of headers, or more!
 - thats a 20x bandwidth increase in that case
 
 Slide: Long polling unacceptable
@@ -152,6 +155,8 @@ Slide: Explorer only
 Slide: Xhr Streaming
 - transport for ff and safari
 Slide: ready state 3
+- don't do one event per request/response cycle
+- do a hundred. a thousand... 
 - ready state 3 saves the day
 - callbacks for download progress from server
 - responseText is just plain text without any inherent meaning
@@ -177,7 +182,7 @@ Slide: SSE
 Slide: Html5
 
 - Then they went on to propose that the this be included in HTML5
-- after discussions with other vendors, a new spec came up
+- after discussions with other vendors, gained support, a new spec came up
 
 Slide: deprecated
 
@@ -185,8 +190,7 @@ Slide: deprecated
 - but thats okay
 - we can use the deprecated one in opera 8+
 
-Slide: Transport Conclusions
-- You've seen the prettier side of Comet
+Slide: Transport Conclusions 10.18.20
 - Ten minutes to explain 
 - Years to discover
 
@@ -200,11 +204,11 @@ Slide: moving target
 - but the board moves after you've thrown the dart
 - That is to say, just imagine the most frustrating game you can
 - That game is twice as fun as building transports
-- But in the end
 
 Slide: sleek bridge
 - We can avoid the boat transport (long polling)
 - And provide great user experience
+- get a nice looking bridge
 
 Slide: sleek bridge image with orbited logo superimosed
 - And orbited does just that
@@ -219,42 +223,53 @@ Slide: Scalability
 Slide: Vertical Scalability
 - How do you put lots of users on one machine?
 - Seems like such a hard problem, but really there's a simple trick
-- And once you know the trick, its easy
+- And once you know the trick, its possible
 - Don't use threads.
 - People  have tried this with servers like apache
-- So a reasonable thread count, of 20, will service 20 users
+- A reasonable thread count, of 20, will service 20 users
 - A better user count is a 1000 though
 - But a 1000 threads brings a system to its knees with context switches
 - No comet, just thrashing
+
+Slide: Comet + threads != scalable
 - So use the little trick of omitting threads, and you're golden
 - Build event-based servers
-- Your comet apps won't have to be like nature preserves
+- You don't want your comet apps to be like nature preserves
 - You don't want your app to be a lonely desert with the occasional wanderer
 - it should be a riot, with users tearing down the walls, sucking your resources dry, demanding more...
 
 Slide: desert -> riot
 - So use event based programming for your comet server
+- And I guarantee, your app will be a riot, not a desert. 
 
 Slide: zzzz
 This is the easy problem
 The harder problem is the other "half" of scaling,
 
 Slide: Horizontal Scalability
+- If one server supports 1000 users, does 2 support 2000? and n, n-1000?
 - This is a truly tough problem
 - Really though, it depends on the application
+- No one answer.
 - But a few core rules are in order
 - 1. Don't share state between comet servers
-- 2. Only do Comet in the Comet server. no Pub/sub, no jabber/game server, just comet
+- 2. Only do Comet in the Comet server. no Pub/sub, no jabber/game server, no load balancing, just comet
 - 3. Treat comet as the last leg of the journey
 
 Slide: Two Comet servers (sharded by user) doing pub sub (ajaxworld slide)
 - For some reason, comet servers are all trying to provide a pub/sub api
 - Developers like it, great.
 - But it was already a hard problem before Browser's existed
-- And the people solving the problem, RabbitMQ/ActiveMQ, aren't part of the comet community.
-- Integrating comet would real publish/subscribe message queues would be great
+- And the people solving the problem, RabbitMQ/ActiveMQ, aren't part of the comet community. (there have  been minor inroads)
+- Integrating streaming comet sith real publish/subscribe message queues would be great
 - But, thats just a specific case of a larger issue
-- And really, integrating comet with existing technologies would allow us to solve the horizontal scaling problem however these existing technologies already solve it.
+- The real issue with scaling comet applications is that 
+     - Comet is difficult
+     - Comet imposes architectural constraints on web apploications that we aren't used to (can't do round robin balancing per http request)
+     - Its a moving part that has to be closely tied to the other pieces of the system
+- But integrating comet with existing technologies would allow us to solve the horizontal scaling problem however these existing technologies already solve it.
+- How could you scale a thick client deployment?
+- We want that to be the only question to answer when scaling a comet application.
 - So How do you integrate comet servers with X?
 
 <!-- (Part III - Integrating Comet - 10 Minutes) -->
@@ -278,6 +293,7 @@ Slide: previous slide (Offbard comet integrated with jabber)
 - and then you have to implement each client twice
 - once for the bridge, once for the browser
 - the bridge speaks xmpp to the jabber server, but json-chat (made up protocol) to the browser
+- Clearly not the solution...
 
 Slide: Victory march picture, maybe the planting of the american flag in some battle
 - Standards save the day.
@@ -285,7 +301,8 @@ Slide: Victory march picture, maybe the planting of the american flag in some ba
 
 
 Slide: TCPConnection (word)
-- I've been working closely with whatwg/w3c to specify a protocol and api that solves all of our problems
+- I've been working closely with whatwg/w3c to specify the protocol and api that solves all of our problems
+- tcpconnection is just like a socket, but for javsacript in browsers
 - It will 
     -traverse forward proxies
     - speak ssl
@@ -304,10 +321,12 @@ Slide: Browser < - > Comet Proxy < - > Jabber diagram
 - Orbited speaks comet transports on the front
 - and plain old tcp on the back
 - So you put it in front of ANY tcp server
-- and the browsers can interact as if they'd connected directly to the server over tcp.
-- and the server doesn't need to be altered at all.
+- and the browsers can interact as if they'd connected directly to the backend server over tcp.
+- and the server doesn't need to be altered whatsoever.
 - No need for a bridge or dispatch protocol
-- but we can simplify this picture still
+- Much less complex means easier to scale
+- Load Balancing?
+- We can simplify this picture still
 
 Slide: Browser < - > ( comet Proxy + Jabber Diagram single machine)
 - Treat the comet proxy as part of the server
@@ -315,13 +334,12 @@ Slide: Browser < - > ( comet Proxy + Jabber Diagram single machine)
 - Now you can all sigh in relief
 
 Slide: Sigh of relief
-- Because Comet isn't going to get in the way anymore
-- Scaling Comet applications isn't a twofold problem anymore
+- Because Comet isn't going to get in the way
+- Scaling Comet applications horizontally isn't a twofold problem anymore
 - If you know how to scale a network application, then you can scale a comet application.
 
 Slide: Jabber server cloud with half Comet proxies, half normal
 - And whats more, there's no difference between the browser and the desktop
-- You get to 
 
 
 Slide: Auth + persistence (a pair of keys and some kind of storage)
@@ -329,13 +347,18 @@ Slide: Auth + persistence (a pair of keys and some kind of storage)
 
 Slide: Jabber server with comet proxy on left, web app on the right, sql server behind both
 - Just have the network server and the web app coordinate on the back end
+- put the sql server behind both
+- User creates an account over the web app
+- but can log in to jabber
+- jabber saves logs to the database
+- and the user can see those logs via the web app
 - And your problems are over.
 
 Slide:Conclusion  (Bullseye (with orbited logo somewhere))
-- Transports are frustrating, but Orbited implements them (indeed, many projects take our implementation directly)
+- Transports are frustrating, but Orbited implements them (indeed, a number of projects take our implementation directly)
 - Vertical Scalability and threads don't mix. Orbited use event-based network IO.
 - Horizontal scalability is tough because you have two problems.
-- If you can solve integration, then you can get a handle on horizontal scalability
+- If you can solve integration, then you can get a handle on horizontal scalability by normal means
 - TCPConnection is the perfect integration point. It works with all past, present, and future tcp/ip servers. Out of the box.
 - Orbited provides that functionality today.
 
