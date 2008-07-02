@@ -82,7 +82,6 @@ def setup():
             map[key].update(val)
         else:
             map[key] = val
-    map.update(defaults)
     
 def load(f):
     lines = [line.strip() for line in f.readlines()]
