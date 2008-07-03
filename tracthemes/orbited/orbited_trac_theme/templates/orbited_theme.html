@@ -1,0 +1,23 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/"
+      py:strip="">
+  <?python from genshi.builder import tag ?>
+
+  <div py:def="navigation(category)" id="${category}" class="nav">
+    <ul py:if="chrome.nav[category]">
+      <li py:for="idx, item in  enumerate(chrome.nav[category])"
+          class="${classes(first_last(idx, chrome.nav[category]), active=item.active)}">${item.label}</li>
+    </ul>
+  </div>
+
+  <body py:match="body">
+    <h2> This is the body of my theme </h2>
+  </body>
+
+  <xi:include href="site.html"><xi:fallback /></xi:include>
+
+</html>
