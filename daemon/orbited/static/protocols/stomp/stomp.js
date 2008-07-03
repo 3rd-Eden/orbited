@@ -109,7 +109,7 @@ STOMPClient = function() {
         self.buffer = ""                     // reset buffer state
         self.user = user
         var onsockopen = function() {
-            send_frame("CONNECT", {"login": user})
+            send_frame("CONNECT", {'login': user, 'passcode':password})
         }
         conn = new BinaryTCPSocket(domain, port)
         conn.onopen = onsockopen
