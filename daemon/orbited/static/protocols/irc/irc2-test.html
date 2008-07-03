@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="http://localhost:8000/static/TCPSocket.js"></script>
+    <script src="irc2.js"></script>
+    <script>
+        var hostname = "irc.freenode.net"
+        var channel = "#orbited.tutorial"
+        var port = 6667
+        nickname = ""
+
+        var client = new IRCClient()
+
+        client.onopen = function() {
+            nickname = prompt("Please enter a user name")
+            client.nick(nickname)
+            client.ident(nickname, "8 *", "Tutorial User")
+            client.join(channel)
+        }
+        client.onPRIVMSG = function(args) {
+                console.log("privmsg", args)
+        }
+        client.onerror = function(msg) {
+            console.log("error",msg)
+            if (msg.type == 433)
+                console.log("NICK TAKEN")
+        }
+        client.onresponse = function(msg) {
+            console.log("reply",msg)
+        }
+        var send_message = function() {
+            var input = document.getElementById("input")
+            console.log(nickname + ": " + input.value)
+            client.privmsg(channel, input.value)
+        }
+    </script>
+</head>
+<body>
+    <div id="output"></div>
+    <input type=text id="input"><button onclick="send_message()">Send</button>
+    <button onclick="client.connect(hostname,port)">Connect</button>
+</body>
+</html>
