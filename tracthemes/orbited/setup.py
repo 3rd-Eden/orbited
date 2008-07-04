@@ -10,7 +10,7 @@ setup(
     package_data = { 'orbited_trac_theme': [
         'templates/*.html',
         'htdocs/*.png',
-        'htdocs/css/*.css'
+        'htdocs/*.css'
         ] 
     },
 
