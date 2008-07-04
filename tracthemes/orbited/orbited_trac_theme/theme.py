@@ -9,7 +9,7 @@ class Orbited(ThemeBase):
     """A theme for Trac based on http://www.oswd.org/design/information/id/3465."""
     template = True
     htdocs = True
-#    css = True
+    css = True
 #    screenshot = True
 #    template = htdocs = css = screenshot = True
     
