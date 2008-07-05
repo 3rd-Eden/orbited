@@ -72,7 +72,7 @@ var fillUserList = function () {
 };
 
 var scrollDown = function () {
-  var box = $('#chathistory');
+  var box = $('#chathistory')[0];
   box.scrollTop = box.scrollHeight;
 }
 
