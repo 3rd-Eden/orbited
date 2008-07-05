@@ -20,11 +20,11 @@ class BinaryProxyProtocol(Protocol):
        
     def send(self, msg):
         bytes = hex_to_byte(msg)
-#        print "%s:%s (%s) -> %s" % ( self.host, self.port, len(bytes),  bytes.replace('\r', '\\r').replace('\n', '\\n'))
+#        log.debug("%s:%s (%s) -> %s" % ( self.host, self.port, len(bytes),  bytes.replace('\r', '\\r').replace('\n', '\\n')))
         self.transport.write(bytes)
         
     def dataReceived(self, data):
-#        print "%s:%s (%s) <- %s" % (self.host, self.port, len(data), data)
+#        log.debug("%s:%s (%s) <- %s" % (self.host, self.port, len(data), data))
         self.proxy_conn.send(byte_to_hex(data))
 
     def connectionLost(self, reason):
