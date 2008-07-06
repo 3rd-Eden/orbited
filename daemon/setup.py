@@ -16,8 +16,8 @@ static_types = [
 
 _install_requires = [ "demjson" ]
 
-if sys.platform != "win32":
-    _install_requires.append("Twisted")
+#if sys.platform != "win32":
+#    _install_requires.append("Twisted")
 
 setup(
     name='orbited',

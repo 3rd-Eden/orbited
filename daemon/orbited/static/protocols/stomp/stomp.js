@@ -5,7 +5,6 @@
  *
  * Frank Salim (frank.salim@gmail.com) (c) 2008 Orbited (orbited.org)
  */
-DATA = []
 STOMPClient = function() {
     var self = this
     var conn = null
