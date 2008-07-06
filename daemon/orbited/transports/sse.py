@@ -16,6 +16,6 @@ class SSETransport(HTTPTransport):
             '\n'.join(['data: %s' % line for line in payload.splitlines()]) +
             '\n\n'
         )
-        print 'WRITE:', data.replace('\n', '\\n\n').replace('\r', '\\r')
-        print '==='
+#        print 'WRITE:', data.replace('\n', '\\n\n').replace('\r', '\\r')
+#        print '==='
         self.request.write(data)
