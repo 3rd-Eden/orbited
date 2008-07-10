@@ -65,7 +65,7 @@ XMPPClient = function() {
     self.onMessage = function(jid, username, text) {}
     self.onSocketConnect = function() {}
     self.sendSubscribed = function(jid, me_return) {
-        self.send(construct(PRESENCE, [me_return, from, "subscribed"]));
+        self.send(construct(PRESENCE, [me_return, jid, "subscribed"]));
     }
     self.connect = function(h, p) {
         host = h;
