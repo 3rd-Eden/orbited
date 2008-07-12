@@ -101,9 +101,16 @@ function doNextRequest() {
             var headers = {}
             for (var i = 0; i < markedResponseHeaders.length; ++i) {
                 var h = markedResponseHeaders[i];
-                var v = xhr.getResponseHeader(h)
-                if (typeof(v) != "undefined" && v != null) {
-                    headers[h] = v
+                // NB: In IE markedResponseHeaders is not a real array,
+                //     so sometimes its length property is higher than
+                //     what is really on the array and h will be
+                //     "undefined", which is an invalid argument to
+                //     xhr.getResponseHeader.
+                if (h) {
+                    var v = xhr.getResponseHeader(h)
+                    if (typeof(v) != "undefined" && v != null) {
+                        headers[h] = v
+                    }
                 }
             }
             
