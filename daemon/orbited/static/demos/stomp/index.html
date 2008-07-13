@@ -27,7 +27,7 @@
     <div id="output" style="background-color: #eee; overflow-y: scroll; height : 200px;"></div>
 
     
-    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value)">Connect</button>Name: <input id="username" value="frank">
+    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value, document.getElementById('password').value)">Connect</button>Name: <input id="username" value="frank"> Password: <input id="password" value="">
     <br>    
     <button onclick="stomp.subscribe(document.getElementById('sub_channel').value)">Subscribe</button>
     <button onclick="stomp.unsubscribe(document.getElementById('sub_channel').value)">Unsubscribe</button>
