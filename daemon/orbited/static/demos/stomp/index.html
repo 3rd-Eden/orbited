@@ -6,20 +6,34 @@
     <title>JavaScript Stomp Test</title>
     <script src="/static/BinaryTCPSocket.js"></script>
     <script src="shell.js"></script>
-     <script src="/static/protocols/stomp/stomp.js"></script>
+    <script src="/static/protocols/stomp/stomp.js"></script>
     <script>
         onload = function() {
-            document.domain = document.domain
-            // set up shell
-            var output = document.getElementById('output')
-            var s = new Shell(output)
-            shellprint = s.print
-//            ORBITED_PORT = 8000
-            stomp = new STOMPClient()
-            stomp.onmessage = function(msg) { shellprint (msg.body) }
-            stomp.onerror = function(msg) { alert(msg.body) }
-            stomp.onopen = function() { shellprint ("Connected to ActiveMQ as user " + document.getElementById('username').value) }
-        }
+            // set up shell.
+            var output = document.getElementById('output');
+            var shell = new Shell(output);
+
+            // set up stomp client.
+            stomp = new STOMPClient();
+            stomp.onopen = function() {
+                shell.print("Transport openned");
+            };
+            stomp.onclose = function() {
+                shell.print("Transport closed");
+            };
+            stomp.onerror = function(error) {
+                alert(error);
+            };
+            stomp.onerrorframe = function(frame) {
+                alert(frame.body);
+            };
+            stomp.onconnectedframe = function() {
+                shell.print("Connected to ActiveMQ as user " + document.getElementById('username').value);
+            };
+            stomp.onmessageframe = function(frame) {
+                shell.print(frame.body);
+            };
+        };
     </script>
 </head>
 <body>
@@ -27,7 +41,10 @@
     <div id="output" style="background-color: #eee; overflow-y: scroll; height : 200px;"></div>
 
     
-    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value, document.getElementById('password').value)">Connect</button>Name: <input id="username" value="frank"> Password: <input id="password" value="">
+    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value, document.getElementById('password').value)">Connect</button>
+    <button onclick="stomp.disconnect()">Disconnect</button>
+    Name: <input id="username" value="frank">
+    Password: <input id="password" value="">
     <br>    
     <button onclick="stomp.subscribe(document.getElementById('sub_channel').value)">Subscribe</button>
     <button onclick="stomp.unsubscribe(document.getElementById('sub_channel').value)">Unsubscribe</button>
