@@ -362,7 +362,9 @@ SSE = function() {
         source.setAttribute('src', url.render());
 //      TODO: uncomment this line to work in opera 8 - 9.27.
 //            there should be some way to make this work in both.
-//        document.body.appendChild(source);
+        if (opera.version() < 9.5) {
+            document.body.appendChild(source);
+        }
         source.addEventListener('orbited', receiveSSE, false);
     }
     var receiveSSE = function(event) {
