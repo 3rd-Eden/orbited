@@ -185,8 +185,10 @@ LineProtocol = function(transport) {
 //
 //      TODO: implement ``ondisconnect''.
 //
-//  send(message : string, destination : string, extraHeaders : {}|undefined)
+//  send(message : string|int[], destination : string, extraHeaders : {}|undefined)
 //      sends the given message to destination.
+//
+//      to send a binary message use an int[].
 //
 //  subscribe(destination : string)
 //      starts receiving messages from the given destination.
@@ -404,17 +406,24 @@ STOMPClient = function() {
     //
 
     self.sendFrame = function(type, headers, body) {
-        var frame = ""
-        frame += type + "\n"
-        for (var key in headers)
-            frame += key + ":" + headers[key] + "\n"
-        frame += "\n"                   // end of headers
-        // TODO handle binary body
-        if (body)
-            frame += body
-        frame += "\0"                   // frame delineator
-        protocol.send(UTF8ToBytes(frame))
-    }
+        var isText = typeof(body) === "string";
+        var head = [type];
+        if (!isText && body !== undefined) {
+            head.push("content-length:" + body.length);
+        }
+        for (var key in headers) {
+            if (key === "content-length")
+                continue;
+            head.push(key + ":" + headers[key]);
+        }
+        head.push("\n");
+        var bytes = UTF8ToBytes(head.join("\n"));
+        if (body) {
+            bytes.push.apply(bytes, isText ? UTF8ToBytes(body) : body);
+        }
+        bytes.push(0);
+        protocol.send(bytes);
+    };
 
     // TODO Deprecated
     self.send_frame = self.sendFrame;

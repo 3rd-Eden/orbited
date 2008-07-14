@@ -11,9 +11,9 @@
             dojo.addOnLoad(function() {
                 function TCPSocketMock() {
                     var self = this;
-                    self.data = '';
+                    self.data = [];
                     self.send = function(data) {
-                        self.data += data;
+                        self.data.push.apply(self.data, data);
                     };
                     self.onopen = null;
                     self.onread = null;
@@ -201,7 +201,7 @@
                     //     the needed "onopen" event.
                     context.transport.onread(UTF8ToBytes("CONNECTED\n\n\0"));
                     // cleanup the received transport data (we already test it in "baseline")
-                    context.transport.data = "";
+                    context.transport.data = [];
                 }
 
                 doh.register("STOMPClientTests",
@@ -361,6 +361,19 @@
                                 t.is("body", context.frames[1].body);
                                 t.is([], context.errors);
                                 t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "sendBinaryMessageWithEmbeddedNul",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+                                context.stomp.send([97, 0, 98], "/topic/NULL");
+                                t.is(
+                                    "SEND\ncontent-length:3\ndestination:/topic/NULL\n\na\0b\0",
+                                    bytesToUTF8(context.transport.data)
+                                );
                             }
                         },
                     ]
