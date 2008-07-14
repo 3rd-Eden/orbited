@@ -184,6 +184,7 @@ STOMPClient = function() {
     var buffer = [];
     var type = null;
     var headers = null;
+    var remainingBodyLength = null;
 
     // TODO probably this function should be move into a common base...
     function trim(str) {
@@ -201,9 +202,14 @@ STOMPClient = function() {
             // we reached the end headers.
             log.debug("onLineReceived: all headers:");
             log.dir(headers);
+            if ('content-length' in headers) {
+                // NB: content-length does not include the trailing NUL,
+                //     but we need to account it.
+                remainingBodyLength = parseInt(headers['content-length']) + 1;
+            } else {
+                remainingBodyLength = null;
+            }
             protocol.setRawMode();
-            // TODO parse content-length header and receive that many
-            //      bytes in onRawDataReceived.
             return;
         }
 
@@ -223,33 +229,58 @@ STOMPClient = function() {
 
     function onRawDataReceived(data) {
         log.debug("onRawDataReceived: data.length=", data.length);
-        buffer.push.apply(buffer, data);
 
-        var end = buffer.indexOf(0);
-        if (end >= 0) {
-            // split into head (bytes) and tail (buffer).
-            var bytes = buffer.splice(0, end + 1);
-            // remove NUL.
-            // TODO when bytesToUTF8 accepts an end index, remove this pop.
-            bytes.pop();
+        if (remainingBodyLength === null) {
+            // we're doing a text message parsing.
 
-            var frame = {
-                type: type,
-                headers: headers,
-                body: bytesToUTF8(bytes)
-            };
+            buffer.push.apply(buffer, data);
 
-            log.debug("onRawDataReceived: end frame");
-            log.dir(frame);
+            var end = buffer.indexOf(0);
+            if (end >= 0) {
+                // split into head (bytes) and tail (buffer).
+                var bytes = buffer.splice(0, end + 1);
+                doDispatch(bytes, buffer);
+            }
+        } else {
+            // we're doing a binary message parsing.
 
-            dispatch(frame);
+            var toRead = Math.min(data.length, remainingBodyLength);
+            remainingBodyLength -= toRead;
 
-            type = null;
-            headers = {};
-            data = buffer;
-            buffer = [];
-            protocol.setLineMode(data);
+            // split into head (bytes) and tail (data).
+            // NB: we don't do "toRead + 1" because that NUL char was
+            //     already accounted in remainingBodyLength.
+            var bytes = data.splice(0, toRead);
+            // buffer will contain the whole message body.
+            buffer.push.apply(buffer, bytes);
+
+            if (remainingBodyLength === 0) {
+                doDispatch(buffer, data);
+            }
         }
+    }
+
+    function doDispatch(bytes, extra) {
+        // remove NUL (this marks EOF).
+        bytes.pop();
+
+        var frame = {
+            type: type,
+            headers: headers,
+            body: (remainingBodyLength === null ? bytesToUTF8(bytes) : bytes)
+        };
+
+        log.debug("doDispatch: end frame");
+        log.dir(frame);
+
+        dispatch(frame);
+
+        buffer = [];
+        type = null;
+        headers = {};
+        remainingBodyLength = null;
+
+        protocol.setLineMode(extra);
     }
 
     function dispatch(frame) {

@@ -317,6 +317,52 @@
                                 t.is(1, context.oncloseCounter);
                             }
                         },
+
+                        {
+                            name: "twoMessagesInSingleRead",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread(UTF8ToBytes("MESSAGE\n\na\0MESSAGE\n\nb\0"));
+                                context.transport.onclose();
+
+                                // make sure we've received two messages, one with
+                                // an embeded NUL and other without.
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({}, context.frames[0].headers);
+                                t.is("a", context.frames[0].body);
+                                t.is({}, context.frames[1].headers);
+                                t.is("b", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "binaryMessageWithEmbeddedNul",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread(UTF8ToBytes("MESSAGE\ncontent-length: 3\n\na\0b\0MESSAGE\n\nbody\0"));
+                                context.transport.onclose();
+
+                                // make sure we've received two messages, one with
+                                // an embeded NUL and other without.
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({"content-length": "3"}, context.frames[0].headers);
+                                t.is([97, 0, 98], context.frames[0].body);
+                                t.is({}, context.frames[1].headers);
+                                t.is("body", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
                     ]
                 );
 
