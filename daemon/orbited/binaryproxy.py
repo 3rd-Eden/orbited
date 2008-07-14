@@ -1,3 +1,4 @@
+from config import map as config
 from tcp import TCPConnection, TCPConnectionFactory
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientCreator
@@ -59,6 +60,7 @@ class BinaryProxyConnection(TCPConnection):
         self.remote_conn.proxy_conn = self
         for item in self.buffer:
             self.remote_conn.send(item)
+        # TODO clear buffer?
     
     def dataReceived(self, data):
 #        print 'recv: ', data
@@ -70,10 +72,16 @@ class BinaryProxyConnection(TCPConnection):
             host, port = data.split(':')
             self.host = host
             self.port = int(port)
+            # TODO DRY this with ProxyConnection.
+            if (self.host, self.port) not in config['[access]']:
+                log.warn('unauthorized', data)
+                raise (Exception("Unauthorized"), "(host, port) pair not authorized for proxying")
             log.access(self.getClientIP(), "TCP/bin", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
+            # TODO set errback (also look for errback misses in other classes)!
             self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
             self.state = 'proxy'
         except Exception, x:
+            # TODO when we raise the unauthorized message, the client does not understand it.
             self.send("Invalid handhsake: " + str(x) + "(payload: %s)" % data)
             self.loseConnection()
             raise
@@ -90,6 +98,7 @@ class BinaryProxyConnection(TCPConnection):
     def connectionLost(self):
         if self.remote_conn:
             self.remote_conn.transport.loseConnection()
+        # TODO set connected=False et al?
 #        print "Proxy Connection Lost", self.id
 
 class BinaryProxyFactory(TCPConnectionFactory):
