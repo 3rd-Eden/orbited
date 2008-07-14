@@ -653,6 +653,9 @@ XSubdomainRequest = function(bridgeDomain, bridgePort, bridgePath, markedHeaders
 
         }
     }
+    self.abort = function() {
+        // TODO implement.  this is needed by TCPSocket.disconnect
+    };
 
     var hideIframe =function (ifr) {
         ifr.style.display = 'block';
