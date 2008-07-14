@@ -163,37 +163,106 @@ LineProtocol = function(transport) {
 // TODO propose to rename this to BaseStompClient
 //      See the comment in the callbacks zone bellow.
 // TODO add ";" to all lines (where it makes sense).
+// TODO remove deprecated stuff.
+//
+// Deprecated attributes:
+//
+//  user : string
+//      the user name used to login into the STOMP server.
+//
+//
+// Methods:
+//
+//  connect(domain : string, port : int, user : string, password : string)
+//      connects to the given STOMP server.
+//
+//      the connection is established after ``onconnected'' is received.
+//
+//  disconnect()
+//      disconnects from current STOMP server.
+//
+//      the connection is disconnected after ``onclose'' is received.
+//
+//      TODO: implement ``ondisconnect''.
+//
+//  send(message : string, destination : string, extraHeaders : {}|undefined)
+//      sends the given message to destination.
+//
+//  subscribe(destination : string)
+//      starts receiving messages from the given destination.
+//
+//  unsubscribe(destination : string)
+//      stops receiving messages from the given destination.
+//
+//
+// Callbacks:
+//
+//  onopen()
+//      underline transport is openned.
+//
+//  onclose()
+//      underline transport is closed.
+//
+//  onerror(error : Error)
+//      there was an error.
+//
+//  onframe(frame : Frame)
+//      received a STOMP frame.
+//
+//      this will dispatch for a specific method based on the frame
+//      type, eg. when frame.type is "MESSAGE" this calls
+//      onmessageframe(frame).
+//
+//      frame is an object with the following properties:
+//
+//          type : string
+//          headers : {string: string}
+//          body : string|int[]
+//
+//  onconnectedframe(frame : Frame)
+//      received a CONNECTED STOMP frame.
+//
+//  onmessageframe(frame : Frame)
+//      received a MESSAGE STOMP frame.
+//
+//  onreceiptframe(frame : Frame)
+//      received a RECEIPT STOMP frame.
+//
+//  onerrorframe(frame : Frame)
+//      received a ERROR STOMP frame.
+//
+//
+// Deprecated callbacks:
+//
+//  onmessage(frame)
+//      use ``onmessageframe'' instead.
+//
+//      received a MESSAGE STOMP frame.
+//
 STOMPClient = function() {
     var log = getStompLogger("STOMPClient");
-    var self = this
-    // TODO should we really save this?
-    self.user = null
-
-    // Callbacks
-    // TODO rename these to onXXXFrame?
-    //      the ideia is, this should be a bare bone StompClient,
-    //      sugar stuff should be implemented in a different
-    //      object (where we could try out different API without
-    //      borking the raw interface).
-    self.onopen = null
-    self.onclose = null
-    self.onmessage = null
-    self.onerror = null
-
+    var self = this;
     var protocol = null;
     var buffer = [];
     var type = null;
     var headers = null;
     var remainingBodyLength = null;
 
+    // Deprecated attributes:
+    self.user = null;
+
     // TODO probably this function should be move into a common base...
     function trim(str) {
         // See http://blog.stevenlevithan.com/archives/faster-trim-javascript
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
+    
+    //
+    // LineProtocol implementation.
+    //
 
-    function onLineReceived(line) {
-        log.debug("onLineReceived: line=", line);
+    function protocol_onLineReceived(line) {
+        log.debug("protocol_onLineReceived: line=", line);
 
         if (line.length == 0) {
             // ignore empty lines before the type line.
@@ -227,8 +296,8 @@ STOMPClient = function() {
         log.debug("onLineReceived: found header ", key, "=", value);
     }
 
-    function onRawDataReceived(data) {
-        log.debug("onRawDataReceived: data.length=", data.length);
+    function protocol_onRawDataReceived(data) {
+        log.debug("protocol_onRawDataReceived: data.length=", data.length);
 
         if (remainingBodyLength === null) {
             // we're doing a text message parsing.
@@ -273,7 +342,7 @@ STOMPClient = function() {
         log.debug("doDispatch: end frame");
         log.dir(frame);
 
-        dispatch(frame);
+        self.onframe(frame);
 
         buffer = [];
         type = null;
@@ -283,54 +352,80 @@ STOMPClient = function() {
         protocol.setLineMode(extra);
     }
 
-    function dispatch(frame) {
+    //
+    // Callbacks
+    //
+
+    function Ignored() {}
+
+    self.onopen = Ignored;
+
+    self.onclose = Ignored;
+
+    self.onerror = Ignored;
+
+    self.onframe = function(frame) {
         switch (frame.type) {
             case 'CONNECTED':
-                // TODO rename to onconnected and leave the onopen to
-                //      notify the user when the transport is open?
-                self.onopen();
+                self.onconnectedframe(frame);
                 break;
             case 'MESSAGE':
-                self.onmessage(frame);
+                self.onmessageframe(frame);
                 break;
             case 'RECEIPT':
-                // TODO: receipts and acking modes
+                self.onreceiptframe(frame);
                 break;
             case 'ERROR':
-                self.onerror(frame);
+                self.onerrorframe(frame);
                 break;
             default:
+                // TODO throw or call onerror with a proper error
                 throw("Unknown STOMP frame type " + frame.type);
         }
-    }
+    };
 
-    /* Messaging methods
-     *
-     */
-     var send_frame = function(type, headers, body) {
+    self.onconnectedframe = Ignored;
+
+    self.onreceiptframe = Ignored;
+
+    self.onmessageframe = function(frame) {
+        // TODO stop calling deprecated onmessage.
+        if (this.onmessage)
+            this.onmessage(frame);
+    };
+
+    self.onerrorframe = Ignored;
+
+    // Deprecated callbacks
+    self.onmessage = Ignored;
+
+    //
+    // Methods
+    //
+
+    self.sendFrame = function(type, headers, body) {
         var frame = ""
         frame += type + "\n"
         for (var key in headers)
             frame += key + ":" + headers[key] + "\n"
         frame += "\n"                   // end of headers
+        // TODO handle binary body
         if (body)
             frame += body
         frame += "\0"                   // frame delineator
         protocol.send(UTF8ToBytes(frame))
     }
-    // XXX why is this public?  even though we can send custom frames,
-    //     there is no way (dispatch is private) to receive custom
-    //     replies.
-    self.send_frame = send_frame
 
-    /* Client Actions
-     *
-     */
+    // TODO Deprecated
+    self.send_frame = self.sendFrame;
+
     self.connect = function(domain, port, user, password) {
-        self.buffer = []                     // reset buffer state
-        self.user = user
+        // TODO deprecated
+        self.user = user;
+
         function onopen() {
-            send_frame("CONNECT", {'login': user, 'passcode':password})
+            self.sendFrame("CONNECT", {'login':user, 'passcode':password});
+            self.onopen();
         }
         protocol = self._createProtocol(domain, port);
         // XXX shouldn't LineProtocol/BinaryTCPSocket have an connect method?
@@ -343,11 +438,10 @@ STOMPClient = function() {
         //     after we shutdown orbited.
         protocol.onclose = self.onclose
         // TODO what should we do when there is a protocol error?
-        //      XXX this is also triggered when we receive an ERROR frame!
         protocol.onerror = self.onerror
-        protocol.onlinereceived = onLineReceived
-        protocol.onrawdatareceived = onRawDataReceived
-    }
+        protocol.onlinereceived = protocol_onLineReceived;
+        protocol.onrawdatareceived = protocol_onRawDataReceived;
+    };
 
     // NB: this is needed for the unit tests.
     self._createProtocol = function(domain, port) {
@@ -355,43 +449,42 @@ STOMPClient = function() {
     };
 
     self.disconnect = function() {
-        send_frame("DISCONNECT", {})
-    }
+        // NB: after we send a DISCONNECT frame, the STOMP server
+        //     should automatically close the transport, which will
+        //     trigger an "onclose" event.
+        self.sendFrame("DISCONNECT");
+    };
 
-    self.send = function(msg, destination, custom_headers) {
-        var headers = {"destination": destination}
-        if (custom_headers)
-            for (var key in custom_headers)
-                headers[key] = custom_headers[key]
-            
-        send_frame("SEND", headers, msg)
-    }
+    self.send = function(message, destination, extraHeaders) {
+        var headers = {destination:destination};
+        if (extraHeaders) {
+            for (var key in extraHeaders)
+                headers[key] = extraHeaders[key];
+        }
+        self.sendFrame("SEND", headers, message);
+    };
 
     self.subscribe = function(destination) {
-        send_frame("SUBSCRIBE", {"destination": destination})
-    }
+        self.sendFrame("SUBSCRIBE", {"destination": destination});
+    };
     
     self.unsubscribe = function(destination) {
-        send_frame("UNSUBSCRIBE", {"destination": destination})
-    }
+        self.sendFrame("UNSUBSCRIBE", {"destination": destination});
+    };
 
-    /* Transactions and acking
-     *
-     */
     self.begin = function(id) {
-        send_frame("BEGIN", {"transaction": id})
-    }
+        self.sendFrame("BEGIN", {"transaction": id});
+    };
 
     self.commit = function(id) {
-        send_frame("COMMIT", {"transaction": id})
-    }
+        self.sendFrame("COMMIT", {"transaction": id});
+    };
 
-    // Rolls back the given transaction
     self.abort = function(id) {
-        send_frame("ABORT", {"transaction": id})
-    }
+        self.sendFrame("ABORT", {"transaction": id});
+    };
 
     self.ack = function(message_id, transaction_id) {
-        //throw("ack: not implemented")
-    }
+        // TODO implement
+    };
 }
