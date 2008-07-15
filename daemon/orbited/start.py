@@ -58,7 +58,7 @@ def main():
                 logger.error("Error opening key or crt file: %s, %s" % (key, crt))
                 sys.exit(0)
             logger.info('Listening https@%s (%s, %s)' % (url.port, key, crt))
-            reactor.listenSSL(url.port, site, ssl_context)
+            reactor.listenSSL(url.port, site, ssl_context, interface=hostname)
         else:
             logger.error("Invalid Listen URI: %s" % addr)
             sys.exit(0)
