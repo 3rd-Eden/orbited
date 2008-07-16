@@ -1,3 +1,4 @@
+# XXX why not use twisted loggers?
 from datetime import datetime
 import sys
 import traceback
@@ -19,8 +20,11 @@ def setup(configmap):
                 continue
             if loc == 'enabled.default':
                 continue
-            if loc == 'SCREEN':
+            if loc in ('SCREEN', 'STDOUT'):
+                # NB: "SCREEN" is for backward compatability with 0.5-
                 defaults[logtype].append(ScreenLog())
+            elif loc == 'STDERR':
+                defaults[logtype].append(ScreenLog(sys.stderr))
             else:
                 defaults[logtype].append(FileLog(loc))
             defaults[logtype][-1].open()
@@ -153,25 +157,26 @@ class Logger(object):
             logger.log(output)
 
 class ScreenLog(object):
-    def __init__(self):
+    def __init__(self, file=sys.stdout):
         self.enabled = True
-        pass
-    
+        self.file = file
+
     def log(self, data):
         if not self.enabled:
             return
         # Something weird was happening with the daemonization stuff
         # that made this just break.
         try:
-            sys.stdout.write(data)
+            self.file.write(data)
         except:
             self.enabled = False
+
     def open(self):
         pass
-    
+
     def flush(self):
         pass
-    
+
     def close(self):
         pass
     

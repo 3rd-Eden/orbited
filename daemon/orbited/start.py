@@ -4,9 +4,9 @@ import urlparse
 
 from orbited import config
 from orbited.config import map as configmap
-from orbited.logger import get_logger
 
-logger = get_logger('Daemon')
+# NB: this is set after we load the configuration at "main".
+logger = None
 
 def _import(name):
     module_import = name.rsplit('.', 1)[0]
@@ -38,7 +38,13 @@ def _setup_static(root):
         root.putChild(key, static.File(val))
 
 def main():
+    # load configuration from configuration file and from command
+    # line arguments.
     config.setup(sys.argv)
+
+    # we can now safely get loggers.
+    from orbited.logger import get_logger
+    global logger; logger = get_logger('Daemon')
 
     # NB: we need to install the reactor before using twisted.
     reactor_name = configmap['[global]'].get('reactor')
