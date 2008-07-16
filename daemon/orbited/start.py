@@ -1,69 +1,89 @@
-import urlparse
-import sys
 import os
-from twisted.internet import reactor
-from twisted.web import server, resource, static
-from logger import get_logger
-from config import map as config
-#from revolved import RevolvedConnection
-logger = get_logger('Daemon')
-#if 'INDEX' in config['[static]']:
-#    print 'index found', config['[static]']['INDEX']
-#    root = static.File(config['[static]']['INDEX'])
-#else:
-root = resource.Resource()
-static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
-root.putChild('static', static_files)
-site = server.Site(root)
+import sys
+import urlparse
 
-def setup_static(taken):
-    for key, val in config['[static]'].items():
-        if key in taken:
-            logger.error("cannot mount static directory with reserved name %s" % key)
-            sys.exit(0)
+from orbited import config
+from orbited.config import map as configmap
+from orbited.logger import get_logger
+
+logger = get_logger('Daemon')
+
+def _import(name):
+    module_import = name.rsplit('.', 1)[0]
+    return reduce(getattr, name.split('.')[1:], __import__(module_import))
+
+def _setup_protocols(root):
+    protocols = [
+        #child_path     config_key      factory_class_import
+        ('echo',        'echo',         'orbited.echo.EchoFactory'),
+        ('proxy',       'proxy',        'orbited.proxy.SimpleProxyFactory'),
+        ('binaryproxy', 'binaryproxy',  'orbited.binaryproxy.BinaryProxyFactory'),
+        ('websocket',   'websocket',    'orbited.websocket.WebSocketFactory'),
+        ('legacy',      'dispatch',     'orbited.dispatch.DispatchFactory'),
+    ]
+    for child_path, config_key, factory_class_import in protocols:
+        if configmap['[global]'].get('%s.enabled' % config_key) == '1':
+            factory_class = _import(factory_class_import)
+            root.putChild(child_path, factory_class())
+            logger.info('%s protocol active' % config_key)
+
+def _setup_static(root):
+    from twisted.web import static
+    for key, val in configmap['[static]'].items():
         if key == 'INDEX':
             key = ''
+        if root.getStaticEntity(key):
+            logger.error("cannot mount static directory with reserved name %s" % key)
+            sys.exit(-1)
         root.putChild(key, static.File(val))
 
 def main():
-    from echo import EchoFactory
-    from proxy import SimpleProxyFactory
-    from binaryproxy import BinaryProxyFactory
-    from websocket import WebSocketFactory
-    from dispatch import DispatchFactory
-    root.putChild('echo', EchoFactory())
-    root.putChild('proxy', SimpleProxyFactory())
-    root.putChild('binaryproxy', BinaryProxyFactory())
-    root.putChild('websocket', WebSocketFactory())
-    if config['[global]']['dispatch.enabled'] == '1':
-        root.putChild('legacy', DispatchFactory())
-    setup_static(['echo', 'proxy', 'binaryproxy', 'websocket'])
-    for addr in config['[listen]']:
+    config.setup(sys.argv)
+
+    # NB: we need to install the reactor before using twisted.
+    reactor_name = configmap['[global]'].get('reactor')
+    if reactor_name:
+        install = _import('twisted.internet.%sreactor.install' % reactor_name)
+        install()
+        logger.info('using %s reactor' % reactor_name)
+
+    from twisted.internet import reactor
+    from twisted.web import resource
+    from twisted.web import server
+    from twisted.web import static
+
+    root = resource.Resource()
+    static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
+    root.putChild('static', static_files)
+    site = server.Site(root)
+
+    _setup_protocols(root)
+    _setup_static(root)
+
+    for addr in configmap['[listen]']:
         url = urlparse.urlparse(addr)
-        hostname = url.hostname
-        if hostname == None:
-            hostname = ''
+        hostname = url.hostname or ''
         if url.scheme == 'http':
             logger.info('Listening http@%s' % url.port)
             reactor.listenTCP(url.port, site, interface=hostname)
         elif url.scheme == 'https':
             from twisted.internet import ssl
-            crt = config['[ssl]']['crt']
-            key = config['[ssl]']['key']
+            crt = configmap['[ssl]']['crt']
+            key = configmap['[ssl]']['key']
             try:
                 ssl_context = ssl.DefaultOpenSSLContextFactory(key, crt)
             except ImportError:
                 raise
             except:
                 logger.error("Error opening key or crt file: %s, %s" % (key, crt))
-                sys.exit(0)
+                sys.exit(-1)
             logger.info('Listening https@%s (%s, %s)' % (url.port, key, crt))
             reactor.listenSSL(url.port, site, ssl_context, interface=hostname)
         else:
             logger.error("Invalid Listen URI: %s" % addr)
-            sys.exit(0)
-    reactor.run()
+            sys.exit(-1)
 
+    reactor.run()
 
 if __name__ == "__main__":
     main()

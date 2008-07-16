@@ -1,11 +1,22 @@
+from optparse import OptionParser
 import os
+import os.path
 import sys
 
 map = {
     '[global]': {
-        'dispatch.enabled': '0',
+        #'reactor': 'epoll',
+
+        #'echo.enabled': '1',
+        #'proxy.enabled': '1',
+        #'binaryproxy.enabled': '1',
+        #'websocket.enabled': '1',
+        #'dispatch.enabled': '1',
+        #'dispatch.port': '9000',
+
         'pid.location': '/tmp/orbited.pid'
     },
+
     '[logging]': {
         'debug': 'SCREEN',
         'info': 'SCREEN',
@@ -14,84 +25,79 @@ map = {
         'error': 'SCREEN',
         'enabled.default': 'info,access,warn,error',
     },
-    '[loggers]': {
-    
-    },
-    'default_config': 1, # set to 0 later if we load a config file
-    '[listen]': [
-    ],
-    '[access]': [
-    ],
-    '[static]': {
-    
-    }
-    
-}
 
-defaults = {
-    '[global]': {
-        'dispatch.enabled': '1',
-        'dispatch.port': '9000',
-    },
-    '[access]': [
-        ('localhost', 9998), # Allow WebSocket test daemon
-        ('irc.freenode.net', 6667), # Allow chat demo
-        ('www.google.com', 80) # Telnet demo defaults
-    ],
-    '[listen]': [
-        'http://:8000',
-#        'https://:8043'
-    ],
-#    '[ssl]': {
-#        'key': 'orbited.key',
-#        'crt': 'orbited.crt'
-#    },
     '[loggers]': {
-        'WebSocket': 'debug,info,access,warn,error',
-    },        
+        #'WebSocket': 'debug,info,access,warn,error',
+    },
+
+    # XXX why?
+    'default_config': 1, # set to 0 later if we load a config file
+
+    '[listen]': [
+        #'http://:8001',
+    ],
+
+    '[ssl]': {
+        #'key': 'orbited.key',
+        #'crt': 'orbited.crt',
+    },
+
+    '[access]': [
+        #('irc.freenode.net', 6667),
+    ],
+
+    '[static]': {
+        #'tmp': '/tmp',
+    }
 }
 
 def update(**kwargs):
     map.update(kwargs)
     return True
 
-def setup():
-    try:
-        path = os.path.join('/', 'etc', 'orbited.cfg')
-        configfile = open(path, 'r')
-        print "using config file:", path
-        return load(configfile)
-    except:
-        pass
-    try:
-        path = os.path.join('/', 'Program Files', 'Orbited', 'etc', 'orbited.cfg')
-        configfile = open(path, 'r')
-        print "using config file:", path
-        return load(configfile)
-    except:
-        pass
-    try:
-        configfile = open('orbited.cfg', 'r')
-        print "using config file: ./orbited.cfg"
-        return load(configfile)
-    except:
-        pass
-    print "Could not locate configuration file. Using default configuration"
-    for key, val in defaults.items():
-        if isinstance(map.get(key), dict):
-            map[key].update(val)
-        else:
-            map[key] = val
-    
-def load(f):
+def setup(argv):
+    parser = OptionParser()
+    parser.add_option(
+        "--config",
+        dest="config",
+        type="string",
+        default=None,
+        help="path to configuration file"
+    )
+    (options, args) = parser.parse_args(argv)
+
+    # NB: args[0] is the command name that started orbited.
+    if len(args) != 1:
+        parser.error('unexpected positional command line arguments; aborting.')
+
+    if not options.config:
+        # no config file specified, try to search it.
+        paths = [
+            os.path.join('/', 'etc', 'orbited.cfg'),
+            os.path.join('/', 'Program Files', 'Orbited', 'etc', 'orbited.cfg'),
+            'orbited.cfg',
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                options.config = path
+                break
+
+    if not options.config:
+        parser.error('unable to find the configuration file, please specify it in the --config command line argument; aborting.')
+
+    _load(open(options.config, 'r'))
+
+def _load(f):
+    # TODO why not use a python file as the configuration file?
     lines = [line.strip() for line in f.readlines()]
     map['default_config'] = 0    
     section = None
     try:
         for (i, line) in enumerate(lines):
-            # ignore comments
+            # ignore comments and empty lines.
             if '#' in line:
                 line, comment = line.split('#', 1)
+                line = line.strip()
             if not line:
                 continue
             
@@ -118,8 +124,7 @@ def load(f):
             
             # skip lines which do not assign a value to a key
             if '=' not in line:
-                print "Configuration parse error on line", i
-                sys.exit(0)
+                raise Exception('parse error on line %d' % i)
             
             key, value = [side.strip() for side in line.split('=', 1)]
             
@@ -129,8 +134,6 @@ def load(f):
             
             map[section][key] = value
     except Exception, e:
-        print e
-        sys.exit(0)
+        print >>sys.stderr, 'failed to load configuration file: %s; aborting.' % e
+        sys.exit(-1)
     return True
-
-setup()
