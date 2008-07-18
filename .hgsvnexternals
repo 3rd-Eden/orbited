@@ -1,0 +1,2 @@
+[daemon/orbited/static]
+ protocols http://orbited.org/svn/js.io/trunk/protocols
