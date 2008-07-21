@@ -174,7 +174,7 @@ var connect = function () {
 
     $("<div class='informative part'></div>")
       .html("<span class='user'>" + leaver + '</span> left ' + CHANNEL +
-            (message ? ' (“' + message + '”)' : ''))
+            (message ? ' (“' + sanitize(message) + '”)' : ''))
       .appendTo("#chathistory");         
     scrollDown();                        
                                          
@@ -186,7 +186,7 @@ var connect = function () {
 
     $("<div class='informative quit'></div>")
       .html("<span class='user'>" + quitter + '</span> quit' +
-            (message ? ' (“' + message + '”)' : ''))
+            (message ? ' (“' + sanitize(message) + '”)' : ''))
       .appendTo("#chathistory");         
     scrollDown();
   
