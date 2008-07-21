@@ -65,21 +65,43 @@ var connect = function () {
       .appendTo("#chathistory");
     scrollDown();
   };
-  // XXX implement onresponse to extract all the user list.
-  //     See RPL_NAMREPLY (sic) and RPL_ENDOFNAMES at
-  //     http://tools.ietf.org/html/rfc2812#section-5.1
-  irc.onnames = function (namelist) {
-    for (var i = namelist.length - 1; i >= 0; i--){
-      var name = namelist[i];
-      if ($.trim(name) != "" & $(".user_list #user_" + name).length == 0)
+  irc.onresponse = function(command) {
+    var responseCode = parseInt(command.type);
+
+    if (responseCode == 353) {
+      // 353 is the code for RPL_NAMEREPLY.
+
+      // The args are:
+      //
+      // """
+      //   <target> ( "=" / "*" / "@" ) <channel>
+      //    :[ "@" / "+" ] <nick> *( " " [ "@" / "+" ] <nick> )
+      //
+      //   - "@" is used for secret channels, "*" for private
+      //     channels, and "=" for others (public channels).
+      // """ -- rfc2812
+
+      var channel = command.args[2];
+      if (channel != CHANNEL)
+        return;
+
+      var partialUserList = command.args[3].split(' ');
+      for (var i = 0, l = partialUserList.length; i < l; ++i) {
+        var name = $.trim(partialUserList[i]);
+        if (name == "" || users[name])
+          continue;
         addName(name);
-    };
-    fillUserList();
-    
-    $("<div class='informative welcome'></div>").
-      html("Welcome to the " + CHANNEL + " channel.  Make yourself at home.").
-      appendTo("#chathistory");
-    scrollDown();
+      }
+    } else if (responseCode == 366) {
+      // 366 is the code for RPL_ENDOFNAMES.
+
+      fillUserList();
+
+      $("<div class='informative welcome'></div>").
+        html("Welcome to the " + CHANNEL + " channel.  Make yourself at home.").
+        appendTo("#chathistory");
+      scrollDown();
+    }
   };
   irc.onopen = function() {
     irc.nick(nickname);
