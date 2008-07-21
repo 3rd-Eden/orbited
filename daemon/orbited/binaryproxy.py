@@ -1,9 +1,13 @@
-from config import map as config
-from tcp import TCPConnection, TCPConnectionFactory
-from twisted.internet import reactor, defer
-from twisted.internet.protocol import Protocol, ClientCreator
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.protocol import ClientCreator
+from twisted.internet.protocol import Protocol
 
+from config import map as config
 from logger import get_logger
+from tcp import TCPConnection
+from tcp import TCPConnectionFactory
+
 log = get_logger("BinaryTCPConnection")
 
 # Based on code from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/510399
@@ -28,9 +32,11 @@ class BinaryProxyProtocol(Protocol):
 #        log.debug("%s:%s (%s) <- %s" % (self.host, self.port, len(data), data))
         self.proxy_conn.send(byte_to_hex(data))
 
+    # TODO support half closure (peer write end)
     def connectionLost(self, reason):
         self.proxy_conn.loseConnection()
 
+# XXX why does this exists?  why not directly use a ClientCreator?
 class ProxyClient(object):
   
     def __init__(self):
@@ -39,13 +45,15 @@ class ProxyClient(object):
     def connect(self, host, port):
         d = defer.Deferred()
 #        print "opening remote connection to %s:%s" % (host, port)
-        self.c.connectTCP(host, port).addCallback(self.connected, d, host, port)
+        connectDeferred = self.c.connectTCP(host, port)
+        connectDeferred.addCallback(self.connected, d, host, port)
+        connectDeferred.addErrback(d.errback)
         return d
     
     def connected(self, conn, d, host, port):
         conn.host, conn.port = host, port
         d.callback(conn)
-        
+
 class BinaryProxyConnection(TCPConnection):
     
     def setup(self):
@@ -61,7 +69,22 @@ class BinaryProxyConnection(TCPConnection):
         for item in self.buffer:
             self.remote_conn.send(item)
         # TODO clear buffer?
-    
+
+    def connect_remote_failed(self, reason):
+        """
+        Called when we could not establish a connection with backend
+        server.
+        
+        reason is a twisted.python.failure.Failure
+        """
+        # TODO do this in proxy.py too...
+        exception = reason.value
+        log.error('Failed to connect to remote backend server: %r' % exception)
+        # TODO how to propagate error to the client as an .onerror
+        #      callback (in JS)?
+        self.send("Failed to connect to remote backend server: %s" % exception)
+        self.loseConnection()
+
     def dataReceived(self, data):
 #        print 'recv: ', data
         getattr(self, 'state_' + self.state)(data)
@@ -69,6 +92,7 @@ class BinaryProxyConnection(TCPConnection):
     def state_initial(self, data):
 #        print 'recv:', data
         try:
+            # XXX this is assuming data is received in one single chunk?!
             host, port = data.split(':')
             self.host = host
             self.port = int(port)
@@ -77,8 +101,10 @@ class BinaryProxyConnection(TCPConnection):
                 log.warn('unauthorized', data)
                 raise (Exception("Unauthorized"), "(host, port) pair not authorized for proxying")
             log.access(self.getClientIP(), "TCP/bin", " -> ", self.host, ":", self.port, " [ ", self.getClientIP(), " ]")
-            # TODO set errback (also look for errback misses in other classes)!
-            self.factory.client.connect(self.host, self.port).addCallback(self.connected_remote)
+            # TODO look for errback misses in other classes!
+            clientDeferred = self.factory.client.connect(self.host, self.port)
+            clientDeferred.addCallback(self.connected_remote)
+            clientDeferred.addErrback(self.connect_remote_failed)
             self.state = 'proxy'
         except Exception, x:
             # TODO when we raise the unauthorized message, the client does not understand it.
@@ -94,7 +120,8 @@ class BinaryProxyConnection(TCPConnection):
         
 #    def connectionMade(self):
 #        print "Proxy Connection Made", self.id
-        
+
+    # TODO support half closure (peer write end)
     def connectionLost(self):
         if self.remote_conn:
             self.remote_conn.transport.loseConnection()
