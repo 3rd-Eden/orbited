@@ -65,6 +65,21 @@ var connect = function () {
       .appendTo("#chathistory");
     scrollDown();
   };
+  irc.onTOPIC = function(command) {
+    // See http://tools.ietf.org/html/rfc2812#section-3.2.4
+    // Args: <channel> [ <topic> ]
+
+    var channel = command.args[0];
+    if (channel != CHANNEL)
+      return;
+
+    var topic = command.args[1];
+
+    var user = parseName(command.prefix);
+    $("<div class='informative topic'></div>").
+        html('<span class="user">' + user + '</span> changed the topic to: ' + sanitize(topic)).
+        appendTo("#chathistory");
+  };
   irc.onresponse = function(command) {
     var responseCode = parseInt(command.type);
     
@@ -88,7 +103,7 @@ var connect = function () {
       var topic = command.args[2];
 
       $("<div class='informative topic'></div>").
-        html(sanitize(topic)).
+        html("Channel topic is: " + sanitize(topic)).
         appendTo("#chathistory");
     } else if (responseCode == 353) {
       // 353 is the code for RPL_NAMEREPLY.
