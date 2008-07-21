@@ -13,31 +13,61 @@ var connect = function () {
   $('#chatbox_input').focus();
 
   nickname = $("#nickname").val();
-  irc.onmessage = function (sender, message) {
-    messagediv = $('<div class="message"></div>');
+
+  function parseName(identity) {
+    return identity.split("!", 1)[0];
+  }
+
+  irc.onPRIVMSG = function(command) {
+    console.dir(command);
+    var sender = parseName(command.prefix);
+    var target = command.args[0];
+    var message = command.args[1];
+
+    var messagediv = $('<div class="message"></div>');
+
+    if (message.charCodeAt(0) == 1) {
+      // This is an CTCP request.
+
+      // NB: the embedded CTCP requests is:
+      //        \x01<request>[ <arg>]+\x01
+      //     eg:
+      //      when we type "/me waves", we receive the following message:
+      //        \x01ACTION waves\x01
+      //     eg:
+      //      after we connect, the freenode networks sends:
+      //        \x01VERSION\x01
+      // See http://www.invlogic.com/irc/ctcp.html
+      // NB: CTCP draft talks about quoting but it does not actually
+      //      define it.
+      var args = message.slice(1, message.length - 1).split(' ');
+      var request = args.shift();
+      if (request == "ACTION") {
+        message = args.join(" ");
+        messagediv.addClass("action");
+      } else {
+        message = request + " " + args.join(" ");
+        messagediv.addClass("ctcp");
+      }
+    }
+
     if (sender == nickname)
       messagediv.addClass("self");
+
+    if (target == nickname)
+      messagediv.addClass("private");
+
     if (isSubstring(nickname, message))
       messagediv.addClass("mentioned");
+
     messagediv.html('<span class="user">' + sender + ':</span> ' +
                     sanitize(message))
       .appendTo("#chathistory");
     scrollDown();
   };
-  irc.onaction = function(sender, message) {
-    if (channel != CHANNEL) {
-      return false;
-    };
-    messagediv = $('<div class="message action"></div>');
-    if (sender == nickname)
-      messagediv.addClass("self");
-    if (isSubstring(nickname, message))
-      messagediv.addClass("mentioned");
-    messagediv.html('<span class="user">• ' + sender + '</span> ' +
-                    sanitize(message))
-      .appendTo("#chathistory");
-    scrollDown();
-  };
+  // XXX implement onresponse to extract all the user list.
+  //     See RPL_NAMREPLY (sic) and RPL_ENDOFNAMES at
+  //     http://tools.ietf.org/html/rfc2812#section-5.1
   irc.onnames = function (namelist) {
     for (var i = namelist.length - 1; i >= 0; i--){
       var name = namelist[i];
@@ -51,7 +81,7 @@ var connect = function () {
       appendTo("#chathistory");
     scrollDown();
   };
-  irc.onident = function() {
+  irc.onopen = function() {
     irc.nick(nickname);
     irc.ident(nickname, '8 *', nickname);
     irc.join(CHANNEL);
@@ -64,7 +94,13 @@ var connect = function () {
       quit();
     })
   }
-  irc.onjoin = function(joiner) {
+  irc.onclose = function() {
+    console.debug("closed...");  
+  };
+  // TODO implement onNOTICE...
+  irc.onJOIN = function(command) {
+    var joiner = parseName(command.prefix);
+
     addName(joiner);
     fillUserList();
   
@@ -73,7 +109,10 @@ var connect = function () {
       .appendTo("#chathistory");         
     scrollDown();                        
   }                                      
-  irc.onpart = function(leaver, message) {        
+  irc.onPART = function(command) {
+    var leaver = parseName(command.prefix);
+    var message = command.args.join(" ");
+
     $("<div class='informative part'></div>")
       .html("<span class='user'>" + leaver + '</span> left ' + CHANNEL +
             (message ? ' (“' + message + '”)' : ''))
@@ -82,7 +121,10 @@ var connect = function () {
                                          
     removeName(leaver);                  
   }                                      
-  irc.onquit = function(quitter, message) {       
+  irc.onQUIT = function(command) {       
+    var quitter = parseName(command.prefix);
+    var message = command.args.join(" ");
+
     $("<div class='informative quit'></div>")
       .html("<span class='user'>" + quitter + '</span> quit' +
             (message ? ' (“' + message + '”)' : ''))
@@ -99,12 +141,18 @@ var chat = function () {
   msg = $('#chatbox_input').val();
   irc.privmsg(CHANNEL, msg);
   $('#chatbox_input').val('');
+  // the IRC server will not echo our message back, so simulate a send.
+  irc.onPRIVMSG({prefix:nickname,type:'PRIVMSG',args:[CHANNEL, msg]});
 }
 
 var quit = function () {
+  // XXX sometimes the quit reason is not seen when we quit...
+  //     probably because the browser is immediately closed
+  //     without waiting for socket flush?
   irc.quit();
 }
 
+// TODO enable the nick change code.
 // function nickChanged(newnick) {
 //     userRenamed(nickname, newnick);
 //     nickname = newnick;
@@ -171,9 +219,20 @@ var isSubstring = function (sub, str) {
   return str.toLowerCase().indexOf(sub.toLowerCase()) >= 0;
 };
 
-var sanitize = function (str) {
-  return str.replace(/</, '&lt;').replace(/&/, '&amp;')
-};
+var sanitize = (function(str) {
+  // See http://bigdingus.com/2007/12/29/html-escaping-in-javascript/
+  var MAP = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  var repl = function(c) { return MAP[c]; };
+  return function(s) {
+    return s.replace(/[&<>'"]/g, repl);
+  };
+})();
 
 // function infoMessage(message) {
 //   $("<div class='informative'></div>")
