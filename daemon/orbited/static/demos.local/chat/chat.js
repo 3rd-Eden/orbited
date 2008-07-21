@@ -67,8 +67,30 @@ var connect = function () {
   };
   irc.onresponse = function(command) {
     var responseCode = parseInt(command.type);
+    
+    if (responseCode == 332) {
+      // """
+      // 331 RPL_NOTOPIC
+      //     <target> <channel> :No topic is set
+      // 332 RPL_TOPIC
+      //     <target> <channel> :<topic>
+      //
+      // When sending a TOPIC message to determine the
+      // channel topic, one of two replies is sent.  If
+      // the topic is set, RPL_TOPIC is sent back else
+      // RPL_NOTOPIC.
+      // """ -- rfc2812
 
-    if (responseCode == 353) {
+      var channel = command.args[1];
+      if (channel != CHANNEL)
+        return;
+
+      var topic = command.args[2];
+
+      $("<div class='informative topic'></div>").
+        html(sanitize(topic)).
+        appendTo("#chathistory");
+    } else if (responseCode == 353) {
       // 353 is the code for RPL_NAMEREPLY.
 
       // The args are:
@@ -98,7 +120,7 @@ var connect = function () {
       fillUserList();
 
       $("<div class='informative welcome'></div>").
-        html("Welcome to the " + CHANNEL + " channel.  Make yourself at home.").
+        html("Joined " + CHANNEL + " channel.").
         appendTo("#chathistory");
       scrollDown();
     }
