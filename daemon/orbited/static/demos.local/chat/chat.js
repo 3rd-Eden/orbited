@@ -1,4 +1,4 @@
-var CHANNEL = "#orbited.test"
+var CHANNEL = "#orbited"
 var IRC_SERVER = 'irc.freenode.net'
 var IRC_PORT = 6667
 
