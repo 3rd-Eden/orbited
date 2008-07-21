@@ -1,4 +1,4 @@
-var CHANNEL = "#orbited"
+var CHANNEL = "#orbited.test"
 var IRC_SERVER = 'irc.freenode.net'
 var IRC_PORT = 6667
 
@@ -15,6 +15,7 @@ var connect = function () {
   nickname = $("#nickname").val();
 
   function parseName(identity) {
+    // TODO remove privileges from name head.
     return identity.split("!", 1)[0];
   }
 
@@ -156,6 +157,12 @@ var connect = function () {
   irc.onclose = function() {
     console.debug("closed...");  
   };
+  irc.onNICK = function(command) {
+    // See http://tools.ietf.org/html/rfc2812#section-3.1.2
+    var previousNick = parseName(command.prefix);
+    var newNick = command.args[0];
+    userRenamed(previousNick, newNick);
+  };
   // TODO implement onNOTICE...
   irc.onJOIN = function(command) {
     var joiner = parseName(command.prefix);
@@ -216,18 +223,18 @@ var quit = function () {
 //     userRenamed(nickname, newnick);
 //     nickname = newnick;
 // }
-// 
-// function userRenamed(oldname, newname) {
-//   $("<div class='informative rename'></div>")
-//     .html("<span class='user'>" + oldname + "</span> is now known as " +
-//           "<span class='user'>" + newname + "</span>")
-//     .appendTo("#chathistory");
-//   scrollDown();
-// 
-//   $(".user_list .user#user" + oldname)
-//     .attr("id", "user" + newname)
-//     .html(newname);
-// }
+
+function userRenamed(oldname, newname) {
+  $("<div class='informative rename'></div>")
+    .html("<span class='user'>" + oldname + "</span> is now known as " +
+          "<span class='user'>" + newname + "</span>")
+    .appendTo("#chathistory");
+  scrollDown();
+
+  $(".user_list .user#user_" + oldname)
+    .attr("id", "user_" + newname)
+    .html(newname);
+}
 
 var user_priviledges = function (name) {
   var privs_symbols = {"@":"admin", "%":"subadmin", "+":"voice"};
@@ -239,7 +246,10 @@ var user_priviledges = function (name) {
 };
 
 var addName = function (name) {
-  var priviledges = user_priviledges[name];
+  // XXX this MUST remove the nick privileges from name (eg: because
+  //     these prefixes are not sent when the user changed his nick,
+  //     etc).
+  var priviledges = user_priviledges(name);
   users[name] = {"privs":priviledges};
   $('<div class="user_entry" id="user_' + name + '">' + name + '</div>')
     .addClass(priviledges)
