@@ -1,0 +1,20 @@
+Slide: Orbited (Michael Carter and Jacob Rus)
+
+M: Hi, my name is Michael Carter. I'm the founder of the Orbited project which I've been working on for two years. Orbited is an MIT licensed Comet server built for scalability and integration.
+
+J: And I'm Jacob Rus. I've been working with Michael for a year in a half. There are some recent developments with Orbited 
+
+M: So, to start us off I'd like to ask a question. How many of you in this room have used Comet in your applications?
+
+(hands raise)
+Slide (classic picture of many responses to a signle request)
+M: Ok, so this talk should help those of you with your hands up as well as your hands down. Just to make sure we're all on the same page, how about a definition? Comet is (TODO)
+
+J: Wait a second, that sounds an awful lot like a socket. You know, TCP? Full-duplex; Bi-directional communication between the client and server...
+
+[Slide: Flash sockets and Java sockets with an X through them)
+M: Well, no, its not a socket. Sockets don't work on the web. We have had sockets in Flash and Java for a long time, but there is a show-stopping problem. That is, they don't interoperate over routers and firewalls. You can't deploy an application that will fail on at any school, government, or coroporate office. 
+
+J: Ok then, whats the archtiecture of Comet?
+
+M: So we already know about a typical web application deployment. You have your web framework
