@@ -93,7 +93,9 @@ M: Same deal. We create a jabber connection on the web app for each user connect
 
                 Slide: Ajaxian "[they] now like to call..."
 
-J: So this is my point. I say, lets call this TCPSocket, and many people say, "oh, word games. Now you like to call Comet TCPSocket." Like this ajaxian article for instance.
+J: So this is my point. I say, lets call this TCPSocket, and many people say, "oh, word games. Now you like to call Comet TCPSocket." Like a couple weeks ago when there was an article about Orbited's sockets in the browser. This ajaxian article is very representative of how most people initially saw this point, that its just calling the same thing a new name.
+
+                Slide: Multiple bridges
 
 J: But really, its about integration. You are proposing that we write a server-side bridge for each back-end system we want to integrate with. But with that method, our life is ahead of us because what we're *really* doing is writing a new json based protocol for each existing protocol, and then writing a server-side trans-coder.
 
@@ -113,8 +115,6 @@ J: Yeah....
 
 M: They're full duplex, They're for real-time communication, they're all built on TCP...
 
-                Slide: TCPSocket bridge
-
 J: Exactly. They are TCP protocols. So thats my argument. Lets write a SINGLE bridge that takes raw TCP data and transcodes it to ajax/comet.
 
 M: What does that even mean?
@@ -131,6 +131,8 @@ J: So lets say you have this code:
 J: Now when you create a TCPSocket, it actually causes the Orbited server to create a tcp socket to the destination port and domain
 
 J: So when you call conn.send("data"), it takes that payload "data" and makes a POST to Orbited with that payload. 
+
+                Slide: TCPSocket bridge
 
 J: Next, Orbited, takes that data, and writes it to the TCP socket. It doesnt care what the protocol is whatsoever, it just proxies any bytes that it receives.
 
@@ -172,15 +174,13 @@ M: Right, which is why I recommended that we do it that way.
 
 J: But hold on -- That means that we would saturate the server with 500 users. Any past that and We'd be using more than 100% of the cpu. So if you want any chance of scaling this stuff, you better not do the processing on the server!
 
-                Slide: 500 vs. 100k
-
 M: ***TODO*** Okay, so maybe I exagerated. It would take probably 1% of the processor to parse the js protocol
 
 J: Okay, then whats the problem? If the user's browser is only using 1% of the cpu, that isn't a problem for them at all -- Its practically nothing. 
 
-J: The bottom line is this: The server is *always* the bottleneck for any webapp. If there is some piece of the computing that you can do in the browser, then *do it in the browser*. Parsing the protocols can clearly happen on the server or the browser. But If you parse the protocol on the server, scalability will be a big problem. Therefore, distributing this work load to the clients allows massive scalability.
 
-J: Moreover, the browser still has to understand a protocol with identical semantics to 
+                Slide: desert vs. riot
+J: The bottom line is this: The server is *always* the bottleneck for any webapp. If there is some piece of the computing that you can do in the browser, then *do it in the browser*. Parsing the protocols can clearly happen on the server or the browser. But If you parse the protocol on the server, scalability will be a big problem. Therefore, distributing this work load to the clients allows massive scalability. You want your web app to be like a riot, not a nature preserve. 
 
 M: So you have packets in, and then you have packets out. Its a dumb proxy.
 
@@ -235,4 +235,26 @@ J: Well thats the best part is that we can just make a library of these protocol
                 Slide: Announcing JS.IO
 
 J: The JS.IO projects contains an XMPP client, an IRC client, and a STOMP client. We have IMAP, Google Protocol Buffers, and AMQP on the way.
-    
+
+M: Great. So i still have a question. How do you integrate all this with existing applications?
+
+J: Well, i would recommend using a message queue, such as ActiveMQ or RabbitMQ. They are all about routing messages to the right place.
+
+M: How do you get messages from the web app to the Message Queue?
+
+J: You use the STOMP protocol. The web app needs to send a message to a particular user or set of users, so it uses a STOMP client to send the message.
+
+M: Well, we're getting to the end of our time here, so its time now to demo a real-time strategy game that Jacob and I have been working on.
+
+M: The game server is written like a game server, not a web app. We then use orbited to bridge data from the browser to the game server. We plan on writing a thick client with pygame as well, but thats a bit down the road.
+
+J: Here's how the game works.
+    1. You have a starting planet
+    2. You can attack neighboring planets
+    3. Try to take over the map
+
+Then we play
+
+                    Slide: Leveling the playing field
+Questions?
+
