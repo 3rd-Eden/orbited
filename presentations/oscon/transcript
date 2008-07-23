@@ -111,8 +111,8 @@ J: Remember that TCPSocket api I told you about?
 M: yeah?
 
 J: So lets say you have this code:
-[tcpsocket connect]
-( conn = new TCPSocket("domain", port) )
+[Slide: tcpsocket connect]
+conn = new TCPSocket("domain", port) 
 
 J: Now when you create a TCPSocket, it actually causes the Orbited server to create a tcp socket to the destination port and domain
 
@@ -120,7 +120,11 @@ J: So when you call conn.send("data"), it takes that payload "data" and makes a 
 
 J: Next, Orbited, takes that data, and writes it to the TCP socket. It doesnt care what the protocol is whatsoever, it just proxies any bytes that it receives.
 
-J: So when the back-end server sends some downward, Orbited will locate the appropriate live Comet connection
+J: So when the back-end server sends some data downward, Orbited will locate the appropriate live Comet connection and send that data to the browser. The browser receives it and calls the TCPSocket's onread function.
+
+J: So in essence, this TCPSocket api isn't just a way to communicate between the browser and the comet server. Its like the comet server doesn't exist -- its just a dumb proxy. Really, its a way to communicate between the browser and an *arbitrary* back-end TCP server.
+
+J: We aren't calling comet Sockets. We're putting sockets in the browser. And the best part is, because we're implementing sockets ON TOP of comet, it still traverses proxies and firewalls seamlessly, and works in any browser.
 
 M: So in the case of the irc client you'd be getting *raw* irc data in the browser?
 
@@ -128,7 +132,7 @@ J: yes.
 
 M: what good is that?
 
-J: So you write an IRC client. You parse the IRC protocol. 
+J: So you write an IRC client in the browser. In javascript. You parse the IRC protocol. Just like you would do for any other language
 
 M: Yeah, but now you have to do more work in the browser. You'll be using extra cpu to parse IRC instead of just eval or safe evaling some json.
 
@@ -139,24 +143,39 @@ M: 10%
 
 J: Sure. So, how much faster is C than javascript for parsing protocols
 
+M: Whats that have to do with anything?
+
+J: For making an accurate comparison between doing the processing on the server in the fastest language possible versus on the client in javascript
+
 M: 50x
 [slide 10% processor; c is 50x faster than js]
 
-J: Ok, so then it would only take 0.2% of the processor for the server to parse that protocol for the browser, right?
+J: Ok, so for one user it takes 10% of the processor. But c is 50 times faster, so divide that by 50. Therefore, it would only take 0.2% of the processor for the server to parse that protocol for the browser, right?
 
-M: sure.
+M: Right, which is why I recommended that we do it that way.
 
 [The math... = 500 users MAX]
-J: That means that we would saturate the server with 500 users. So if you want any chance of scaling this stuff, you better not put it on the server!
+J: But hold on -- That means that we would saturate the server with 500 users. So if you want any chance of scaling this stuff, you better not put it on the server!
+[Slide: 500 vs. 100k]
 
 M: I see what you did there! Okay, so maybe I exagerated. It would take probably 1% of the processor to parse the js protocol
 
-[Slide: 500 vs. 100k]
 
-J: Okay, then whats the problem? 1% of the cpu isn't a problem at all. The bottom line is this: If you parse the protocol on the server, scalability will be a big problem. On the other hand, distributing this work load to the clients allows massive scalability.
+J: Okay, then whats the problem? If the user's browser is only using 1% of the cpu, that isn't a problem for them at all -- Its pratically nothing. 
 
-M: So lets see a demo of this socket.
+J: The bottom line is this: The server is *always* the bottleneck for any webapp. If there is some piece of the computing that you can do in the browser, then *do it in the browser*. Parsing the protocols can clearly happen on the server or the browser. But If you parse the protocol on the server, scalability will be a big problem. Therefore, distributing this work load to the clients allows massive scalability.
 
+M: So you have packets in, and then you have packets out. Its a dumb proxy.
+
+J: Almost. We have one more component in Orbited which is an access control list. We only proxy connections to pre-configured destinations. The best way to describe orbited is as a web enabled Firewall.
+
+[slide: orbited firewall]
+
+M: Thats interesting. So here's my question. I have a reasonable understanding how Gmail works -- its like a classic Comet deployment.
+
+M: For the chat, they have a web application that maintains a connection to the xMPP server for each applicaiton 
+
+J: 
 [DEMO: telnet/IRC] (local irc server as back up if freenode isn't up for us)
 
 
