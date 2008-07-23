@@ -4,7 +4,7 @@ M: Hi, my name is Michael Carter. I'm the founder of the Orbited project which I
 
 J: And I'm Jacob Rus. I've been working with Michael on Orbited for about a year and a half.  And I'm going to tell you about some exciting recent developments in Orbited that might change your lives forever.
 
-M: So, to start us off I'd like to ask a question. How many of you in this room have used Comet in your applications?
+M: So, to start us off I'd like to ask a question. How many of you in this room have developed an application that uses Comet -- Any application, even if its not in production.
 
     (hands raise)
 
@@ -20,7 +20,7 @@ M: A Tcp socket?
 
 J: yeah, TCP -- Full-duplex, Bi-directional communication between the client and server...
 
-J: How many of you have used TCP sockets in your applications?
+J: How many of you have used TCP sockets in your applications? raise your hands
 
     (hands raise)
 
@@ -29,6 +29,8 @@ J: All network programming for decades has been written on top of the same strai
 M: Well no, it's not a socket.
 
                 Slide: Flash sockets and Java sockets with an X through them
+
+J: How's that?
 
 M: Sockets don't work on the web. We've had sockets in Flash and Java for a long time, but there is a show-stopping problem. That is, they don't interoperate over routers and firewalls. You can't deploy an application that will fail on at any school, government, or coroporate office. 
 
@@ -82,7 +84,7 @@ M: Same deal. We create a jabber connection on the web app for each user connect
 
 J: So this is my point. I say, lets call this TCPSocket, and many people say, oh, word games. Now you like to call Comet TCPSocket. Like this ajaxian article for instance.
 
-J: But really, its about integration. You are proposing that we write a server-side bridge for each back-end system we want to integrate with. But with that method, or life is ahead of us because what we're *really* doing is writing a new protocol json based protocol for each existing protocol, and then writing a server-side trans-coder.
+J: But really, its about integration. You are proposing that we write a server-side bridge for each back-end system we want to integrate with. But with that method, our life is ahead of us because what we're *really* doing is writing a new json based protocol for each existing protocol, and then writing a server-side trans-coder.
 
 M: Slow down there. We aren't creating any new protocols, just bridge the protocols to the browser.
 
@@ -93,10 +95,16 @@ M: Thats not a big deal though. We could write a transcoder for the more popular
 [Slide a bunch of protocols]
 J: Its a waste a time. Tell me, what do these protocols all have in common?
 
-M: They're all tcp?
+M: They're all protocols, on the internet
+
+J: Yeah....
+
+M: They're full duplex, They're for real-time communication, they're all built on TCP...
 
 [Slide: TCPSocket bridge ]
 J: Exactly. They are TCP protocols. So thats my argument. Lets write a SINGLE bridge that takes raw TCP data and transcodes it to ajax/comet.
+
+M: 
 
 M: So in the case of the irc client you'd be getting *raw* irc data in the browser?
 
@@ -110,12 +118,13 @@ M: Yeah, but now you have to do more work in the browser. You'll be using extra 
 
 J: So what percentage of the processor would you say the browser uses doing this complicated processing?
 
-[slide 10% of the processor to parse the protocol in JS ]
 M: 10%
+[slide 10% of the processor to parse the protocol in JS ]
 
 J: Sure. So, how much faster is C than javascript for parsing protocols
-[slide 10% processor; c is 50x faster than js]
+
 M: 50x
+[slide 10% processor; c is 50x faster than js]
 
 J: Ok, so then it would only take 0.2% of the processor for the server to parse that protocol for the browser, right?
 
