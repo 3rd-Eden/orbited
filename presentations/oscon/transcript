@@ -173,9 +173,32 @@ J: Almost. We have one more component in Orbited which is an access control list
 
 M: Thats interesting. So here's my question. I have a reasonable understanding how Gmail works -- its like a classic Comet deployment.
 
-M: For the chat, they have a web application that maintains a connection to the xMPP server for each applicaiton 
+M: For the chat, they have a web application that maintains a connection to the xMPP server for each applicaiton. When new XMPP data arrives, the Comet component is used to dispatch the message to the user. How would Gmail chat work with the Web firewall notion of comet?
 
-J: 
+J: So you would have no such web application for the bridging. You would deploy an out-of-the-box XMPP server, and put the orbited firewall in front of it. 
+
+J: Then the browser would open a tcp connection to the XMPP server via orbited. The browser would parse incoming XMPP data and make the appropriate callbacks that an XMPP client should have, 
+[slide: xmpp api]
+
+J: such as onPresence, or onInstantMessage.
+
+M: That makes sense. But I don't see how you would integrate the chat with the web mail.
+
+J: So the webmail is the most interesting part of the whole process.
+
+[slide: IMAP server, orbited, browser]
+J: Lets say we ran an IMAP server, like so. When the static html page loaded, we could prompt the user for the username and password, then call  IMAPClient.connect() and authenticate with those credentials. Once the connection was established, we would ask the IMAP client for the 50 most recent mail messages, including subject line, sender, date, and read status.
+
+[slide, from imap client to imap gui]
+
+J: Next, we just take that data and stick it in the GUI.
+
+J: Lastly, we send an IMAP idle command to the imap server. this IDLE command tells the imap server "Remain idle until I execute another command. But if a new email arrives, let me know about it." That means we get instant browser notification of new mail that arrives, and for free! because the IMAP protocol supports it inherently.
+
+M: You know, IMAP also supports search. You could implement Gmail's search feature by making an IMAP search request and getting back the subject lines and message ids of the emails that matched the search critera.
+
+J: Yeah, exactly. Whats really neat here is that there was already a ton of work put into these protocols for the purpose of 
+
 [DEMO: telnet/IRC] (local irc server as back up if freenode isn't up for us)
 
 
