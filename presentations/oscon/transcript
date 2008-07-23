@@ -12,11 +12,13 @@ M: So, to start us off I'd like to ask a question. How many of you in this room 
 
 M: Ok, so this talk should help those of you with your hands up as well as your hands down. Just to make sure we're all on the same page, how about a definition? Comet is (TODO)
 
-J: Wait a second, that sounds an awful lot like a socket. 
+J: Wait a second, Michael.  That sounds an awful lot like a socket. 
 
 M: A Tcp socket?
 
                 Slide: TCP
+
+J: yeah, TCP -- Full-duplex, Bi-directional communication between the client and server...
 
 J: How many of you have used TCP sockets in your applications?
 
