@@ -207,7 +207,7 @@ J: Yeah, exactly. Whats really neat here is that there was already a ton of work
 
 M: So that doesn't fully answer my question. We can have an XMPP client and an IMAP client on one page. But how do we connect them to the same user account. How then do you avoid server side code?
 
-J: When the user signs in, you create both an IMAP and XMPP client. On the back-end, you could also run an LDAP server, for instance. Then its simply a matter of configuring your IMAP and XMPP server to use the same LDAP server for authentication. This is how you deploy most serious applications anyway. 
+J: When the user signs in, you create both an IMAP and XMPP client. On the back-end, you just need to configure both the IMAP server and the XMPP server to use a shared back-end authentication source. It could be a SQL database, or an LDAP server, for instance. This is how you deploy most serious applications anyway.  
 
 M: I see a certain value to all of this. Can you explain to me how to actually see the TCPSocket in action?
 
