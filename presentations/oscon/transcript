@@ -104,7 +104,23 @@ M: They're full duplex, They're for real-time communication, they're all built o
 [Slide: TCPSocket bridge ]
 J: Exactly. They are TCP protocols. So thats my argument. Lets write a SINGLE bridge that takes raw TCP data and transcodes it to ajax/comet.
 
-M: 
+M: What does that even mean?
+
+J: Remember that TCPSocket api I told you about?
+
+M: yeah?
+
+J: So lets say you have this code:
+[tcpsocket connect]
+( conn = new TCPSocket("domain", port) )
+
+J: Now when you create a TCPSocket, it actually causes the Orbited server to create a tcp socket to the destination port and domain
+
+J: So when you call conn.send("data"), it takes that payload "data" and makes a POST to Orbited with that payload. 
+
+J: Next, Orbited, takes that data, and writes it to the TCP socket. It doesnt care what the protocol is whatsoever, it just proxies any bytes that it receives.
+
+J: So when the back-end server sends some downward, Orbited will locate the appropriate live Comet connection
 
 M: So in the case of the irc client you'd be getting *raw* irc data in the browser?
 
