@@ -36,13 +36,16 @@ M: Sockets don't work on the web. We've had sockets in Flash and Java for a long
 
 J: Ok then.  If it's not a socket, what *is* the architecture of Comet?
 
+
+M: Well, in the browser, Comet works using a variety of methods to get data down to the browser. For instance, we can do something called long polling where the browser pre-emptively opens a connection to the server and waits for a response. Or we can do iframe streaming, or use server-sent-events. All of these methods do require extensive JS, which Orbited ships with out of the box. Let me show you a diagram of how this works...
+
+J: No, no.  
+
                 Slide: long polling? -- no, go to BOF
 
-M: Well, in the browser, Comet works using a variety of methods to get data down to the browser, hacking around browser objects that were never really intended 
+J: The low level implementation details of Comet aren't important. They are extensively documented online, what I want to hear about is conceptual -- the high-level architecture of Comet applications.
 
-J: No, no.  Those are implementation details of interest to Comet server developers, but these good citizens in the audience don't care to that level of detail: they just want to write applications.  Instead of talking about that, I want to hear about the high-level architecture.
-
-M: You're right.  If any of you *are* interested in the nitty-gritty details of how Comet works, there are explanations online, or you can stop by the Comet BOF session Thursday night at 8.
+M: Sure. But if anyone is interested interested in the nitty-gritty details of how Comet works, there are plenty of articles all over the net, such as cometdaily.com. Tomorrow night we'll have a BOF where we, along with other Comet framework developers can answer any questions. Its at 8pm in room E146.
 
                 Slide: typical web framework
 
@@ -219,8 +222,17 @@ M: So that doesn't fully answer my question. We can have an XMPP client and an I
 
 J: When the user signs in, you create both an IMAP and XMPP client. On the back-end, you just need to configure both the IMAP server and the XMPP server to use a shared back-end authentication source. It could be a SQL database, or an LDAP server, for instance. This is how you deploy most serious applications anyway.  
 
-M: I see a certain value to all of this. Can you explain to me how to actually see the TCPSocket in action?
+M: I see a certain value to all of this. Lets actually using a socket.
 
     [DEMO: telnet/IRC]
     (local irc server as back up if freenode isn't up for us)
+
+
+M: If you know the IRC protocol thats pretty neat.
+
+J: Well thats the best part is that we can just make a library of these protocols. Which we've done!
+
+                Slide: Announcing JS.IO
+
+J: The JS.IO projects contains an XMPP client, an IRC client, and a STOMP client. We have IMAP, Google Protocol Buffers, and AMQP on the way.
     
