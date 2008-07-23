@@ -197,7 +197,11 @@ J: Lastly, we send an IMAP idle command to the imap server. this IDLE command te
 
 M: You know, IMAP also supports search. You could implement Gmail's search feature by making an IMAP search request and getting back the subject lines and message ids of the emails that matched the search critera.
 
-J: Yeah, exactly. Whats really neat here is that there was already a ton of work put into these protocols for the purpose of 
+J: Yeah, exactly. Whats really neat here is that there was already a ton of work put into these protocols. the IMAP protocol supports every features you could ever want. Moving mail to a different folder. Deleting it. Tagging it. Whatever! We get it all for free, and with NO SERVER CODE whatsoever because its all already implemented by the IMAP server.
+
+M: So that doesn't fully answer my question. We can have an XMPP client and an IMAP client on one page. But how do we connect them to the same user account. How then do you avoid server side code?
+
+J: Remember what I said aboutn 
 
 [DEMO: telnet/IRC] (local irc server as back up if freenode isn't up for us)
 
