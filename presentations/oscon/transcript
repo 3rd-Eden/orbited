@@ -24,7 +24,7 @@ J: How many of you have used TCP sockets in your applications? raise your hands
 
     (hands raise)
 
-J: All network programming for decades has been written on top of the same straight-forward abstraction.  We have a bi-directional communication channel, where each end has a write function for sending data, and a way to attach callbacks for reading data written at the other end.
+J: All network programming for decades has been written on top of the same straight-forward abstraction.  We have a bi-directional communication channel, where each end has a write function for sending data, and a way to attach callbacks for reading data written at the other end.  So isn't that what you're talking about here?
 
 M: Well no, it's not a socket.
 
@@ -32,9 +32,17 @@ M: Well no, it's not a socket.
 
 J: How's that?
 
-M: Sockets don't work on the web. We've had sockets in Flash and Java for a long time, but there is a show-stopping problem. That is, they don't interoperate over routers and firewalls. You can't deploy an application that will fail on at any school, government, or coroporate office. 
+M: Sockets don't work on the web. We've had sockets in Flash and Java for a long time, but there is a show-stopping problem. That is, they don't interoperate over routers and firewalls. You can't deploy an application that will fail on at any school, government, or corporate office. 
 
 J: Ok then.  If it's not a socket, what *is* the architecture of Comet?
+
+                Slide: long polling? -- no, go to BOF
+
+M: Well, in the browser, Comet works using a variety of methods to get data down to the browser, hacking around browser objects that were never really intended 
+
+J: No, no.  Those are implementation details of interest to Comet server developers, but these good citizens in the audience don't care to that level of detail: they just want to write applications.  Instead of talking about that, I want to hear about the high-level architecture.
+
+M: You're right.  If any of you *are* interested in the nitty-gritty details of how Comet works, there are explanations online, or you can stop by the Comet BOF session Thursday night at 8.
 
                 Slide: typical web framework
 
@@ -42,7 +50,7 @@ M: So we already know about a typical web application deployment. You have your 
 
                 Slide: web framework + comet server
 
-M: In order to do downstream, we add a Comet server beside the web applciation. Downstream data flows from the the  web application, to the comet server, and then to the browser.
+M: In order to do downstream, we add a Comet server beside the web application. Downstream data flows from the the  web application, to the comet server, and then to the browser.
 
 J: But what does the javascript API look like?
 
@@ -135,7 +143,7 @@ J: yes.
 
 M: what good is that?
 
-J: So you write an IRC client in the browser. In javascript. You parse the IRC protocol. Just like you would do for any other language
+J: So you write an IRC client in the browser. In javascript. You parse the IRC protocol. Just like you would do in a desktop client.
 
 M: Yeah, but now you have to do more work in the browser. You'll be using extra cpu to parse IRC instead of just eval or safe evaling some json.
 
@@ -168,6 +176,8 @@ M: ***TODO*** Okay, so maybe I exagerated. It would take probably 1% of the proc
 J: Okay, then whats the problem? If the user's browser is only using 1% of the cpu, that isn't a problem for them at all -- Its practically nothing. 
 
 J: The bottom line is this: The server is *always* the bottleneck for any webapp. If there is some piece of the computing that you can do in the browser, then *do it in the browser*. Parsing the protocols can clearly happen on the server or the browser. But If you parse the protocol on the server, scalability will be a big problem. Therefore, distributing this work load to the clients allows massive scalability.
+
+J: Moreover, the browser still has to understand a protocol with identical semantics to 
 
 M: So you have packets in, and then you have packets out. Its a dumb proxy.
 
@@ -213,3 +223,4 @@ M: I see a certain value to all of this. Can you explain to me how to actually s
 
     [DEMO: telnet/IRC]
     (local irc server as back up if freenode isn't up for us)
+    
