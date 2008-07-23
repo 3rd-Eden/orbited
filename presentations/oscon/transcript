@@ -82,7 +82,7 @@ M: Same deal. We create a jabber connection on the web app for each user connect
 
                 Slide: Ajaxian "[they] now like to call..."
 
-J: So this is my point. I say, lets call this TCPSocket, and many people say, oh, word games. Now you like to call Comet TCPSocket. Like this ajaxian article for instance.
+J: So this is my point. I say, lets call this TCPSocket, and many people say, "oh, word games. Now you like to call Comet TCPSocket." Like this ajaxian article for instance.
 
 J: But really, its about integration. You are proposing that we write a server-side bridge for each back-end system we want to integrate with. But with that method, our life is ahead of us because what we're *really* doing is writing a new json based protocol for each existing protocol, and then writing a server-side trans-coder.
 
@@ -139,7 +139,7 @@ J: So you write an IRC client in the browser. In javascript. You parse the IRC p
 
 M: Yeah, but now you have to do more work in the browser. You'll be using extra cpu to parse IRC instead of just eval or safe evaling some json.
 
-J: So what percentage of the processor would you say the browser uses doing this complicated processing?
+J: You really think thats a big problem? So what percentage of the processor would you say the browser uses doing this complicated processing?
 
                 Slide: 10% of the processor to parse the protocol in JS
 M: 10%
@@ -153,17 +153,17 @@ J: For making an accurate comparison between doing the processing on the server 
 M: 50x
                 Slide: 10% processor; c is 50x faster than js
 
-J: Ok, so for one user it takes 10% of the processor. But c is 50 times faster, so divide that by 50. Therefore, it would only take 0.2% of the processor for the server to parse that protocol for the browser, right?
+J: Ok, so for one user it takes 10% of the processor. But c is 50 times faster, so divide that by 50. Therefore, it would only take 0.2% of the processor for the server to parse that protocol for the browser, for each user, right?
 
 M: Right, which is why I recommended that we do it that way.
 
                 Slide: The math... = 500 users MAX
 
-J: But hold on -- That means that we would saturate the server with 500 users. So if you want any chance of scaling this stuff, you better not put it on the server!
+J: But hold on -- That means that we would saturate the server with 500 users. Any past that and We'd be using more than 100% of the cpu. So if you want any chance of scaling this stuff, you better not do the processing on the server!
 
                 Slide: 500 vs. 100k
 
-M: I see what you did there! Okay, so maybe I exagerated. It would take probably 1% of the processor to parse the js protocol
+M: ***TODO*** Okay, so maybe I exagerated. It would take probably 1% of the processor to parse the js protocol
 
 J: Okay, then whats the problem? If the user's browser is only using 1% of the cpu, that isn't a problem for them at all -- Its practically nothing. 
 
@@ -175,7 +175,7 @@ J: Almost. We have one more component in Orbited which is an access control list
 
                 Slide: orbited firewall
 
-M: Thats interesting. So here's my question. I have a reasonable understanding how Gmail works -- its like a classic Comet deployment.
+M: Thats interesting. So here's my question. I have a reasonable understanding how Gmail Chat works, you know, Google Talk in the browser -- its like a classic Comet deployment. 
 
 M: For the chat, they have a web application that maintains a connection to the xMPP server for each applicaiton. When new XMPP data arrives, the Comet component is used to dispatch the message to the user. How would Gmail chat work with the Web firewall notion of comet?
 
@@ -193,7 +193,7 @@ J: So the webmail is the most interesting part of the whole process.
 
                 Slide: IMAP server, orbited, browser
 
-J: Lets say we ran an IMAP server, like so. When the static html page loaded, we could prompt the user for the username and password, then call  IMAPClient.connect() and authenticate with those credentials. Once the connection was established, we would ask the IMAP client for the 50 most recent mail messages, including subject line, sender, date, and read status.
+J: Lets say we ran an IMAP server, like so. When the static html page is loaded, we could prompt the user for the username and password, then call  IMAPClient.connect() and authenticate with those credentials. Once the connection was established, we would ask the IMAP client for the 50 most recent mail messages, including subject line, sender, date, and read status.
 
                 Slide: from imap client to imap gui
 
