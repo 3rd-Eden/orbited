@@ -84,4 +84,45 @@ J: But really, its about integration. You are proposing that we write a server-s
 
 M: Slow down there. We aren't creating any new protocols, just bridge the protocols to the browser.
 
-J: No, actually you are. You aren't actually sending RAW irc to the browser, you're sending JSON encoded IRC. But the IRC/JSON encoder 
+J: No, actually you are. You aren't actually sending RAW irc to the browser, you're sending JSON encoded IRC. So you need a new transcoder for every protocol.
+
+M: Thats not a big deal though. We could write a transcoder for the more popular protocols, and then write a tutorial on how to write your own for any protocol we don't support.
+
+[Slide a bunch of protocols]
+J: Its a waste a time. Tell me, what do these protocols all have in common?
+
+M: They're all tcp?
+
+[Slide: TCPSocket bridge ]
+J: Exactly. They are TCP protocols. So thats my argument. Lets write a SINGLE bridge that takes raw TCP data and transcodes it to ajax/comet.
+
+M: So in the case of the irc client you'd be getting *raw* irc data in the browser?
+
+J: yes.
+
+M: what good is that?
+
+J: So you write an IRC client. You parse the IRC protocol. 
+
+M: Yeah, but now you have to do more work in the browser. You'll be using extra cpu to parse IRC instead of just eval or safe evaling some json.
+
+J: So what percentage of the processor would you say the browser uses doing this complicated processing?
+
+[slide 10% of the processor to parse the protocol in JS ]
+M: 10%
+
+J: Sure. So, how much faster is C than javascript for parsing protocols
+[slide 10% processor; c is 50x faster than js]
+M: 50x
+
+J: Ok, so then it would only take 0.2% of the processor for the server to parse that protocol for the browser, right?
+
+M: sure.
+
+[The math... = 500 users MAX]
+J: That means that we would saturate the server with 500 users. So if you want any chance of scaling this stuff, you better not put it on the server!
+
+M: I see what you did there! Okay, so maybe I exagerated. It would take probably 1% of the processor to parse the js protocol
+
+[Slide: 500 vs. 100k]
+J: Okay, then whats the problem? 1% of the cpu isn't a problem at all. The bottom line is this: If you parse the protocol on the server, scalability will be a big problem. On the other hand, letting the client do the processing is far better for distribution
