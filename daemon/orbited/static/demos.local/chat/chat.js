@@ -7,6 +7,7 @@ var nickname = null;
 var users = {};
 
 var irc = new IRCClient();
+var log = getIrcLogger("Chat");
 
 var connect = function () {
   $('#signin_popup, #absorb_clicks').hide();
@@ -20,7 +21,6 @@ var connect = function () {
   }
 
   irc.onPRIVMSG = function(command) {
-    console.dir(command);
     var sender = parseName(command.prefix);
     var target = command.args[0];
     var message = command.args[1];
@@ -155,7 +155,7 @@ var connect = function () {
     })
   }
   irc.onclose = function() {
-    console.debug("closed...");  
+    log.debug("closed...");  
   };
   irc.onNICK = function(command) {
     // See http://tools.ietf.org/html/rfc2812#section-3.1.2
