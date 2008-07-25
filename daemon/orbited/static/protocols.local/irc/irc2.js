@@ -103,7 +103,10 @@ IRCClient = function() {
     self.quit = function(reason) {
         var reason = reason || "leaving";
         send("QUIT", ":" + reason)
-        conn.close()
+        // XXX there is no TCPSocket.close method... YET!
+        //     but sending a QUIT should make the IRCD close
+        //     the connection too...
+        //conn.close()
     }
     self.privmsg = function(destination, message) {
         send('PRIVMSG', destination + ' :' + message)
