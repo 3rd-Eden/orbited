@@ -25,7 +25,34 @@
  * ©2008 The Orbited Project
  */
 
+// TODO DRY this by creating a common logging infrastructure (this is also on stomp.js)
+IRC_DEBUG = false;
+
+if (IRC_DEBUG && typeof(console)) {
+    function getIrcLogger(name) {
+        return {
+            debug: function() {
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift(name, ": ");
+                console.debug.apply(console, args);
+            },
+            dir: function() {
+                console.debug(name, ":");
+                console.dir.apply(console, arguments);
+            }
+        };
+    }
+} else {
+    function getIrcLogger(name) {
+        return {
+            debug: function() {},
+            dir: function() {}
+        };
+    }
+}
+
 IRCClient = function() {
+    var log = getIrcLogger("IRCClient");
     var self = this
     var conn = null
     var buffer = ""
@@ -38,6 +65,7 @@ IRCClient = function() {
     self.onresponse = function(command) {}     // used for numerical replies
                             
     self.connect = function(hostname, port) {
+        log.debug("connect");
         conn = self._createTransport(hostname, port);
         conn.onopen = conn_opened
         conn.onclose = conn_closed
@@ -48,7 +76,13 @@ IRCClient = function() {
         return new TCPSocket(hostname, port);
     };
     self.close = function() {
-        conn.close()
+        log.debug("close");
+        // XXX there is no TCPSocket.close method... so I'm removing all
+        //     the listeners here (until this is fixed).
+        //conn.close()
+        conn.onopen = null;
+        conn.onclose = null;
+        conn.onread = null;
         self.onclose()
     }
     self.ident = function(nickname, modes, real_name) {
@@ -83,6 +117,8 @@ IRCClient = function() {
         self.onclose()
     }
     var conn_read = function(data) {
+        log.debug("data:");
+        log.debug(data);
         buffer += data
         parse_buffer()
     }
@@ -121,11 +157,14 @@ IRCClient = function() {
           var prefix = null;
         }
 
-        return {
+        var command = {
             prefix: prefix,
             type: args.shift(),
             args: args
         };
+        log.debug("command:");
+        log.dir(command);
+        return command;
     };
     var dispatch = function(line) {
         command = parse_command(line);
@@ -143,9 +182,7 @@ IRCClient = function() {
             //     but cannot send any arbitrary command
             self["on" + command.type](command);
         } else {
-            // TODO make this work with a logger instead:
-            console.debug("unhandled command received:");
-            console.dir(command);
+            log.debug("unhandled command received: ", command.type);
         }
     };
 };
