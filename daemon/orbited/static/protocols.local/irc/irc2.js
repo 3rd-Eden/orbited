@@ -115,7 +115,7 @@ IRCClient = function() {
         }
 
         // extract the prefix (if there is one).
-        if (args[0][0] == ":") {
+        if (args[0].charAt(0) == ":") {
           var prefix = args.shift().slice(1);
         } else {
           var prefix = null;
