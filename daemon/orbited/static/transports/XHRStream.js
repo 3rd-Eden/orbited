@@ -14,6 +14,15 @@ XHRStream = function() {
     self.readyState = 0
 
     self.onread = function(packet) { }
+    self.onclose = function() { }
+    self.close = function() {
+        if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
+            self.readyState = 2
+            xhr.onreadystatechange = function() { }
+            xhr.abort()
+            xhr = null;        
+        }
+    }
 
     self.connect = function(_url) {
         if (self.readyState == 1) {
@@ -33,34 +42,33 @@ XHRStream = function() {
         open()
     }
     open = function() {
-
-        xhr.open('GET', url.render(), true)
-        if (typeof(ackId) == "number")
-            xhr.setRequestHeader('ack', ackId)
-        xhr.onreadystatechange = function() {
-            switch(xhr.readyState) {
-                case 3:
-                    process();
-                    break;
-                case 4:
-                    switch(xhr.status) {
-                        case 200:
-                            process();
-                            reconnect();
-                            break;
-                        default:
-                            self.disconnect();
-                    }
+        try {
+            xhr.open('GET', url.render(), true)
+            if (typeof(ackId) == "number")
+                xhr.setRequestHeader('ack', ackId)
+            xhr.onreadystatechange = function() {
+                switch(xhr.readyState) {
+                    case 3:
+                        process();
+                        break;
+                    case 4:
+                        switch(xhr.status) {
+                            case 200:
+                                process();
+                                reconnect();
+                                break;
+                            default:
+                                self.disconnect();
+                        }
+                }
             }
+            xhr.send(null);
         }
-        xhr.send(null);
+        catch(e) {
+            self.close()
+        }
     }
-    self.disconnect = function() {
-        self.readyState = 2
-        xhr.onreadystatechange = function() { }
-        xhr.abort()
-        xhr = null;
-    }
+
     var reconnect = function() {
         offset = 0;
         setTimeout(open, self.retry)

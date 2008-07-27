@@ -1,5 +1,5 @@
 var CHANNEL = "#orbited"
-var IRC_SERVER = 'irc.freenode.net'
+var IRC_SERVER = 'localhost'
 var IRC_PORT = 6667
 
 var orig_domain = document.domain;

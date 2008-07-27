@@ -2,7 +2,7 @@ HTMLFile = function() {
     var self = this;
     id = ++HTMLFile.prototype.i;
     HTMLFile.prototype.instances[id] = self
-    var htmlfile2 = null
+    var htmlfile = null
     var url = null;
     self.onread = function(packet) { }
 
@@ -17,7 +17,12 @@ HTMLFile = function() {
         self.readyState = 1
         doOpen()
     }
-
+    self.close = function() {
+        // TODO: I think this works -- couldn't test in IE. Will someone do that?
+        //       -mcarter 7-26-08
+        htmlfile = null;
+        CollectGarbage();
+    }
     var doOpenIfr = function() {
         
         var ifr = document.createElement('iframe')

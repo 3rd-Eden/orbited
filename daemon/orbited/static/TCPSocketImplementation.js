@@ -8,7 +8,12 @@ TCPSocket = function(domain, port) {
     var conn = new BaseTCPConnection()
 
     self.send = function(data) {
-        conn.send(data);
+        // First character is throwaway
+        conn.send("_" + data);
+    }
+    self.close = function(data) {
+        self.send("-")
+        self.onclose("")
     }
     conn.onread = function(data) {
         self.onread(data);
@@ -19,7 +24,7 @@ TCPSocket = function(domain, port) {
     }
     conn.onopen = function() {
         self.readyState = conn.readyState
-        conn.send(domain + ":" + port)
+        self.send(domain + ":" + port)
         self.onopen()
     }
     var connUrl = new URL(location.href)

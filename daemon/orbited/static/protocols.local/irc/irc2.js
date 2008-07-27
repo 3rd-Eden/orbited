@@ -67,6 +67,7 @@ IRCClient = function() {
     self.connect = function(hostname, port) {
         log.debug("connect");
         conn = self._createTransport(hostname, port);
+        self.conn = conn
         conn.onopen = conn_opened
         conn.onclose = conn_closed
         conn.onread = conn_read
@@ -79,7 +80,7 @@ IRCClient = function() {
         log.debug("close");
         // XXX there is no TCPSocket.close method... so I'm removing all
         //     the listeners here (until this is fixed).
-        //conn.close()
+        conn.close()
         conn.onopen = null;
         conn.onclose = null;
         conn.onread = null;

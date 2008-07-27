@@ -3,6 +3,19 @@ SSE = function() {
     self.onread = function(packet) { }
     var source = null
     var url = null;
+
+    self.close = function() {
+        if (source != null) {
+            // TODO: can someone test this and get back to me? (No opera at the moment)
+            //     : -mcarter 7-26-08
+            source.removeEventSource(source.src)
+            source.src = ""
+            document.body.removeChild(source)
+            source = null;
+        }
+    }
+
+
     self.connect = function(_url) {
         if (self.readyState == 1) {
             throw new Error("Already Connected")
@@ -16,13 +29,12 @@ SSE = function() {
     open = function() {
         var source = document.createElement("event-source");
         source.setAttribute('src', url.render());
-//      TODO: uncomment this line to work in opera 8 - 9.27.
-//            there should be some way to make this work in both.
         if (opera.version() < 9.5) {
             document.body.appendChild(source);
         }
         source.addEventListener('orbited', receiveSSE, false);
     }
+
     var receiveSSE = function(event) {
         var data = eval(event.data);
         if (typeof(data) != 'undefined') {
