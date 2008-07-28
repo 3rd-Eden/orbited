@@ -7,11 +7,11 @@ from logger import get_logger
 logger = get_logger("Proxy")
 class ProxyProtocol(Protocol):
     def send(self, msg):
-        logger.debug("%s:%s (%s) -> %s" % ( self.host, self.port, len(msg),  msg.replace('\r', '\\r').replace('\n', '\\n')))
+        logger.debug("%s:%s (%s) -> %r" % ( self.host, self.port, len(msg),  msg))
         self.transport.write(msg)
         
     def dataReceived(self, data):
-        logger.debug("%s:%s (%s) <- %s" % ( self.host, self.port, len(data),  data.replace('\r', '\\r').replace('\n', '\\n\n')))
+        logger.debug("%s:%s (%s) <- %r" % ( self.host, self.port, len(data),  data))
         self.proxy_conn.send(data)
 
     def connectionLost(self, reason):

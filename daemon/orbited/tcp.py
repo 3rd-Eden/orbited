@@ -63,10 +63,11 @@ class TCPConnection(resource.Resource):
         self.timeout_timer = reactor.callLater(self.ping_timeout, self.timeout)
         
     def timeout(self):
-#        print 'TIMEOUT', self.id
+        self.logger.debug('timeout ', self.id)
         self.close()
         
     def close(self):
+        self.logger.debug('close ', self.id)
         if self.transport:
             self.transport.send_packet('close', "", 'timeout')
             self.transport.flush()
@@ -76,7 +77,7 @@ class TCPConnection(resource.Resource):
         self.connectionLost()
         
     def transport_closed(self, transport):
-#        print 'transport_closed'
+        self.logger.debug('transport_closed')
         if transport is self.transport:
 #            print 'set to none'
             self.transport = None
@@ -84,13 +85,12 @@ class TCPConnection(resource.Resource):
 
     
     def close_transport(self):
-        
-#        print "Transport closing"
+        self.logger.debug("Transport closing")
         self.transport.close()
         self.transport = None
         
     def ack(self, ack_id, reset=False):
-#        print 'ACK:', ack_id, 'reset:', reset
+        self.logger.debug('ack id=', ack_id, ' reset=', reset)
         if reset:
             self.reset_ping_timer()
         ack_id = min(ack_id, self.packet_id)
@@ -108,10 +108,9 @@ class TCPConnection(resource.Resource):
         
     def send(self, data, flush=True):
         if not self.transport:
-#            print 'queue: ' + data
+            self.logger.debug('send (no transport) data=', data, ' flush=', flush)
             self.msg_queue.append(data)
         else:
-#            print 'SEND: ' + str(data)
             self.packet_id += 1
             self._send(data, self.packet_id)
             self.unack_queue.append(data)
@@ -119,6 +118,7 @@ class TCPConnection(resource.Resource):
                 self.transport.flush()
                 
     def _send(self, data, packet_id=""):
+        self.logger.debug('_send data=', data, ' packet_id=', packet_id)
         if isinstance(data, TCPPing):
             self.transport.send_packet('ping', packet_id)
         else:
@@ -127,6 +127,7 @@ class TCPConnection(resource.Resource):
     def resend_unack_queue(self):
         if not self.unack_queue:
             return
+        self.logger.debug('resend_unack_queue')
         for data in self.unack_queue:
             self._send(data)
         ack_id = self.last_ack_id + len(self.unack_queue)
@@ -142,21 +143,22 @@ class TCPConnection(resource.Resource):
         
         
     def render_downstream(self, request):
-#        print "Render Downstream:", request
+        self.logger.debug(self.id, " render downstream: ", request)
         if self.transport:
             self.close_transport()
         self.transport = transports.create(request)
         if not self.open:
-#            print 'not previously open'
+            self.logger.debug(self.id, 'not previously open')
             self.open = True
             self.transport.send_packet('open', self.packet_id)
             self.transport.send_packet('retry', '', self.retry)
             self.transport.flush()
             self.client_ip = self.transport.getClientIP()
+            # XXX no errback?
             self.transport.onClose().addCallback(self.transport_closed)
             self.connectionMade()
         else:
-#            print 'previously open'
+            self.logger.debug(self.id, 'previously open')
             ack = request.received_headers.get('ack', None)
             if not ack:
                 ack = request.args.get('ack', [None])[0]
@@ -164,10 +166,10 @@ class TCPConnection(resource.Resource):
                 try:
                     ack = int(ack)
                     self.ack(ack, True)
-                    
-                except:
-                    pass
-#            print 'setting up new transport', self.id
+                except Exception, e:
+                    self.logger.error(self.id, ' failed to ack: ', e)
+            self.logger.debug(self.id, 'setting up new transport')
+            # XXX no errback?
             self.transport.onClose().addCallback(self.transport_closed)
             self.resend_unack_queue()
             self.send_msg_queue()
@@ -175,8 +177,9 @@ class TCPConnection(resource.Resource):
         return server.NOT_DONE_YET
             
     def render_upstream(self, request):
-#        print 'RENDER UPSTREAM'
-#        print request.received_headers
+        # TODO make sure this is a POST
+        self.logger.debug(self.id, ' RENDER UPSTREAM')
+        self.logger.debug(self.id, ' ', request.received_headers)
         stream = request.content.read()
         ack = request.received_headers.get('ack', None)
         if not ack:
@@ -185,10 +188,9 @@ class TCPConnection(resource.Resource):
             try:
                 ack = int(ack)
                 self.ack(ack, True)
-#                print 'worked with', ack
-            except:
-#                print 'COULD NOT ACK WITH', ack
-                pass
+            except Exception, e:
+                self.logger.error(self.id, ' failed to ack: ', e)
+        # XXX why non std headers?  why isn't content-type appropriate?
         encoding = request.received_headers.get('tcp-encoding', None)
         request.write('OK')
         request.finish()
@@ -217,11 +219,13 @@ class TCPConnectionFactory(resource.Resource):
     def create_session(self, request):
         key = None
         while key is None or key in self.connections:
+            # TODO why not use the uuid module? too slow?
             key = "".join([random.choice("ABCDEF1234567890") for i in range(10)])
         self.connections[key] = self.protocol(self, key)
         return key
     
     def getChild(self, path, request):
+        # XXX why is this here?  aren't all the static files served from /static instead of /<protocol>/static/ ?
         if path == 'static':
             return self.static_files
         if path not in self.connections:
