@@ -1,0 +1,33 @@
+Meebo is one of the pioneers of Comet applications. Their web-based chat client lets users connect to a variety of instant messaging services, all through a browser. A recent article on O'Reilly shows that changing the type of Comet transport they use could provide significant benefits. 
+
+Meebo's lead software engineer Jian Shen notes that "most users are not aware of Web browser limitations and don't care," and his team has done a great job of meeting that challenge. One of their main technical achievements was building a customized lighttpd server designed to be fast and scalable while running Comet applications. This allows them to closely mimic the desktop application experience. 
+
+<h2>The Problem of Dropped Connections</h2>
+
+The article points out that spotty internet connections are a problem for real-time web application developers like Meebo's team. If a user's connection drops and the browser isn't notified, the browser won't automatically try to reestablish the connection. Furthermore, the user will think that the application is operating in a connected state, and won't realize that they're missing messages. Meebo's solution is to use the long-polling Comet transport with a fixed maximum duration, so that every 30 seconds the connection is reestablished. Because of this frequent reconnection, the maximum time that the browser is unaware of the connection state is 30 seconds. These reconnects also help with the problem of timeouts: browsers and proxies often close an open connection after around 60 seconds of inactivity, and reconnecting every 30 seconds avoids the connection being closed unceremoniously. 
+
+<h2>A Flawed Solution</h2>
+
+Long-polling works, but it's not ideal. The main problem with long-polling is that it reconnects too often: whenever the server sends data to the client the connection must be reestablished. The 30 second fixed reconnect only happens if no data was sent to the client in that timeframe. Reconnecting each time the server sends data creates serious problems:
+
+<ul>
+<li>
+<strong>Latency</strong> is up to 3X longer than a transport that doesn't need to reconnect each time it receives a frame. When the server needs to send a message right after it's sent another message, the browser has to wait for the first message to arrive, the reconnection to the server to occur, and the second message to arrive. If the connection didn't have to be reopened, the second message could be sent immediately after the first message. This is one reason why financial applications, which need top performance, use a streaming transport, as Shen mentions. 
+</li>
+<li>
+<strong>Bandwidth:</strong> Every reconnect requires bandwidth to send the HTTP request and response headers. These add up to about 1 kilobyte, meaning that if the server is sending 1 message per second there's a constant overhead of 1 kilobyte/second on top of the actual payload. This is bad for dial-up and mobile users, and even worse for the server, which is the bottleneck for web applications.
+</li>
+<li>
+<strong>Cycles:</strong> Those HTTP headers must be parsed by the server, and doing so wastes CPU cycles. 
+</li>
+</ul>
+
+<h2>The Solution: Streaming Transports</h2>
+
+There is a type of transport which doesn't need to reconnect after the server sends data: streaming. Shen mentions it in the article, but says that it's worse for handling spotty connections because the connection stays open for a long time. 
+
+But there's no reason we can't use Meebo's fixed maximum duration reconnect method with a streaming transport as well. The server can send a "restart stream" frame to the browser every 30 seconds. The connection is then closed and reopened, just like the maximum duration reconnect method for long-polling. This gives identical tolerance to dropped connections but provides all the benefits of streaming (lower latency, bandwidth, and cycles).
+
+And streaming can be much better at alerting the browser of dropped connections than fixed maximum duration long-polling. This is achieved by sending a "heartbeat" from the server to the client. A heartbeat is a tiny amount of data (~1 byte) sent without HTTP headers, meaning the cost both of bandwidth and server processing is completely negligible. If we send a heartbeat every 3 seconds, the maximum time the browser is unaware of the connection state drops from 30 seconds (with long-polling) to 3 seconds. Remember the timeout problem? Most of the timeouts only happen to inactive connections, and since the heartbeats count as activity, we can maintain streaming Comet connections for an indefinite period of time. 
+
+Streaming does work with most firewalls, forward proxies, reverse proxies, and routers. But if a particular deployment of intermediaries does manage to thwart streaming, the server can fall back to long-polling. Meebo could adopt a streaming transport without any of the drawbacks they're concerned about, and make their already great user experience even better. Streaming always performs much better than long-polling, so it's well worth the effort of switching over.
