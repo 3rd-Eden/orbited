@@ -24,12 +24,7 @@ BaseTCPConnection = function() {
         self.readyState = 1;
         getSession();
     }
-    self.close = function() {
-        if (self.readyState == 3) {
-            throw new Error("already closed")
-        }
-        doClose();
-    }
+        
     self.send = function(data) {
         sendQueue.push(data)
         if (!sending) {
@@ -38,36 +33,27 @@ BaseTCPConnection = function() {
     }
     
     var doSend = function() {
-        
         if (sendQueue.length == 0) {
             sending = false;
             return
         }
-        try {
-            sending = true;
-            numSent = sendQueue.length
-            xhr.open('POST', url.render(), true)
-            xhr.setRequestHeader('ack', ackId)
-            xhr.setRequestHeader('Tcp-Encoding', 'text')
-            xhr.onreadystatechange = function() {
-                switch(xhr.readyState) {
-                    case 4:
-                        switch(xhr.status) {
-                            case 200:
-                                sendQueue = sendQueue.slice(numSent)
-                                return doSend();
-                        }
-                        break;
-                }
+        sending = true;
+        numSent = sendQueue.length
+        xhr.open('POST', url.render(), true)
+        xhr.setRequestHeader('ack', ackId)
+        xhr.setRequestHeader('Tcp-Encoding', 'text')
+        xhr.onreadystatechange = function() {
+            switch(xhr.readyState) {
+                case 4:
+                    switch(xhr.status) {
+                        case 200:
+                            sendQueue = sendQueue.slice(numSent)
+                            return doSend();
+                    }
+                    break;
             }
-            xhr.send(sendQueue.join(""))
         }
-        catch(e) {
-            // Something went wrong...
-            doClose()
-            // Note: when you refresh the page the above code will cause an error
-            //       on FF2+ for some reason. This is a good enough fix for now.
-        }
+        xhr.send(sendQueue.join(""))
     
     }
 
@@ -142,19 +128,10 @@ BaseTCPConnection = function() {
         self.onopen();
     }
     var doClose = function() {
+        if (self.readyState == 3) {
+            throw new Error("already closed")
+        }
         self.readyState = 3;
-        try {
-            if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
-                xhr.onreadystatechange = function() {}
-                xhr.abort()
-            }
-            if (transport != null) {
-                transport.close()
-            }
-        }
-        catch(e) {
-            console.log(e)
-        }
         self.onclose();
     }
     var doRead = function(args) {

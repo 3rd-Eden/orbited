@@ -50,11 +50,6 @@ class ProxyConnection(TCPConnection):
             self.remote_conn.send(item)
     
     def dataReceived(self, data):
-        print 'RECEIVED', data
-        if data[0] == '-':
-            return self.close()
-        else:
-            data = data[1:]
         getattr(self, 'state_' + self.state)(data)
     
     def state_initial(self, data):

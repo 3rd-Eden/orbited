@@ -203,13 +203,6 @@ XHRStream = function() {
     self.readyState = 0
 
     self.onread = function(packet) { }
-    self.close = function() {
-        if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
-        self.readyState = 2
-        xhr.onreadystatechange = function() { }
-        xhr.abort()
-        xhr = null;        }
-    }
 
     self.connect = function(_url) {
         if (self.readyState == 1) {
@@ -251,7 +244,12 @@ XHRStream = function() {
         }
         xhr.send(null);
     }
-
+    self.disconnect = function() {
+        self.readyState = 2
+        xhr.onreadystatechange = function() { }
+        xhr.abort()
+        xhr = null;
+    }
     var reconnect = function() {
         offset = 0;
         setTimeout(open, self.retry)
@@ -292,7 +290,7 @@ HTMLFile = function() {
     var self = this;
     id = ++HTMLFile.prototype.i;
     HTMLFile.prototype.instances[id] = self
-    var htmlfile = null
+    var htmlfile2 = null
     var url = null;
     self.onread = function(packet) { }
 
@@ -307,12 +305,7 @@ HTMLFile = function() {
         self.readyState = 1
         doOpen()
     }
-    self.close = function() {
-        // TODO: I think this works -- couldn't test in IE. Will someone do that?
-        //       -mcarter 7-26-08
-        htmlfile = null;
-        CollectGarbage();
-    }
+
     var doOpenIfr = function() {
         
         var ifr = document.createElement('iframe')
@@ -354,19 +347,6 @@ SSE = function() {
     self.onread = function(packet) { }
     var source = null
     var url = null;
-
-    self.close = function() {
-        if (source != null) {
-            // TODO: can someone test this and get back to me? (No opera at the moment)
-            //     : -mcarter 7-26-08
-            source.removeEventSource(source.src)
-            source.src = ""
-            document.body.removeChild(source)
-            source = null;
-        }
-    }
-
-
     self.connect = function(_url) {
         if (self.readyState == 1) {
             throw new Error("Already Connected")
@@ -380,12 +360,13 @@ SSE = function() {
     open = function() {
         var source = document.createElement("event-source");
         source.setAttribute('src', url.render());
+//      TODO: uncomment this line to work in opera 8 - 9.27.
+//            there should be some way to make this work in both.
         if (opera.version() < 9.5) {
             document.body.appendChild(source);
         }
         source.addEventListener('orbited', receiveSSE, false);
     }
-
     var receiveSSE = function(event) {
         var data = eval(event.data);
         if (typeof(data) != 'undefined') {
@@ -439,12 +420,7 @@ BaseTCPConnection = function() {
         self.readyState = 1;
         getSession();
     }
-    self.close = function() {
-        if (self.readyState == 3) {
-            throw new Error("already closed")
-        }
-        doClose();
-    }
+        
     self.send = function(data) {
         sendQueue.push(data)
         if (!sending) {
@@ -453,36 +429,27 @@ BaseTCPConnection = function() {
     }
     
     var doSend = function() {
-        
         if (sendQueue.length == 0) {
             sending = false;
             return
         }
-        try {
-            sending = true;
-            numSent = sendQueue.length
-            xhr.open('POST', url.render(), true)
-            xhr.setRequestHeader('ack', ackId)
-            xhr.setRequestHeader('Tcp-Encoding', 'text')
-            xhr.onreadystatechange = function() {
-                switch(xhr.readyState) {
-                    case 4:
-                        switch(xhr.status) {
-                            case 200:
-                                sendQueue = sendQueue.slice(numSent)
-                                return doSend();
-                        }
-                        break;
-                }
+        sending = true;
+        numSent = sendQueue.length
+        xhr.open('POST', url.render(), true)
+        xhr.setRequestHeader('ack', ackId)
+        xhr.setRequestHeader('Tcp-Encoding', 'text')
+        xhr.onreadystatechange = function() {
+            switch(xhr.readyState) {
+                case 4:
+                    switch(xhr.status) {
+                        case 200:
+                            sendQueue = sendQueue.slice(numSent)
+                            return doSend();
+                    }
+                    break;
             }
-            xhr.send(sendQueue.join(""))
         }
-        catch(e) {
-            // Something went wrong...
-            doClose()
-            // Note: when you refresh the page the above code will cause an error
-            //       on FF2+ for some reason. This is a good enough fix for now.
-        }
+        xhr.send(sendQueue.join(""))
     
     }
 
@@ -557,19 +524,10 @@ BaseTCPConnection = function() {
         self.onopen();
     }
     var doClose = function() {
+        if (self.readyState == 3) {
+            throw new Error("already closed")
+        }
         self.readyState = 3;
-        try {
-            if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
-                xhr.onreadystatechange = function() {}
-                xhr.abort()
-            }
-            if (transport != null) {
-                transport.close()
-            }
-        }
-        catch(e) {
-            console.log(e)
-        }
         self.onclose();
     }
     var doRead = function(args) {
