@@ -130,26 +130,27 @@ class FakeTCPProtocol(Protocol):
         self.parentTransport.dataReceived(newData)
     
     def connectionLost(self):
-        self.parentTraqnsport.connectionLost()
+        self.parentTransport.connectionLost()
+    
+    
     
 
-
-# Test it out
+    
 if __name__ == "__main__":
-    class EchoProtocol(Protocol):
+class EchoProtocol(Protocol):
+    
+    def dataReceived(self, data):
+        print "RECV:", data
+        self.transport.write("Echo: " + data)
         
-        def dataReceived(self, data):
-            print "RECV:", data
-            self.transport.write("Echo: " + data)
-            
-        def connectionMade(self):
-            print "Connection Opened"
-            
-        def connectionLost(self):
-            print "Connection Lost"
-            
-    class EchoFactory(Factory):
-        protocol = EchoProtocol  
-        factory = EchoFactory()
+    def connectionMade(self):
+        print "Connection Opened"
+        
+    def connectionLost(self):
+        print "Connection Lost"
+        
+class EchoFactory(Factory):
+    protocol = EchoProtocol  
+    factory = EchoFactory()
     reactor.listenWith(Port, 7777, factory)
     reactor.run()

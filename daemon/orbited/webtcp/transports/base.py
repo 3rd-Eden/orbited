@@ -1,21 +1,22 @@
 from twisted.web import server, resource, static, error
-
+from twisted.internet import defer
 
 class CometTransport(resource.Resource):
   
-    def __init__(self, **options):
-        self.options = options
+    def __init__(self, conn):
+        self.conn = conn
+        self.open = False
         
     def render(self, request):
+        self.open = True
         self.packets = []
-        request = self.request
-        self.request.notifiyFinish().addCallback(self.finished)
-        self.closeDeferred = defer.Deferred()
+        self.request = request
+#        self.request.notifiyFinish().addCallback(self.finished)
+        self.closeDeferred = defer.Deferred()        
+        self.conn.transportOpened(self)
         return server.NOT_DONE_YET
     
-    
-    
-   def send_packet(self, name, id, *info):
+    def sendPacket(self, name, id, *info):
         self.packets.append((id, name, info))
     
     def flush(self):
@@ -24,7 +25,7 @@ class CometTransport(resource.Resource):
             self.packets = []
             
     def finished(self, arg):
-        if open:
+        if self.open:
             self.request = None
             self.open = False
             self.close()
@@ -40,7 +41,7 @@ class CometTransport(resource.Resource):
             self.request.finish()
         self.request = None
         self.closeDeferred.callback(self)
-        self.closeDeferred = none
+        self.closeDeferred = None
         
     # Override these    
     def write(self, packets):

@@ -1,14 +1,14 @@
 from twisted.internet import reactor
-from base import HTTPTransport
+from base import CometTransport
 ESCAPE = '_'
 PACKET_DELIMITER = '_P'
 ARG_DELIMITER = '_A'
 
-class XHRStreamingTransport(HTTPTransport):
+class XHRStreamingTransport(CometTransport):
     
     def opened(self):
         # Force reconnect ever 45 seconds
-        self.close_timer = reactor.callLater(45, self.triggerCloseTimeout)
+#        self.close_timer = reactor.callLater(45, self.triggerCloseTimeout)
         self.request.setHeader('content-type', 'orbited/event-stream')
         # Safari/Tiger may need 256 bytes
         self.request.write(' ' * 256)
