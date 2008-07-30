@@ -58,7 +58,7 @@ class FakeTCPTransport(object):
         self.transportProtocol.write(data)
 
     def writeSequence(self, data):
-        self.transportProtocol.write(data)
+        self.transportProtocol.writeSequence(data)
 
     def loseConnection():
         self.transportProtocol.loseConnection()
