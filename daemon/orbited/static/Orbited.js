@@ -38,7 +38,6 @@ Orbited.util.chooseTransport = function() {
     var choices = []
     for (var name in Orbited.CometTransports) {
         var transport = Orbited.CometTransports[name];
-        console.log(transport)
         if (typeof(transport[Orbited.util.browser]) == "number") {
             choices.push(transport)
         }
@@ -168,7 +167,6 @@ Orbited.CometSession = function() {
                 self.onclose();
                 break;
             case states.OPEN:
-                console.log('reset');
                 self.sendQueue = []
                 self.sending = false;
                 if (xhr.readyState < 4) {
@@ -194,7 +192,6 @@ Orbited.CometSession = function() {
     }
 
     var transportOnReadFrame = function(frame) {
-        console.log('frame', frame)
         self.lastPacketId = Math.max(self.lastPacketId, frame.id);
 
         switch(frame.name) {
@@ -219,7 +216,6 @@ Orbited.CometSession = function() {
     }
     
     var encodePackets = function(queue) {
-        console.log('encode', queue)
         //TODO: optimize this.
         var packets = []
         
@@ -321,7 +317,6 @@ Orbited.TCPSocket = function() {
         sessionUrl.domain = Orbited.settings.hostname
         sessionUrl.port = Orbited.settings.port
         sessionUrl.protocol = Orbited.settings.protocol
-        console.log(sessionUrl, sessionUrl.render())
         session.open(sessionUrl.render())
         session.onopen = sessionOnOpen;
         session.onread = sessionOnRead;
@@ -645,7 +640,6 @@ Orbited.CometTransports.XHRStream = function() {
     }
     var process = function() {
         var stream = xhr.responseText;
-        console.log('process')
         while (true) {
             if (stream.length <= offset) {
                 return;
@@ -654,7 +648,6 @@ Orbited.CometTransports.XHRStream = function() {
             if (nextBoundary == -1)
                 return;
             var packet = stream.slice(offset, nextBoundary);
-            console.log(packet);
             offset = nextBoundary + PACKET_DELIMITER.length
             receivedPacket(packet)
         }
