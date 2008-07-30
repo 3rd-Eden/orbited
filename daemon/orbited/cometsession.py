@@ -11,7 +11,7 @@ from twisted.internet import reactor, defer
 
 def setup_site(port):
     root = resource.Resource()
-    static_files = static.File(os.path.join(os.path.dirname(__file__), '..', 'static'))
+    static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
     root.putChild('static', static_files)
     site = server.Site(root)
     root.putChild('tcp', TCPResource(port))
@@ -302,7 +302,7 @@ class TCPResource(resource.Resource):
     def __init__(self, listeningPort):
         resource.Resource.__init__(self)
         self.listeningPort = listeningPort
-        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], '..', 'static'))
+        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
         self.connections = {}
         self.connections['ABC'] = TCPConnectionResource(self, 'ABC')
         self.listeningPort.connectionMade(self.connections['ABC'])

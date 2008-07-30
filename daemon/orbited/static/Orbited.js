@@ -348,10 +348,10 @@ Orbited.TCPSocket = function() {
 
     // TODO: how about base64, or at least hex encoding?
     //       -mcarter 2-30-08        
-    var encodeBinary(data) {
+    var encodeBinary = function(data) {
         return data.join(",")
     }
-    var decodeBinary(data) {
+    var decodeBinary = function(data) {
         data = data.split(",")
         for (var i = 0; i < data.length; ++i) {
             data[i] = parseInt(data[i])
