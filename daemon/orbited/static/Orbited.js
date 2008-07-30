@@ -7,8 +7,9 @@ var RETRY_TIMEOUT = 30000
 Orbited = {}
 
 Orbited.settings = {}
-Orbited.settings.hostname = location.href
+Orbited.settings.hostname = document.domain
 Orbited.settings.port = (location.port.length > 0) ? location.port : 80
+Orbited.settings.protocol = 'http'
 
 // Orbited CometSession Errors
 Orbited.Errors = {}
@@ -94,7 +95,6 @@ Orbited.CometSession = function() {
                 if (xhr.status == 200) {
                     sessionKey = xhr.responseText;
                     sessionUrl = new Orbited.URL(_url)
-
                     // START new URL way
 //                    sessionUrl.extendPath(sessionKey)
                     // END: new URL way
@@ -194,6 +194,7 @@ Orbited.CometSession = function() {
     }
 
     var transportOnReadFrame = function(frame) {
+        console.log('frame', frame)
         self.lastPacketId = Math.max(self.lastPacketId, frame.id);
 
         switch(frame.name) {
@@ -302,7 +303,7 @@ Orbited.TCPSocket = function() {
      * will only accept a btye array.
      */
     self.open = function(_hostname, _port, isBinary) {
-        if (self.state != states.INIITIALIZED) {
+        if (self.readyState != states.INITIALIZED) {
             // TODO: allow reuse from readyState == states.CLOSED?
             //       Re-use makes sense for xhr due to memory concerns, but
             //       probably not for tcp sockets. How often do you reconnect
@@ -311,12 +312,17 @@ Orbited.TCPSocket = function() {
             throw new Error("Invalid readyState");
         }
         // handle isBinary undefined/null case
-        binary = new Boolean(isBinary);
-        self.state = states.OPENING;
+        binary = !!isBinary;
+        self.readyState = states.OPENING;
         hostname = _hostname;
         port = _port;
         session = new Orbited.CometSession()
-        session.open('/tcp')
+        var sessionUrl = new Orbited.URL('/tcp')
+        sessionUrl.domain = Orbited.settings.hostname
+        sessionUrl.port = Orbited.settings.port
+        sessionUrl.protocol = Orbited.settings.protocol
+        console.log(sessionUrl, sessionUrl.render())
+        session.open(sessionUrl.render())
         session.onopen = sessionOnOpen;
         session.onread = sessionOnRead;
         session.onclose = sessionOnClose;
@@ -324,7 +330,10 @@ Orbited.TCPSocket = function() {
     }
 
     self.close = function() {
-
+        if (self.readyState != states.OPEN && self.readyState != states.OPENING) {
+            throw new Error("Invalid readyState");
+        }
+        session.close();
     }
     
     /* self.reset closes the connection from this end immediately. The server
@@ -334,7 +343,10 @@ Orbited.TCPSocket = function() {
      * potential issues with future TCPSocket communication.
      */
     self.reset = function() {
-
+        if (self.readyState != states.OPEN && self.readyState != states.OPENING) {
+            throw new Error("Invalid readyState");
+        }
+        session.reset();
     }
 
     self.send = function(data) {
@@ -343,6 +355,9 @@ Orbited.TCPSocket = function() {
                 throw new Error("invalid payload: binary mode is set");
             }
             session.send(encodeBinary(data))
+        }
+        else {
+            session.send(data)
         }
        }
 
@@ -359,7 +374,7 @@ Orbited.TCPSocket = function() {
         return data
     }
 
-    var onSessionRead = function(data) {
+    var sessionOnRead = function(data) {
         switch(self.readyState) {
             case states.OPEN:
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
@@ -375,18 +390,23 @@ Orbited.TCPSocket = function() {
                             session = null;
                             self.onclose(parseInt(errorCode))
                         }
+                        if (result) {
+                            self.readyState = states.OPEN
+                            self.onopen();
+                        }
+                        break;
                 }
                 break;
         }
     }
     
-    var onSessionOpen = function(data) {
+    var sessionOnOpen = function(data) {
         // TODO: TCPSocket handshake
         session.send((binary ? '1' : '0') + hostname + ':' + port)
         handshakeState = 'initial'
     }
     
-    var onSessionClose = function(status) {
+    var sessionOnClose = function(status) {
         // If we are in the OPENING state, then the handshake code should
         // handle the close
         if (self.readyState >= states.OPEN) {

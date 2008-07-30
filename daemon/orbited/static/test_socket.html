@@ -1,0 +1,53 @@
+<html>
+ <head>
+  <script>document.domain = document.domain</script>
+  <script src="Orbited.js"></script>
+  <script>
+   DATA = []
+   tcp = null;
+   function print(s) {
+       output = document.getElementById("shell")
+       output.innerHTML += "&rarr; " + s + "<br>"
+       output.scrollTop = self.output.scrollHeight
+   }
+    if (typeof(console) == "undefined")
+       console = { log: print}
+
+   function connect() {
+        tcp = new Orbited.TCPSocket()
+//        var connUrl = new URL(location.href)
+//        connUrl.path = "/echo"
+//        connUrl.qs = ""
+//        connUrl.hash = ""
+//        connUrl.domain = "www.test.local"
+        tcp.open('localhost', 6667, false)//connUrl.render())
+        tcp.onopen = function() {
+            print("Connection opened");
+        }
+        tcp.onread = function(data) { 
+            DATA.push(data)
+            print("RECV: " + data )
+        }
+        tcp.onclose = function() { print("Connection closed") }
+   }
+
+   function send() {
+        if (tcp.readyState < 3)
+            print("ERR: Not Connected")
+        else if (tcp.readyState > 3 ) {
+            print("ERR: Disconnect(ed)(ing)")
+        }
+        else {
+            var d = document.getElementById("data").value
+            session.send(d)
+            print("SEND: " + d)
+        }
+   }
+  </script>
+ </head>
+ <body>
+  <button onClick=connect()>connect</button><br>
+  <input type=text id=data> <button onClick=send()>send</button><br>
+  <div style="border: 1px solid black; height: 200px; overflow-y: scroll" id="shell"></div>
+ </body>
+</html>
