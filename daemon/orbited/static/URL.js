@@ -18,7 +18,7 @@ Orbited.URL = function(sourceUrl) {
     self.qs = null;
     self.hash = null;
 
-    /* self.reset will put all of the variables back at their default value
+    /* self.reset will set all the attributes back to null
      */
     self.reset = function() {
         
@@ -101,6 +101,13 @@ Orbited.URL = function(sourceUrl) {
      */
     self.isEqual = function(url) {
     
+    }
+    /* self.extendPath will add the given segment to the path. If the path
+     * was previously null, then the path becomes the segment with "/"
+     * prepended if it was missing. If the path was non-null, and didn't end
+     * with "/", then "/" is put in between the current path and the segment.
+     */
+    self.extendPath = function(segment) {
     }
 
 }
