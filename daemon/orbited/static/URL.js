@@ -56,6 +56,14 @@ Orbited.URL = function(sourceUrl) {
     self.addQsParameter = function(key, value) {
         
     }
+
+    /* self.addQsParameter takes a key and a value and concatenates it to
+     * this.qs, with the appropriate format
+     */
+    self.addQsParameter = function(key, value) {
+        
+    }
+
     /* self.removesQsParameter takes a key and removes from this.qs all 
      *key/value pairs that share the given key.
      */
@@ -110,5 +118,45 @@ Orbited.URL = function(sourceUrl) {
     self.extendPath = function(segment) {
     }
 
+
+
 }
+
+/* Examples of using the library
+
+target = new URL("/hello")
+current = new URL(location.href)
+if (target.isSameDomain(current))
+    alert('same domain!')
+else if (target.isChildDomain(current))
+    alert('child domain!')
+else
+    alert('invalid url')
+
+
+sessionUrl = new URL("/tcp/ABC")
+sessionUrl.addQsParameter('ack', 5)
+xhr = new XMLHTTPRequest()
+xhr.open('GET', sessionUrl.render(), true)
+xhr.send(null);
+
+
+
+handshakeUrl = new Url("/tcp")
+...
+upstreamUrl = new URL()
+upstreamUrl.populateFromURL(handshakeUrl)
+upstreamUrl.extendPath(sessionKey)
+transportUrl = new URL(upstreamUrl) // Similar to last two lines
+transportUrl.extendPath(transport)
+Orbited.CometTransport.connect(transportUrl.render())
+upstreamUrl == '/tcp/ABC' # true
+transportUrl == '/tcp/ABC/xhrstream' # true
+
+
+
+
+
+
+
 }();
