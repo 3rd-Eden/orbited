@@ -83,13 +83,13 @@ class FakeTCPTransport(object):
     def writeSequence(self, data):
         self.transportProtocol.write(data)
 
-    def loseConnection():
+    def loseConnection(self):
         self.transportProtocol.loseConnection()
 
-    def getPeer():
+    def getPeer(self):
         return self.transportProtocol.getPeer()
 
-    def getHost():
+    def getHost(self):
         return self.transportProtocol.getHost()
 
     # ==============================
@@ -100,14 +100,15 @@ class FakeTCPTransport(object):
         self.protocol.dataReceived(data)
         
     def connectionLost(self):
-        self.protocol.connectionLost()
+        self.protocol.connectionLost(None)
             
     
 class TCPConnectionResource(resource.Resource):
-    pingTimeout = 2000
-    pingInterval = 2000
+    pingTimeout = 30 # Determines timeout interval after ping has been sent
+    pingInterval = 30 # Determines interval to wait before sending a ping
+                     # since the last time we heard from the client.
     
-    def __init__(self, root, key):
+    def __init__(self, root, key, **options):
         resource.Resource.__init__(self)
         self.root = root
         self.key = key
@@ -201,7 +202,11 @@ class TCPConnectionResource(resource.Resource):
                 #       we don't want app-level code to break and cause
                 #       only some packets to be delivered.
                 self.parentTransport.dataReceived(args[0])
-        
+            if name == 'ping':
+                # TODO: do we have to do anything? I don't think so...
+                #       -mcarter 7-30-08
+                print 'PONG!'
+                pass
     # Called by the callback attached to the CometTransport
     def transportClosed(self, transport):
         if transport is self.transport:
@@ -214,12 +219,22 @@ class TCPConnectionResource(resource.Resource):
             self.transport = None
         self.transport = transport
         transport.onClose().addCallback(self.transportClosed)
+        ack = transport.request.args.get('ack', [None])[0]
+        if ack:
+            try:
+                ack = int(ack)
+                self.ack(ack, True)
+            except ValueError:
+                pass
+        
         self.resendUnackQueue()
         self.sendMsgQueue()
         if not self.open:
             self.open = True
             self.transport.sendPacket("open", self.packetId)
         self.transport.flush()
+        
+        
         
     def resetPingTimer(self):
         if self.pingTimer:
@@ -239,7 +254,7 @@ class TCPConnectionResource(resource.Resource):
         
     def close(self, reason=""):
         if self.transport:
-            self.transport.send_packet('close', "", reason)
+            self.transport.sendPacket('close', "", reason)
             self.transport.flush()
             self.transport.close()
             self.transport = None
@@ -256,7 +271,7 @@ class TCPConnectionResource(resource.Resource):
         ackId = min(ackId, self.packetId)
         if ackId <= self.lastAckId:
             return
-        for i in range(ack_id - self.lastAckId):
+        for i in range(ackId - self.lastAckId):
             self.unackQueue.pop(0)
         self.lastAckId = ackId
         

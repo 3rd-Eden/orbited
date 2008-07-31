@@ -1,5 +1,5 @@
 from twisted.web import server, resource, static, error
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 class CometTransport(resource.Resource):
   
@@ -11,11 +11,20 @@ class CometTransport(resource.Resource):
         self.open = True
         self.packets = []
         self.request = request
+        self.opened()
 #        self.request.notifiyFinish().addCallback(self.finished)
+        self.resetHeartbeat()
         self.closeDeferred = defer.Deferred()        
         self.conn.transportOpened(self)
         return server.NOT_DONE_YET
     
+    def resetHeartbeat(self):
+        self.heartbeatTimer = reactor.callLater(5, self.doHeartbeat)
+        
+    def doHeartbeat(self):
+        self.writeHeartbeat()
+        self.resetHeartbeat()
+        
     def sendPacket(self, name, id, *info):
         self.packets.append((id, name, info))
     
@@ -23,6 +32,10 @@ class CometTransport(resource.Resource):
         if self.packets:
             self.write(self.packets)
             self.packets = []
+        if self.heartbeatTimer:
+            self.heartbeatTimer.cancel()
+            self.resetHeartbeat()
+        
             
     def finished(self, arg):
         if self.open:
@@ -32,10 +45,13 @@ class CometTransport(resource.Resource):
         
     def onClose(self):
         return self.closeDeferred
+    
 
     def close(self):
         if not self.open:
             return
+        self.heartbeatTimer.cancel()
+        self.heartbeatTimer = None
         self.open = False
         if self.request:
             self.request.finish()
@@ -48,4 +64,7 @@ class CometTransport(resource.Resource):
         raise Exception("NotImplemented")
     
     def opened(self):
+        raise Exception("NotImplemented")
+
+    def writeHeartbeat(self):
         raise Exception("NotImplemented")

@@ -7,6 +7,9 @@
    tcp = null;
    function print(s) {
        output = document.getElementById("shell")
+       while (s.indexOf('\n') > -1) {
+            s = s.replace('\n', '<br>')
+        }
        output.innerHTML += "&rarr; " + s + "<br>"
        output.scrollTop = self.output.scrollHeight
    }
@@ -28,7 +31,7 @@
             DATA.push(data)
             print("RECV: " + data )
         }
-        tcp.onclose = function() { print("Connection closed") }
+        tcp.onclose = function(code) { print("Connection closed " + code); throw new Error("woot"); }
    }
 
    function send() {

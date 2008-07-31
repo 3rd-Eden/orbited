@@ -38,7 +38,7 @@ class ProxyIncomingProtocol(Protocol):
             self.transport.loseConnection()
             
     def connectionLost(self, reason):
-        print 'lost', reason
+#        print 'lost', reason
         if self.otherConn:
             self.otherConn.transport.loseConnection()
             
@@ -50,11 +50,11 @@ class ProxyIncomingProtocol(Protocol):
         self.state = 'proxy' # Not really necessary...
         
     def remoteConnectionLost(self, otherConn, reason):
-        print 'remote lost', reason
+#        print 'remote lost', reason
         self.transport.loseConnection()
         
     def write(self, data):
-        print repr(data)
+#        print repr(data)
         # TODO: how about some real encoding, like base64, or even hex?
         if self.binary:
             data  = ",".join([ str(ord(byte)) for byte in data])
@@ -69,6 +69,7 @@ class ProxyOutgoingProtocol(Protocol):
         self.otherConn.remoteConnectionEstablished(self)
                 
     def dataReceived(self, data):
+        print 'recv', data
         self.otherConn.write(data)
         
     def connectionLost(self, reason):
