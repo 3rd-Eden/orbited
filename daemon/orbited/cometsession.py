@@ -18,25 +18,43 @@ def setup_site(port):
     return site
 
 class Port(object):    
+    """ A cometsession.Port object can be used in two different ways.
+    # Method 1
+    reactor.listenWith(cometsession.Port, 9999, SomeFactory())
+    
+    # Method 2
+    root = twisted.web.resource.Resource()
+    site = twisted.web.server.Site(root)
+    reactor.listenTcp(site, 9999)
+    reactor.listenWith(cometsession.Port, factory=SomeFactory(), resource=root, childName='tcp')
+    
+    Either of these methods should acheive the same effect, but Method2 allows you
+    To listen with multiple protocols on the same port by using different urls.
+    """
     implements(interfaces.IListeningPort)
-    def __init__(self, port, factory, backlog=50, interface='', reactor=None):
+    def __init__(self, port=None, factory=None, backlog=50, interface='', reactor=None, resource=None, childName=None):
         self.port = port
         self.factory = factory
         self.backlog = backlog
         self.interface = interface
-        self.wrapped_factory = setup_site(self)
+        self.resource = resource
+        self.childName = childName
         self.wrapped_port = None
         self.listening = False
                 
     def startListening(self):
         if not self.listening:
             self.listening = True
-            self.wrapped_port = reactor.listenTCP(
-                self.port, 
-                self.wrapped_factory,
-                self.backlog, 
-                self.interface
-            )
+            if self.port:
+                self.wrapped_factory = setup_site(self)
+                self.wrapped_port = reactor.listenTCP(
+                    self.port, 
+                    self.wrapped_factory,
+                    self.backlog, 
+                    self.interface
+                )
+            elif self.resource and self.childName:
+                self.resource.putChild(self.childName, TCPResource(self))
         else:
             raise CannotListenError, "Already listening..."
         
@@ -44,7 +62,10 @@ class Port(object):
         if self.wrapped_port:
             self.listening = False
             self.wrapped_port.stopListening()
-        
+        elif self.resource:
+            pass
+            # TODO: self.resource.removeChild(self.childName) ?
+			
         
     def connectionMade(self, transportProtocol):
         """
@@ -64,8 +85,12 @@ class Port(object):
         protocol.makeConnection(transport)
         
     def getHost():
-        return self.wrapped_port.getHost()
-    
+        if self.wrapped_port:
+            return self.wrapped_port.getHost()
+        elif self.resource:
+            pass
+            # TODO: how do we do getHost if we just have self.resource?
+            
 class FakeTCPTransport(object):
     implements(interfaces.ITransport)
     

@@ -82,5 +82,22 @@ class ProxyFactory(Factory):
         
 if __name__ == "__main__":
     import cometsession
-    reactor.listenWith(cometsession.Port, 9999, ProxyFactory())
+    from twisted.web import server, resource, static, error
+    import os
+    root = resource.Resource()
+    static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
+    root.putChild('static', static_files)
+    site = server.Site(root)
+    reactor.listenTCP(9999, site)
+    reactor.listenWith(cometsession.Port, factory=ProxyFactory(), resource=root, childName='tcp')
+#    reactor.listenWith(cometsession.Port, 9999, ProxyFactory())
     reactor.run()
+	
+	
+	
+	
+	
+	
+	
+	
+	
