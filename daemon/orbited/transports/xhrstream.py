@@ -1,11 +1,17 @@
 from twisted.internet import reactor
-from base import CometTransport
+
+from orbited import logging
+from orbited.transports.base import CometTransport
+
 ESCAPE = '_'
 PACKET_DELIMITER = '_P'
 ARG_DELIMITER = '_A'
 MAXBYTES = 1024
 
 class XHRStreamingTransport(CometTransport):
+
+    logger = logging.get_logger('orbited.transports.xhrstream.XHRStreamingTransport')
+
     def opened(self):
         self.totalBytes = 0
         # Force reconnect ever 45 seconds
@@ -13,12 +19,12 @@ class XHRStreamingTransport(CometTransport):
         self.request.setHeader('content-type', 'orbited/event-stream')
         # Safari/Tiger may need 256 bytes
         self.request.write(' ' * 256)
-        
+
     def triggerCloseTimeout(self):
         self.close()
-    
+
     def write(self, packets):
-        print 'write', packets
+        self.logger.debug('write %r' % packets)
         payload = PACKET_DELIMITER.join([ self.encode(packet) for packet in packets])
         payload += PACKET_DELIMITER
 #        print "write:", repr(payload)
@@ -26,8 +32,7 @@ class XHRStreamingTransport(CometTransport):
         self.totalBytes += len(payload)
         if (self.totalBytes > MAXBYTES):
             self.close()
-        
-        
+
     def encode(self, packet):
         id, name, info = packet
         output = ""
@@ -39,8 +44,8 @@ class XHRStreamingTransport(CometTransport):
 #            print '====    to   ===='
 #            print output
         return output
-    
+
     def writeHeartbeat(self):
-#        return
-        print 'write heartbeat'
+        self.logger.debug('writeHeartbeat')
         self.request.write('x')
+
