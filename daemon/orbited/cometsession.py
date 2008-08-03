@@ -288,6 +288,9 @@ class TCPConnectionResource(resource.Resource):
     def close(self, reason=""):
         if self.timeoutTimer:
             self.timeoutTimer.cancel()
+        if self.pingTimer:
+            self.pingTimer.cancel()
+            
         self.logger.debug('close reason=%s' % reason)
         if self.cometTransport:
             self.cometTransport.sendPacket('close', "", reason)
