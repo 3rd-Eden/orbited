@@ -736,7 +736,7 @@ Orbited.CometTransports.HTMLFile = function() {
 // HTMLFile supported browsers
 Orbited.CometTransports.HTMLFile.firefox = 1.0
 Orbited.singleton.HTMLFile = {
-    i: 0
+    i: 0,
     instances: {}
 }
 
