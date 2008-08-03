@@ -251,6 +251,8 @@ Orbited.CometSession = function() {
         if (typeof(retries) == "undefined") {
             retries = 0
         }
+        // TODO: I don't think this timeout formula is quite right...
+        //       -mcarter 8-3-08
         if (retries*RETRY_INTERVAL >= RETRY_TIMEOUT) {
             doClose(Orbited.Errors.ConnectionTimeout)
             sending = false;
@@ -507,7 +509,7 @@ Orbited.CometTransports.XHRStream = function() {
     
             xhr.open('GET', url.render(), true)
             xhr.onreadystatechange = function() {
-                Orbited.log(xhr.readyState);
+//                Orbited.log(xhr.readyState);
                 switch(xhr.readyState) {
                     case 2:
 //                        heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);                    
@@ -551,7 +553,7 @@ Orbited.CometTransports.XHRStream = function() {
                             // Expoential backoff: Every time we fail to 
                             // reconnect, double the interval. 
                             retryInterval *= 2;
-                            Orbited.log('retryInterval', retryInterval)
+//                            Orbited.log('retryInterval', retryInterval)
                             window.clearTimeout(heartbeatTimer);
                             window.setTimeout(reconnect, retryInterval)
                             return;
@@ -579,26 +581,26 @@ Orbited.CometTransports.XHRStream = function() {
     }
 
     var reconnect = function() {
-        Orbited.log('reconnect...')
+//        Orbited.log('reconnect...')
         if (xhr.readyState < 4 && xhr.readyState > 0) {
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4) {
                     reconnect();
                 }
             }
-            Orbited.log('do abort..')
+//            Orbited.log('do abort..')
             xhr.abort();
             window.clearTimeout(heartbeatTimer);            
         }
         else {
-            Orbited.log('open...')
+//            Orbited.log('open...')
             offset = 0;
             setTimeout(open, 0)
         }
     }
     var process = function() {
         var stream = xhr.responseText;
-        Orbited.log('buffer', stream.slice(offset).length, stream.slice(offset))
+//        Orbited.log('buffer', stream.slice(offset).length, stream.slice(offset))
         xkcd = stream.slice(offset)
         while (true) {
             if (stream.length <= offset) {
@@ -614,16 +616,16 @@ Orbited.CometTransports.XHRStream = function() {
             // If a frame starts with an 'x', then its an actual heartbeat
             // so discard it.
             if (stream[offset] == 'x') {
-                Orbited.log('heartbeat')
+//                Orbited.log('heartbeat')
                 offset += 1
                 continue
             }
             
             else {
-                Orbited.log('activity', stream[offset])
+//                Orbited.log('activity', stream[offset])
             }
             var nextBoundary = stream.indexOf(PACKET_DELIMITER, offset);
-            Orbited.log('partial', stream.slice(offset, nextBoundary));
+//            Orbited.log('partial', stream.slice(offset, nextBoundary));
             if (nextBoundary == -1)
                 return;
             var packet = stream.slice(offset, nextBoundary);
@@ -633,14 +635,17 @@ Orbited.CometTransports.XHRStream = function() {
     }
     var receivedHeartbeat = function() {
         window.clearTimeout(heartbeatTimer);
-        Orbited.log('clearing heartbeatTimer', heartbeatTimer)
-        heartbeatTimer = window.setTimeout(function() { Orbited.log('timer', testtimer, 'did it'); heartbeatTimeout();}, HEARTBEAT_TIMEOUT);
+//        Orbited.log('clearing heartbeatTimer', heartbeatTimer)
+        heartbeatTimer = window.setTimeout(function() { 
+//            Orbited.log('timer', testtimer, 'did it'); 
+            heartbeatTimeout();
+        }, HEARTBEAT_TIMEOUT);
         var testtimer = heartbeatTimer;
 
-        Orbited.log('heartbeatTimer is now', heartbeatTimer)
+//        Orbited.log('heartbeatTimer is now', heartbeatTimer)
     }
     var heartbeatTimeout = function() {
-        Orbited.log('heartbeat timeout... reconnect')
+//        Orbited.log('heartbeat timeout... reconnect')
         reconnect();
     }
     var receivedPacket = function(packetData) {

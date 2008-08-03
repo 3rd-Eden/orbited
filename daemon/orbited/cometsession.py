@@ -146,10 +146,13 @@ class TCPConnectionResource(resource.Resource):
     # since the last time we heard from the client.
     pingInterval = 30
 
-    def __init__(self, root, key, **options):
+    def __init__(self, root, key, peer, host, **options):
         resource.Resource.__init__(self)
+        
         self.root = root
         self.key = key
+        self.peer = peer
+        self.host = host
         self.transport = None
         self.cometTransport = None
         self.parentTransport = None
@@ -165,11 +168,10 @@ class TCPConnectionResource(resource.Resource):
         self.open = False
         
     def getPeer(self):
-        # TODO: get the peer somehow (check twisted.web apis)
-        return None
+        return self.peer
     
     def getHost(self):
-        return None
+        return self.host
     
     def write(self, data):
         self.send(data)
@@ -359,7 +361,9 @@ class TCPResource(resource.Resource):
         key = None
         while key is None or key in self.connections:
             key = "".join([random.choice("ABCDEF1234567890") for i in range(10)])
-        self.connections[key] = TCPConnectionResource(self, key)
+        print request.getClientIP(), repr(request.getClientIP())
+        # request.client and request.host should be address.IPv4Address classes
+        self.connections[key] = TCPConnectionResource(self, key, request.client, request.host)
         self.listeningPort.connectionMade(self.connections[key])
         return key
 
