@@ -182,11 +182,7 @@ class TCPConnectionResource(resource.Resource):
 
     def loseConnection(self):
         # TODO: self.close() ?
-        self.send(TCPClose())
-        if self.cometTransport:
-            self.cometTransport.close()
-            self.cometTransport = None
-        self.connectionLost()
+        self.close('loseConnection')
         return None
 
     def connectionLost(self):
@@ -286,15 +282,22 @@ class TCPConnectionResource(resource.Resource):
         self.timeoutTimer = reactor.callLater(self.pingTimeout, self.timeout)
         
     def timeout(self):
+        self.timeoutTimer = None
         self.close("timeout")
         
     def close(self, reason=""):
+        if self.timeoutTimer:
+            self.timeoutTimer.cancel()
         self.logger.debug('close reason=%s' % reason)
         if self.cometTransport:
             self.cometTransport.sendPacket('close', "", reason)
             self.cometTransport.flush()
             self.cometTransport.close()
             self.cometTransport = None
+        # else:
+        # If we didn't have a comet transport, then we can't send a close frame
+        # but its okay, because it should get a 404 on reconnect, and that 
+        # will trigger the js side onclose cb.
         self.root.removeConn(self)
                 
 #    def transport_closed(self, transport):
