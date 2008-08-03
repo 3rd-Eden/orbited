@@ -30,16 +30,16 @@ class ProxyIncomingProtocol(Protocol):
                 self.binary = (data[0] == '1')
                 host, port = data[1:].split(':')
                 port = int(port)
-                # TODO log peer IP address.
+                peer = self.transport.getPeer()
                 if (host, port) not in config.map['[access]']:
-                    self.logger.warn('Unauthorized connect to %r:%d' % (host, port))
+                    self.logger.warn('Unauthorized connect from %r:%d to %r:%d' % (peer.host, peer.port, host, port))
                     self.transport.write("0" + str(ERRORS['Unauthorized']))
                     self.transport.loseConnection()
                     return
+                self.logger.access('new connection from %s:%s to %s:%d' % (peer.host, peer.port, host, port))
                 self.state = 'connecting'
                 client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
                 client.connectTCP(host, port)
-                self.logger.debug("connecting to %s:%d" % (host, port))
                 # TODO: connect timeout or onConnectFailed handling...
             except:
                 self.logger.error("failed to connect on handshake", tb=True)
