@@ -1,5 +1,4 @@
 import os
-import transports
 import random
 from zope.interface import implements
 from twisted.internet import reactor, interfaces
@@ -8,6 +7,8 @@ from twisted.internet.error import CannotListenError
 from twisted.web import server, resource, static, error
 from twisted.internet import reactor, defer
 
+from orbited import logging
+from orbited import transports
 
 def setup_site(port):
     root = resource.Resource()
@@ -32,6 +33,9 @@ class Port(object):
     To listen with multiple protocols on the same port by using different urls.
     """
     implements(interfaces.IListeningPort)
+
+    logger = logging.get_logger('orbited.cometsession.Port')
+
     def __init__(self, port=None, factory=None, backlog=50, interface='', reactor=None, resource=None, childName=None):
         self.port = port
         self.factory = factory
@@ -43,9 +47,11 @@ class Port(object):
         self.listening = False
                 
     def startListening(self):
+        self.logger.debug('startingListening')
         if not self.listening:
             self.listening = True
             if self.port:
+                self.logger.debug('creating new site and resource')
                 self.wrapped_factory = setup_site(self)
                 self.wrapped_port = reactor.listenTCP(
                     self.port, 
@@ -54,19 +60,20 @@ class Port(object):
                     self.interface
                 )
             elif self.resource and self.childName:
+                self.logger.debug('adding into existing resource as %s' % self.childName)
                 self.resource.putChild(self.childName, TCPResource(self))
         else:
-            raise CannotListenError, "Already listening..."
-        
+            raise CannotListenError("Already listening...")
+
     def stopListening():
+        self.logger.debug('stopListening')
         if self.wrapped_port:
             self.listening = False
             self.wrapped_port.stopListening()
         elif self.resource:
             pass
             # TODO: self.resource.removeChild(self.childName) ?
-			
-        
+
     def connectionMade(self, transportProtocol):
         """
             proto is the tcp-emulation protocol
@@ -75,6 +82,7 @@ class Port(object):
             on proto
             
         """
+        self.logger.debug('connectionMade')
         protocol = self.factory.buildProtocol(transportProtocol.getPeer())
         if protocol is None:
             transportProtocol.transport.loseConnection()
@@ -90,7 +98,7 @@ class Port(object):
         elif self.resource:
             pass
             # TODO: how do we do getHost if we just have self.resource?
-            
+
 class FakeTCPTransport(object):
     implements(interfaces.ITransport)
     
@@ -129,10 +137,15 @@ class FakeTCPTransport(object):
             
     
 class TCPConnectionResource(resource.Resource):
-    pingTimeout = 30 # Determines timeout interval after ping has been sent
-    pingInterval = 30 # Determines interval to wait before sending a ping
-                     # since the last time we heard from the client.
-    
+
+    logger = logging.get_logger('orbited.cometsession.TCPConnectionResource')
+
+    # Determines timeout interval after ping has been sent
+    pingTimeout = 30
+    # Determines interval to wait before sending a ping
+    # since the last time we heard from the client.
+    pingInterval = 30
+
     def __init__(self, root, key, **options):
         resource.Resource.__init__(self)
         self.root = root
@@ -164,8 +177,7 @@ class TCPConnectionResource(resource.Resource):
     def writeSequence(self, data):
         for datum in data:
             self.write(data)
-            
-            
+
     def loseConnection(self):
         # TODO: self.close() ?
         self.send(TCPClose())
@@ -174,8 +186,7 @@ class TCPConnectionResource(resource.Resource):
             self.cometTransport = None
         self.connectionLost()
         return None
-    
-    
+
     def connectionLost(self):
         if not self.lostTriggered:
             self.lostTriggered = True
@@ -185,7 +196,6 @@ class TCPConnectionResource(resource.Resource):
         if path in transports.map:
             return transports.create(path, self)
         return error.NoResource("No such child resource.")
-
 
     def render(self, request):
 #        print '=='
@@ -232,6 +242,7 @@ class TCPConnectionResource(resource.Resource):
                 #       -mcarter 7-30-08
                 print 'PONG!'
                 pass
+
     # Called by the callback attached to the CometTransport
     def transportClosed(self, transport):
         if transport is self.transport:
@@ -258,9 +269,7 @@ class TCPConnectionResource(resource.Resource):
             self.open = True
             self.transport.sendPacket("open", self.packetId)
         self.transport.flush()
-        
-        
-        
+
     def resetPingTimer(self):
         if self.pingTimer:
             self.pingTimer.cancel()
@@ -278,6 +287,7 @@ class TCPConnectionResource(resource.Resource):
         self.close("timeout")
         
     def close(self, reason=""):
+        self.logger.debug('close reason=%s' % reason)
         if self.transport:
             self.transport.sendPacket('close', "", reason)
             self.transport.flush()
@@ -290,7 +300,7 @@ class TCPConnectionResource(resource.Resource):
 #            self.transport = None
         
     def ack(self, ackId, reset=False):
-#        print 'ACK:', ack_id, 'reset:', reset
+        self.logger.debug('ack idId=%s reset=%s' % (ackId, reset))
         if reset:
             self.resetPingTimer()
         ackId = min(ackId, self.packetId)
@@ -308,7 +318,6 @@ class TCPConnectionResource(resource.Resource):
         if not self.transport:
             self.msgQueue.append(data)
         else:
-#            print 'SEND: ' + str(data)
             self.packetId += 1
             self._send(data, self.packetId)
             self.unackQueue.append(data)
@@ -316,6 +325,7 @@ class TCPConnectionResource(resource.Resource):
                 self.transport.flush()
                 
     def _send(self, data, packetId=""):
+        self.logger.debug('_send data=%r packetId=%s' % (data, packetId))
         if isinstance(data, TCPPing):
             self.transport.sendPacket('ping', packetId)
         elif isinstance(data, TCPClose):
@@ -342,11 +352,9 @@ class TCPResource(resource.Resource):
     def __init__(self, listeningPort):
         resource.Resource.__init__(self)
         self.listeningPort = listeningPort
-        self.static_files = static.File(os.path.join(os.path.split(__file__)[0], 'static'))
+        self.static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
         self.connections = {}
-        self.connections['ABC'] = TCPConnectionResource(self, 'ABC')
-        self.listeningPort.connectionMade(self.connections['ABC'])
-        
+
     def render(self, request):
         key = None
         while key is None or key in self.connections:
@@ -365,8 +373,7 @@ class TCPResource(resource.Resource):
     def removeConn(self, conn):
         if conn in self.connections:
             del self.connections[conn.id]
-            
-            
+
     def connectionMade(self, conn):
         self.listeningPort.connectionMade(conn)
         
