@@ -3,11 +3,13 @@ from twisted.internet.protocol import ClientCreator
 from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
 
+from orbited import config
 from orbited import logging
 
 ERRORS = {
     'InvalidHandshake': 102,
-    'RemoteConnectionTimeout': 104
+    'RemoteConnectionTimeout': 104,
+    'Unauthorized': 106,
 }
 
 class ProxyIncomingProtocol(Protocol):
@@ -26,12 +28,19 @@ class ProxyIncomingProtocol(Protocol):
         if self.state == "handshake":
             try:
                 self.binary = (data[0] == '1')
-                hostname, port = data[1:].split(':')
+                host, port = data[1:].split(':')
                 port = int(port)
+                # TODO log peer IP address.
+                if (host, port) not in config.map['[access]']:
+                    self.logger.warn('Unauthorized connect to %r:%d' % (host, port))
+                    self.transport.write("0" + str(ERRORS['Unauthorized']))
+                    self.transport.loseConnection()
+                    # XXX raising an exception still keeps this proxy going...
+                    raise Exception("Unauthorized for proxying")
                 self.state = 'connecting'
                 client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
-                client.connectTCP(hostname, port)
-                self.logger.debug("connecting to %r:%d" % (hostname, port))
+                client.connectTCP(host, port)
+                self.logger.debug("connecting to %s:%d" % (host, port))
                 # TODO: connect timeout or onConnectFailed handling...
             except:
                 self.logger.error("failed to connect on handshake", tb=True)
