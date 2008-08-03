@@ -20,8 +20,14 @@ Orbited.Errors.UserConnectionReset = 103
 Orbited.Statuses = {}
 Orbited.Statuses.ServerClosedConnection = 201
 
-Orbited.util = {}
+if (typeof(console) != "undefined" && typeof(console.log) != "undefined") {
+    Orbited.log = console.log;
+}
+else {
+    Orbited.log = function() { }
+}
 
+Orbited.util = {}
 
 Orbited.util.browser = null;
 if (typeof(ActiveXObject) != "undefined") {
@@ -106,6 +112,7 @@ Orbited.CometSession = function() {
                     var transportClass = Orbited.util.chooseTransport()
                     cometTransport = new transportClass();
                     cometTransport.onReadFrame = transportOnReadFrame;
+                    cometTransport.onclose = transportOnClose;
                     cometTransport.connect(sessionUrl.render())
                 }
                 
@@ -223,7 +230,12 @@ Orbited.CometSession = function() {
                 
         }
     }
-    
+    var transportOnClose = function() {
+        Orbited.log('transportOnClose');
+        if (self.readyState < states.CLOSED) {
+            doClose(Orbited.Statuses.ServerClosedConnection)
+        }
+    }        
     var encodePackets = function(queue) {
         //TODO: optimize this.
         var packets = []
@@ -271,9 +283,12 @@ Orbited.CometSession = function() {
     }
     
     var doClose = function(code) {
+        Orbited.log('doClose', code)
         self.readyState = states.CLOSED;
         cometTransport.onReadFrame = function() {}
-        cometTransport.close()
+        if (cometTransport != null && cometTransport.readyState < 2) {
+            cometTransport.close()
+        }
         self.onclose(code);
 
     }
@@ -410,6 +425,7 @@ Orbited.TCPSocket = function() {
     }
     
     var sessionOnClose = function(status) {
+        Orbited.log('sessionOnClose');
         // If we are in the OPENING state, then the handshake code should
         // handle the close
         if (self.readyState >= states.OPEN) {
@@ -446,16 +462,20 @@ Orbited.CometTransports.XHRStream = function() {
     self.onReadFrame = function(frame) {}
     self.onread = function(packet) { self.onReadFrame(packet); }
     self.onclose = function() { }
+
     self.close = function() {
+        if (self.readyState != 1) {
+            throw new Error("Invalid readyState to close XHRStream")
+        }
         if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
-            self.readyState = 2
             xhr.onreadystatechange = function() { }
             xhr.abort()
             xhr = null;        
         }
+        self.readyState = 2
         window.clearTimeout(heartbeatTimer);
         window.clearTimeout(retryTimer);
-
+        self.onclose();
     }
 
     self.connect = function(_url) {
@@ -484,16 +504,41 @@ Orbited.CometTransports.XHRStream = function() {
     
             xhr.open('GET', url.render(), true)
             xhr.onreadystatechange = function() {
-                console.log(xhr.readyState);
+                Orbited.log(xhr.readyState);
                 switch(xhr.readyState) {
                     case 2:
-                        heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);    
+//                        heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);                    
+                        // If we can't get the status, then we didn't actually
+                        // get a valid xhr response -- we got a network error
+                        try {
+                            var status = xhr.status
+                        }
+                        catch(e) {
+                            return
+                        }
+                        // If we got a 200, then we're in business
+                        if (status == 200) {
+                            heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);
+                            var testtimer = heartbeatTimer;
+                        }
+                        // Otherwise, case 4 should handle the reconnect,
+                        // so do nothing here.
                         break;
                     case 3:
+                        // If we can't get the status, then we didn't actually
+                        // get a valid xhr response -- we got a network error
+                        try {
+                            var status = xhr.status
+                        }
+                        catch(e) {
+                            return
+                        }
                         // We successfully established a connection, so put the
                         // retryInterval back to a short value
-                        retryInterval = 50;
-                        process();
+                        if (status == 200) {
+                            retryInterval = 50;
+                            process();
+                        }
                         break;
                     case 4:
                         try {
@@ -503,7 +548,7 @@ Orbited.CometTransports.XHRStream = function() {
                             // Expoential backoff: Every time we fail to 
                             // reconnect, double the interval. 
                             retryInterval *= 2;
-                            console.log('retryInterval', retryInterval)
+                            Orbited.log('retryInterval', retryInterval)
                             window.clearTimeout(heartbeatTimer);
                             window.setTimeout(reconnect, retryInterval)
                             return;
@@ -514,9 +559,12 @@ Orbited.CometTransports.XHRStream = function() {
                                 process();
                                 offset = 0;
                                 setTimeout(open, 0)
+                                window.clearTimeout(heartbeatTimer);
                                 break;
+                            case 404:
+                                self.close();
                             default:
-                                self.disconnect();
+                                self.close();
                         }
                 }
             }
@@ -528,41 +576,51 @@ Orbited.CometTransports.XHRStream = function() {
     }
 
     var reconnect = function() {
-        console.log('reconnect...')
+        Orbited.log('reconnect...')
         if (xhr.readyState < 4 && xhr.readyState > 0) {
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4) {
                     reconnect();
                 }
             }
-            console.log('do abort..')
+            Orbited.log('do abort..')
             xhr.abort();
+            window.clearTimeout(heartbeatTimer);            
         }
         else {
-            console.log('open...')
+            Orbited.log('open...')
             offset = 0;
             setTimeout(open, 0)
         }
     }
     var process = function() {
         var stream = xhr.responseText;
+        Orbited.log('buffer', stream.slice(offset).length, stream.slice(offset))
+        xkcd = stream.slice(offset)
         while (true) {
             if (stream.length <= offset) {
                 return;
             }
             // Any data counts as a heartbeat
-                receivedHeartbeat()
+            receivedHeartbeat()
 
+            // ignore leading whitespace, such as at the start of an xhr stream
+            while (stream[offset] == ' ') {
+                offset += 1
+            }
             // If a frame starts with an 'x', then its an actual heartbeat
             // so discard it.
             if (stream[offset] == 'x') {
-                console.log('heartbeat')
+                Orbited.log('heartbeat')
                 offset += 1
+                continue
             }
+            
             else {
-                console.log('activity')
+                Orbited.log('activity', stream[offset])
             }
             var nextBoundary = stream.indexOf(PACKET_DELIMITER, offset);
+            Orbited.log('partial', stream.slice(offset, nextBoundary));
             if (nextBoundary == -1)
                 return;
             var packet = stream.slice(offset, nextBoundary);
@@ -572,10 +630,14 @@ Orbited.CometTransports.XHRStream = function() {
     }
     var receivedHeartbeat = function() {
         window.clearTimeout(heartbeatTimer);
-        heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);
+        Orbited.log('clearing heartbeatTimer', heartbeatTimer)
+        heartbeatTimer = window.setTimeout(function() { Orbited.log('timer', testtimer, 'did it'); heartbeatTimeout();}, HEARTBEAT_TIMEOUT);
+        var testtimer = heartbeatTimer;
+
+        Orbited.log('heartbeatTimer is now', heartbeatTimer)
     }
     var heartbeatTimeout = function() {
-        console.log('heartbeat timeout... reconnect')
+        Orbited.log('heartbeat timeout... reconnect')
         reconnect();
     }
     var receivedPacket = function(packetData) {
