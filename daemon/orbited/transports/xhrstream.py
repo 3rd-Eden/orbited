@@ -1,5 +1,4 @@
 from twisted.internet import reactor
-
 from orbited import logging
 from orbited.transports.base import CometTransport
 
