@@ -35,8 +35,7 @@ class ProxyIncomingProtocol(Protocol):
                     self.logger.warn('Unauthorized connect to %r:%d' % (host, port))
                     self.transport.write("0" + str(ERRORS['Unauthorized']))
                     self.transport.loseConnection()
-                    # XXX raising an exception still keeps this proxy going...
-                    raise Exception("Unauthorized for proxying")
+                    return
                 self.state = 'connecting'
                 client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
                 client.connectTCP(host, port)

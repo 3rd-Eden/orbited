@@ -85,7 +85,7 @@ class Port(object):
         self.logger.debug('connectionMade')
         protocol = self.factory.buildProtocol(transportProtocol.getPeer())
         if protocol is None:
-            transportProtocol.transport.loseConnection()
+            transportProtocol.loseConnection()
             return
         
         transport = FakeTCPTransport(transportProtocol, protocol)
@@ -247,15 +247,15 @@ class TCPConnectionResource(resource.Resource):
 
     # Called by the callback attached to the CometTransport
     def transportClosed(self, transport):
-        if transport is self.transport:
-            self.transport = None
+        if transport is self.cometTransport:
+            self.cometTransport= None
     
     # Called by transports.CometTransport.render
     def transportOpened(self, transport):
-        if self.transport:
-            self.transport.close()
-            self.transport = None
-        self.transport = transport
+        if self.cometTransport:
+            self.cometTransport.close()
+            self.cometTransport = None
+        self.cometTransport = transport
         transport.onClose().addCallback(self.transportClosed)
         ack = transport.request.args.get('ack', [None])[0]
         if ack:
@@ -269,8 +269,8 @@ class TCPConnectionResource(resource.Resource):
         self.sendMsgQueue()
         if not self.open:
             self.open = True
-            self.transport.sendPacket("open", self.packetId)
-        self.transport.flush()
+            self.cometTransport.sendPacket("open", self.packetId)
+        self.cometTransport.flush()
 
     def resetPingTimer(self):
         if self.pingTimer:
@@ -290,11 +290,11 @@ class TCPConnectionResource(resource.Resource):
         
     def close(self, reason=""):
         self.logger.debug('close reason=%s' % reason)
-        if self.transport:
-            self.transport.sendPacket('close', "", reason)
-            self.transport.flush()
-            self.transport.close()
-            self.transport = None
+        if self.cometTransport:
+            self.cometTransport.sendPacket('close', "", reason)
+            self.cometTransport.flush()
+            self.cometTransport.close()
+            self.cometTransport = None
         self.root.removeConn(self)
                 
 #    def transport_closed(self, transport):
@@ -313,27 +313,27 @@ class TCPConnectionResource(resource.Resource):
         self.lastAckId = ackId
         
     def sendMsgQueue(self):
-        while self.msgQueue and self.transport:
+        while self.msgQueue and self.cometTransport:
             self.send(self.msgQueue.pop(0), flush=False)
         
     def send(self, data, flush=True):
-        if not self.transport:
+        if not self.cometTransport:
             self.msgQueue.append(data)
         else:
             self.packetId += 1
             self._send(data, self.packetId)
             self.unackQueue.append(data)
             if flush:
-                self.transport.flush()
+                self.cometTransport.flush()
                 
     def _send(self, data, packetId=""):
         self.logger.debug('_send data=%r packetId=%s' % (data, packetId))
         if isinstance(data, TCPPing):
-            self.transport.sendPacket('ping', packetId)
+            self.cometTransport.sendPacket('ping', packetId)
         elif isinstance(data, TCPClose):
-            self.transport.sendPacket('close', packetId)
+            self.cometTransport.sendPacket('close', packetId)
         else:
-            self.transport.sendPacket('data', packetId, data)
+            self.cometTransport.sendPacket('data', packetId, data)
     
     def resendUnackQueue(self):
         if not self.unackQueue:
@@ -341,7 +341,7 @@ class TCPConnectionResource(resource.Resource):
         for data in self.unackQueue:
             self._send(data)
         ackId = self.lastAckId + len(self.unackQueue)
-        self.transport.sendPacket('id', ackId)
+        self.cometTransport.sendPacket('id', ackId)
         
 class TCPPing(object):
     pass

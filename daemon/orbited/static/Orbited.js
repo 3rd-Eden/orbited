@@ -262,13 +262,19 @@ Orbited.CometSession = function() {
             sending = false;
             return
         }
-        
+        sending = true;
         var numSent = sendQueue.length
         sessionUrl.setQsParameter('ack', lastPacketId)
-        xhr.open('POST', sessionUrl.render(), true)
-        xhr.send(encodePackets(sendQueue))
         xhr.onreadystatechange = function() {
+            console.log('send readyState', xhr.readyState)
+            try {
+                console.log('status', xhr.status);
+            }
+            catch(e) {
+                console.log('no status');
+            }
             switch(xhr.readyState) {
+                
                 case 4:
                     if (xhr.status == 200) {
                         sendQueue.splice(0, numSent)
@@ -285,6 +291,11 @@ Orbited.CometSession = function() {
                     }
             }
         }
+        var tdata = encodePackets(sendQueue)
+        console.log('post', retries, tdata);
+        xhr.open('POST', sessionUrl.render(), true)
+        xhr.send(tdata)
+
     }
     
     var doClose = function(code) {
