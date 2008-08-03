@@ -314,6 +314,10 @@ Orbited.CometSession = function() {
 Orbited.TCPSocket = function() {
     var self = this;
 
+    // So we don't completely ambush people used to the 0.5 api...
+    if (arguments.length > 0) {
+        throw new Error("TCPSocket() accepts no arguments")
+    }
     // The readyState values
     var states = {
         INITIALIZED: 1,
