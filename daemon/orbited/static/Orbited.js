@@ -338,10 +338,11 @@ Orbited.TCPSocket = function() {
     var handshakeState = null;
     var hostname = null;
     var port = null;
+
     /* self.open attempts to establish a tcp connection to the specified remote
      * hostname on the specified port. When specified as true, the optional
      * argument, isBinary, will cause onread to return byte arrays, and send
-     * will only accept a btye array.
+     * will only accept a byte array.
      */
     self.open = function(_hostname, _port, isBinary) {
         if (self.readyState != states.INITIALIZED) {
@@ -408,7 +409,7 @@ Orbited.TCPSocket = function() {
     }
     var decodeBinary = function(data) {
         data = data.split(",")
-        for (var i = 0; i < data.length; ++i) {
+        for (var i = 0, l = data.length; i < l; ++i) {
             data[i] = parseInt(data[i])
         }
         return data
@@ -568,7 +569,8 @@ Orbited.CometTransports.XHRStream = function() {
                         }
                         catch(e) {
                             // Expoential backoff: Every time we fail to 
-                            // reconnect, double the interval. 
+                            // reconnect, double the interval.
+                            // TODO cap the max value. 
                             retryInterval *= 2;
 //                            Orbited.log('retryInterval', retryInterval)
                             window.clearTimeout(heartbeatTimer);

@@ -13,6 +13,10 @@ ERRORS = {
 }
 
 class ProxyIncomingProtocol(Protocol):
+    """
+    Handles the protocol between the browser and orbited, and proxies
+    the data to a backend server.
+    """
 
     logger = logging.get_logger('orbited.proxy.ProxyIncomingProtocol')
 
@@ -20,13 +24,28 @@ class ProxyIncomingProtocol(Protocol):
         self.logger.debug("connectionMade")
         self.state = 'handshake'
         self.binary = False
+        # TODO rename this to outgoingProtocol
         self.otherConn = None
 
     def dataReceived(self, data):
+        self.logger.debug('dataReceived: data=%r' % data)
         if self.otherConn:
+            # NB: otherConn is-a ProxyOutgoingProtocol
+            # TODO honour self.binary by actually decoding data into binary.
             return self.otherConn.transport.write(data)            
         if self.state == "handshake":
+            # NB: we can safely process data here in one read because
+            #     the first chunk of data from the browser will include
+            #     the full data.
+            # TODO: though, we might get busted if the client sends data
+            #       imediately, maybe we should end the data with \n?
+            #       OR maybe the router in the middle truncated data.
+            #       UNLESS we can make sure the creation happens in a
+            #       single POST.
             try:
+                # XXX altough this gets saved, self.binary is not
+                #     actually used from browser to backend, so the
+                #     binary sockets are currently broken.
                 self.binary = (data[0] == '1')
                 host, port = data[1:].split(':')
                 port = int(port)
@@ -56,6 +75,8 @@ class ProxyIncomingProtocol(Protocol):
         if self.otherConn:
             self.otherConn.transport.loseConnection()
 
+    # XXX the wording is confusing;  shouldn't this be called
+    #     outgoingConnectionEstablished?  dito for remoteConnectionLost.
     def remoteConnectionEstablished(self, otherConn):
         if self.state == 'closed':
             return otherConn.transport.loseConnection()
@@ -75,10 +96,14 @@ class ProxyIncomingProtocol(Protocol):
         self.transport.write(data)
 
 class ProxyOutgoingProtocol(Protocol):
+    """
+    Handles the protocol between orbited and backend server.
+    """
 
     logger = logging.get_logger('orbited.proxy.ProxyOutgoingProtocol')
 
     def __init__(self, otherConn):
+        # TODO rename this to incomingProtocol
         self.otherConn = otherConn
 
     def connectionMade(self):

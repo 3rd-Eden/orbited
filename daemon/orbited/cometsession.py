@@ -196,11 +196,9 @@ class TCPConnectionResource(resource.Resource):
         return error.NoResource("No such child resource.")
 
     def render(self, request):
-#        print '=='
-#        print request
+        self.logger.debug('render: request=%r' % request);
         stream = request.content.read()
-#        print stream
-#        print
+        self.logger.debug('render: request.content=%r' % stream);
         ack = request.args.get('ack', [None])[0]
         if ack:
             try:
@@ -209,37 +207,52 @@ class TCPConnectionResource(resource.Resource):
             except ValueError:
                 pass
         encoding = request.received_headers.get('tcp-encoding', None)
+        # TODO instead of .write/.finish just return OK?
         request.write('OK')
         request.finish()
+        # TODO why not call parseData here?
         reactor.callLater(0, self.parseData, stream)
         return server.NOT_DONE_YET
         
     def parseData(self, data):
         frames = [ 
+            # TODO test this with a frame that has "_A" inside user data.
             [ i.replace('__', '_') for i in f.split('_A') ]
             for f in data.split('_P') 
         ][:-1]
-#        print frames
         # TODO: do we really need the id? maybe we should take it out
         #       of the protocol...
         #       -mcarter 7-29-08
+        #       I think its a safenet for unintentinal bugs;  we should
+        #       compare it with the last one we received, and error or
+        #       ignore if its not what we expect.
+        #       -- rgl
         for args in frames:
-#            print args
+            self.logger.debug('parseData: frame=%r' % args);
             id = args[0]
             name = args[1]
-            args = args[2:]
             if name == 'close':
+                if len(args) != 2:
+                    # TODO kill the connection with error.
+                    pass
                 self.loseConnection()
-            if name == 'data':
+            elif name == 'data':
                 # TODO: should there be a try/except around this block?
                 #       we don't want app-level code to break and cause
                 #       only some packets to be delivered.
-                self.parentTransport.dataReceived(args[0])
-            if name == 'ping':
+                if len(args) != 3:
+                    # TODO kill the connection with error.
+                    pass
+                data = args[2]
+                # NB: parentTransport is-a FakeTCPTransport.
+                self.parentTransport.dataReceived(data)
+            elif name == 'ping':
+                if len(args) != 2:
+                    # TODO kill the connection with error.
+                    pass
                 # TODO: do we have to do anything? I don't think so...
                 #       -mcarter 7-30-08
-                print 'PONG!'
-                pass
+                self.logger.debug('parseData: PING? PONG!');
 
     # Called by the callback attached to the CometTransport
     def transportClosed(self, transport):
