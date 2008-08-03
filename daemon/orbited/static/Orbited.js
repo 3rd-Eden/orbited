@@ -10,6 +10,8 @@ Orbited.settings = {}
 Orbited.settings.hostname = document.domain
 Orbited.settings.port = (location.port.length > 0) ? location.port : 80
 Orbited.settings.protocol = 'http'
+Orbited.singleton = {}
+
 
 // Orbited CometSession Errors
 Orbited.Errors = {}
@@ -516,7 +518,7 @@ Orbited.CometTransports.XHRStream = function() {
         self.readyState = 1
         open()
     }
-    open = function() {
+    var open = function() {
         try {
             if (typeof(ackId) == "number") {
                 url.setQsParameter('ack', ackId)
@@ -679,7 +681,64 @@ Orbited.CometTransports.XHRStream = function() {
 }
 // XHRStream supported browsers
 Orbited.CometTransports.XHRStream.firefox = 1.0
+Orbited.CometTransports.XHRStream.firefox2 = 1.0
+Orbited.CometTransports.XHRStream.firefox3 = 1.0
+Orbited.CometTransports.XHRStream.safari2 = 1.0
+Orbited.CometTransports.XHRStream.safari3 = 1.0
 
+Orbited.CometTransports.HTMLFile = function() {
+    var self = this;
+    id = ++Orbited.singleton.HTMLFile.i;
+    Orbites.singleton.HTMLFile.isntances[id] = self
+    var htmlfile = null
+    var url = null;
+    self.onread = function(packet) { }
+
+    self.connect = function(_url) {
+        if (self.readyState == 1) {
+            throw new Error("Already Connected")
+        }
+        url = new URL(_url)
+        url.setQsParameter('transport', 'htmlfile')
+        url.setQsParameter('frameID', id.toString())
+//        url.hash = id.toString()
+        self.readyState = 1
+        doOpen()
+    }
+
+    var doOpenIfr = function() {
+        
+        var ifr = document.createElement('iframe')
+        ifr.src = url.render()
+        document.body.appendChild(ifr)
+    }
+
+    var doOpen = function() {
+        htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
+        htmlfile.open();
+        htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
+        htmlfile.parentWindow.HTMLFile = HTMLFile;
+        htmlfile.close();
+        var iframe_div = htmlfile.createElement('div');
+        htmlfile.body.appendChild(iframe_div);
+        iframe_div.innerHTML = "<iframe src=\"" + url.render() + "\"></iframe>";
+    }
+    
+    self.receive = function(id, name, args) {
+        packet = {
+            id: id,
+            name: name,
+            args: args
+        }
+        self.onread(packet)
+    }
+}
+// HTMLFile supported browsers
+Orbited.CometTransports.HTMLFile.firefox = 1.0
+Orbited.singleton.HTMLFile = {
+    i: 0
+    instances: {}
+}
 
 /* This is an old implementation of the URL class. Jacob is cleaning it up
  * mcarter, 7-30-08
