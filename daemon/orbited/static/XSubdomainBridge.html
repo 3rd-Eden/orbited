@@ -1,16 +1,46 @@
 <html>
  <head>
-  <script>
+     <script src="JSON.js"></script>
+
+<script>
+
 var origDomain = document.domain
 var topDomain = null;
 var id = parseInt(location.hash.slice(1));
-
 //var id = location.hash
 var parts = document.domain.split('.')
+var req = null;
+
+// Posts a message in JSON string format to the parent document, issuing the request
+function postMessageToParent(msg)
+{
+        var target = parent.postMessage ? parent : (parent.document.postMessage ? parent.document : undefined);
+        if (typeof target != "undefined") {
+            target.postMessage(msg, "*");
+        }
+};
+
+
+function push(data) {
+    document.domain = topDomain
+
+    if (typeof(opera) != "undefined")
+        postMessageToParent("event " + id + " " + JSON.stringify(data));
+    else
+        parent.XSubdomainRequest.prototype._event(id, data);
+        
+    try {
+        document.domain = origDomain;
+    }
+    catch(e) {
+    }
+}
+
 if (parts.length == 1) {
     try {
         document.domain = document.domain
-        parent.XSubdomainRequest.prototype
+        if (typeof(opera) == "undefined")
+            parent.XSubdomainRequest.prototype
         topDomain = document.domain
     }
     catch(e) {
@@ -20,7 +50,8 @@ else {
     for (var i = 0; i < parts.length-1; ++i) {
         document.domain = parts.slice(i).join(".")
         try {
-            parent.XSubdomainRequest.prototype
+            if (typeof(opera) == "undefined")
+                parent.XSubdomainRequest.prototype
             topDomain = document.domain
             break;
         }
@@ -29,6 +60,7 @@ else {
         }
     }
 }
+
 if (topDomain == null)
     throw new Error("Invalid document.domain for cross-frame communication")
 
@@ -39,6 +71,8 @@ try {
 }
 catch(e) {
 }
+
+
 function getNext() {
     document.domain = topDomain
     var queue = parent.XSubdomainRequest.prototype._state.queues[id]
@@ -53,21 +87,24 @@ function getNext() {
     }
     return data
 }
-function push(data) {
-    document.domain = topDomain
-    parent.XSubdomainRequest.prototype._event(id, data);
-    try {
-        document.domain = origDomain;
-    }
-    catch(e) {
-    }
+
+// Sends a message to the parent, requesting it to send the next request on
+// the queue. The result is handled in the message receiver handler
+function sendGetNext() {
+    document.domain = topDomain;
+    postMessageToParent("queues " + id);
 }
 
 function doNextRequest() {
-    var req = getNext();
+    if (typeof(opera) != "undefined")
+        sendGetNext()
+    else
+        req = getNext();
+
     if (req == null) {
         return setTimeout(doNextRequest, 10);
     }
+
     var smethod = req[0]
     var surl = req[1]
     var spayload = req[2];
@@ -116,6 +153,7 @@ function doNextRequest() {
             
             payload['headers'] = headers
             push(["readystatechange", payload])
+            req = null;
             return doNextRequest();
         }
         push(["readystatechange", payload])
@@ -138,6 +176,17 @@ var createXHR = function() {
     try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
     return null;
 };
+
+
+// Message receiver handler (req. for Opera compatibility)
+document.addEventListener('message', function(e) {
+    var msg = e.data;
+    var response = JSON.parse(msg);
+    req = response;
+}
+, false
+);
+
 
 </script>
 </head>
