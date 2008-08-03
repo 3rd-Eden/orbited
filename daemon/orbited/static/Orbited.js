@@ -274,9 +274,12 @@ Orbited.CometSession = function() {
                     }
                     else {
                         //TODO: implement retry back-off;
-                        window.setTimeout(function() {
-                            doSend(++retrie)
-                        }, RETRY_INTERVAL);
+                        window.setTimeout(
+                            function() {
+                                doSend(++retries);
+                            },
+                            RETRY_INTERVAL
+                        );
                     }
             }
         }
