@@ -265,6 +265,7 @@ class TCPConnectionResource(resource.Resource):
         if self.cometTransport:
             self.cometTransport.close()
             self.cometTransport = None
+        self.logger.debug("new transport: " + repr(transport))
         self.cometTransport = transport
         transport.onClose().addCallback(self.transportClosed)
         ack = transport.request.args.get('ack', [None])[0]
@@ -308,8 +309,9 @@ class TCPConnectionResource(resource.Resource):
         if self.pingTimer:
             self.pingTimer.cancel()
             
-        self.logger.debug('close reason=%s' % reason)
+        self.logger.debug('close reason=%s %s' % (reason, repr(self)))
         if self.cometTransport:
+            self.logger.debug('close cometTransport %s' % repr(self.cometTransport))
             self.cometTransport.sendPacket('close', "", reason)
             self.cometTransport.flush()
             self.cometTransport.close()

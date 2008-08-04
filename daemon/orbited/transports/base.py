@@ -1,7 +1,10 @@
+from orbited import logging
 from twisted.web import server, resource, static, error
 from twisted.internet import defer, reactor
-
+logger = logging.get_logger('orbited.transports.base.CometTransport')
 class CometTransport(resource.Resource):
+  
+    
   
     def __init__(self, conn):
         self.conn = conn
@@ -50,6 +53,7 @@ class CometTransport(resource.Resource):
     def close(self):
         if not self.open:
             return
+        logger.debug('close ', repr(self))
         self.heartbeatTimer.cancel()
         self.heartbeatTimer = None
         self.open = False
