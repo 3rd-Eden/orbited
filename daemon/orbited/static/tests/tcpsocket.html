@@ -107,10 +107,10 @@
                             tearDown: tearDownSocket,
                             runTest: function(t) {
                                 var socket = t._socket;
-                                // XXX this test seems to be leaving the socket running.
+                                // NB: This in intentionally empty.
                             }
                         },
-/*
+
                         {
                             name: "embeddedUnderlines",
                             timeout: testTimeout,
@@ -150,7 +150,6 @@
                                 return endDeferred;
                             }
                         }
-*/
                     ]
                 );
 
