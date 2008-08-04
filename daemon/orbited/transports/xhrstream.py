@@ -45,6 +45,6 @@ class XHRStreamingTransport(CometTransport):
         return output
 
     def writeHeartbeat(self):
-        self.logger.debug('writeHeartbeat')
+        self.logger.debug('writeHeartbeat, ' + repr(self))
         self.request.write('x')
 

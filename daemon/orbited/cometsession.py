@@ -371,6 +371,9 @@ class TCPClose(object):
     pass
 
 class TCPResource(resource.Resource):
+    
+    logger = logging.get_logger('orbited.cometsession.TCPResource')
+  
   
     def __init__(self, listeningPort):
         resource.Resource.__init__(self)
@@ -386,6 +389,7 @@ class TCPResource(resource.Resource):
         # request.client and request.host should be address.IPv4Address classes
         self.connections[key] = TCPConnectionResource(self, key, request.client, request.host)
         self.listeningPort.connectionMade(self.connections[key])
+        self.logger.debug('created conn: ', repr(self.connections[key]))
         return key
 
     def getChild(self, path, request):
