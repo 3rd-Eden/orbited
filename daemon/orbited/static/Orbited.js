@@ -268,12 +268,12 @@ Orbited.CometSession = function() {
         var numSent = sendQueue.length
         sessionUrl.setQsParameter('ack', lastPacketId)
         xhr.onreadystatechange = function() {
-            console.log('send readyState', xhr.readyState)
+            Orbited.log('send readyState', xhr.readyState)
             try {
-                console.log('status', xhr.status);
+                Orbited.log('status', xhr.status);
             }
             catch(e) {
-                console.log('no status');
+                Orbited.log('no status');
             }
             switch(xhr.readyState) {
                 
@@ -294,7 +294,7 @@ Orbited.CometSession = function() {
             }
         }
         var tdata = encodePackets(sendQueue)
-        console.log('post', retries, tdata);
+        Orbited.log('post', retries, tdata);
         xhr.open('POST', sessionUrl.render(), true)
         xhr.send(tdata)
 
@@ -412,14 +412,12 @@ Orbited.TCPSocket = function() {
         for (var i = 0, l = data.length; i < l; ++i) {
             data[i] = parseInt(data[i])
         }
-        console.log('decoded', data)
         return data
     }
 
     var sessionOnRead = function(data) {
         switch(self.readyState) {
             case states.OPEN:
-                console.log('got', data)
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
                 break;
             case states.OPENING:

@@ -166,6 +166,7 @@ class TCPConnectionResource(resource.Resource):
         self.lostTriggered = False
         self.resetPingTimer()
         self.open = False
+        self.closed = False
         
     def getPeer(self):
         return self.peer
@@ -299,6 +300,9 @@ class TCPConnectionResource(resource.Resource):
         self.close("timeout")
         
     def close(self, reason=""):
+        if self.closed:
+            return
+        self.closed = True
         if self.timeoutTimer:
             self.timeoutTimer.cancel()
         if self.pingTimer:
@@ -310,15 +314,13 @@ class TCPConnectionResource(resource.Resource):
             self.cometTransport.flush()
             self.cometTransport.close()
             self.cometTransport = None
+        # NOTE:
         # else:
         # If we didn't have a comet transport, then we can't send a close frame
         # but its okay, because it should get a 404 on reconnect, and that 
         # will trigger the js side onclose cb.
         self.root.removeConn(self)
                 
-#    def transport_closed(self, transport):
-#        if transport is self.transport:
-#            self.transport = None
         
     def ack(self, ackId, reset=False):
         self.logger.debug('ack idId=%s reset=%s' % (ackId, reset))
