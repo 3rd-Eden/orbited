@@ -17,7 +17,7 @@
                     try {
                         t._socket.onerror = function() {};
                         t._socket.onclose = function() {};
-                        if (t._socket.readyState >= t._socket.OPENING)
+                        if (t._socket.readyState >= 2)
                             t._socket.close();
                     } catch (e) {
                         console.error("unable to close socket: ", e);
