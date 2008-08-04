@@ -101,6 +101,45 @@
                                 var socket = t._socket;
                                 // XXX this test seems to be leaving the socket running.
                             }
+                        },
+
+                        {
+                            name: "embeddedUnderlines",
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                var endDeferred = new doh.Deferred();
+                                var success = false;
+                                var buffer = "";
+                                var socket = t._socket;
+                                
+                                var text = "01_2__3___4____5_____0";
+
+                                socket.onopen = function() {
+                                    socket.send(text);
+                                };
+                                socket.onread = function(data) {
+                                    buffer += data;
+                                    console.info("buffer contains: ", buffer);
+                                    if (buffer == text) {
+                                        success = true;
+                                        socket.close();
+                                    }
+                                };
+                                socket.onclose = function() {
+                                    if (success)
+                                        endDeferred.callback(true);
+                                    else
+                                        endDeferred.errback(new Error("socket closed before receiving message"));
+                                };
+                                socket.onerror = function(error) {
+                                    endDeferred.errback(error);
+                                };
+
+                                socket.open("localhost", 7);
+
+                                return endDeferred;
+                            }
                         }
                     ]
                 );
