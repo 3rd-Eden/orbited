@@ -16,6 +16,7 @@ class XHRStreamingTransport(CometTransport):
         # Force reconnect ever 45 seconds
 #        self.close_timer = reactor.callLater(45, self.triggerCloseTimeout)
         self.request.setHeader('content-type', 'orbited/event-stream')
+        self.request.clientproto = "HTTP/1.0"
         # Safari/Tiger may need 256 bytes
         self.request.write(' ' * 256)
 
