@@ -144,25 +144,29 @@ XSubdomainRequest.prototype._event = function(id, payload) {
 
 // Message handler - parses messages posted by the
 // XSubdomainBridge
-document.addEventListener('message', function(e) {
-    var msg = e.data.split(" ");
-    var cmd = msg.shift();
-    if (cmd == "event") 
-    {
-        var id = msg.shift();
-        var dataString = msg.join(" ");
-        var data = JSON.parse(dataString);
 
-        XSubdomainRequest.prototype._event(id, data);
-    }
-    if (cmd == "queues")
-    {
-        var id = msg.shift();
-        var queue = XSubdomainRequest.prototype._state.queues[id];
-        if (queue.length > 0) {
-            var data = queue.shift();
-            e.source.postMessage(JSON.stringify(data), e.origin);
+if (browser == "opera")
+{
+    document.addEventListener('message', function(e) {
+        var msg = e.data.split(" ");
+        var cmd = msg.shift();
+        if (cmd == "event") 
+        {
+            var id = msg.shift();
+            var dataString = msg.join(" ");
+            var data = JSON.parse(dataString);
+    
+            XSubdomainRequest.prototype._event(id, data);
         }
-    }
-}, false
-);
+        if (cmd == "queues")
+        {
+            var id = msg.shift();
+            var queue = XSubdomainRequest.prototype._state.queues[id];
+            if (queue.length > 0) {
+                var data = queue.shift();
+                e.source.postMessage(JSON.stringify(data), e.origin);
+            }
+        }
+    }, false
+    );
+}

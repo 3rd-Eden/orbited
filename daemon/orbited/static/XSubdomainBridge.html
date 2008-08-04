@@ -178,14 +178,17 @@ var createXHR = function() {
 };
 
 
-// Message receiver handler (req. for Opera compatibility)
-document.addEventListener('message', function(e) {
-    var msg = e.data;
-    var response = JSON.parse(msg);
-    req = response;
+if (typeof(opera) != "undefined")
+{
+    // Message receiver handler (req. for Opera compatibility)
+    document.addEventListener('message', function(e) {
+        var msg = e.data;
+        var response = JSON.parse(msg);
+        req = response;
+    }
+    , false
+    );  
 }
-, false
-);
 
 
 </script>
