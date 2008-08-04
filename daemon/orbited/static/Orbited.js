@@ -680,7 +680,7 @@ Orbited.CometTransports.XHRStream.safari3 = 1.0
 Orbited.CometTransports.HTMLFile = function() {
     var self = this;
     id = ++Orbited.singleton.HTMLFile.i;
-    Orbites.singleton.HTMLFile.isntances[id] = self
+    Orbited.singleton.HTMLFile.instances[id] = self;
     var htmlfile = null
     var url = null;
     self.onread = function(packet) { }
@@ -725,7 +725,7 @@ Orbited.CometTransports.HTMLFile = function() {
     }
 }
 // HTMLFile supported browsers
-Orbited.CometTransports.HTMLFile.firefox = 1.0
+Orbited.CometTransports.HTMLFile.ie = 1.0;
 Orbited.singleton.HTMLFile = {
     i: 0,
     instances: {}
