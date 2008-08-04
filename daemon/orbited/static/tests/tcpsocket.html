@@ -17,10 +17,10 @@
                     try {
                         t._socket.onerror = function() {};
                         t._socket.onclose = function() {};
-                        t._socket.close();
+                        if (t._socket.readyState >= t._socket.OPENING)
+                            t._socket.close();
                     } catch (e) {
-                        console.error(e);
-                        // TODO: maybe we should complain loud?
+                        console.error("unable to close socket: ", e);
                     }
                 }
 
@@ -90,6 +90,16 @@
                                 socket.open("localhost", 0);
 
                                 return endDeferred;
+                            }
+                        },
+
+                        {
+                            name: "openCloseSocket",
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                var socket = t._socket;
+                                // XXX this test seems to be leaving the socket running.
                             }
                         }
                     ]
