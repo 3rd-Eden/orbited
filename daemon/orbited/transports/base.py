@@ -9,6 +9,7 @@ class CometTransport(resource.Resource):
     def __init__(self, conn):
         self.conn = conn
         self.open = False
+        self.closed = False
         
     def render(self, request):
         self.open = True
@@ -25,8 +26,12 @@ class CometTransport(resource.Resource):
         self.heartbeatTimer = reactor.callLater(5, self.doHeartbeat)
         
     def doHeartbeat(self):
-        self.writeHeartbeat()
-        self.resetHeartbeat()
+        if self.closed:
+            logger.debug("don't send hearbeat -- we should be closed", )
+            raise Exception("show tb...")
+        else:
+            self.writeHeartbeat()
+            self.resetHeartbeat()
         
     def sendPacket(self, name, id, *info):
         self.packets.append((id, name, info))
@@ -41,18 +46,17 @@ class CometTransport(resource.Resource):
         
             
     def finished(self, arg):
-        if self.open:
-            self.request = None
-            self.open = False
-            self.close()
+        self.request = None
+        self.close()
         
     def onClose(self):
         return self.closeDeferred
     
 
     def close(self):
-        if not self.open:
+        if self.closed:
             return
+        self.closed = True
         logger.debug('close ', repr(self))
         self.heartbeatTimer.cancel()
         self.heartbeatTimer = None
