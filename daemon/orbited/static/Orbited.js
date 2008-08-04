@@ -384,10 +384,8 @@ Orbited.TCPSocket = function() {
      * potential issues with future TCPSocket communication.
      */
     self.reset = function() {
-        if (self.readyState != states.OPEN && self.readyState != states.OPENING) {
-            throw new Error("Invalid readyState");
-        }
-        session.reset();
+        if (session)
+            session.reset();
     }
 
     self.send = function(data) {
