@@ -405,19 +405,21 @@ Orbited.TCPSocket = function() {
     // TODO: how about base64, or at least hex encoding?
     //       -mcarter 2-30-08        
     var encodeBinary = function(data) {
-        return data.join(",")
+        return data.join(",") + '\n'
     }
     var decodeBinary = function(data) {
         data = data.split(",")
         for (var i = 0, l = data.length; i < l; ++i) {
             data[i] = parseInt(data[i])
         }
+        console.log('decoded', data)
         return data
     }
 
     var sessionOnRead = function(data) {
         switch(self.readyState) {
             case states.OPEN:
+                console.log('got', data)
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
                 break;
             case states.OPENING:
@@ -443,7 +445,7 @@ Orbited.TCPSocket = function() {
     
     var sessionOnOpen = function(data) {
         // TODO: TCPSocket handshake
-        session.send((binary ? '1' : '0') + hostname + ':' + port)
+        session.send((binary ? '1' : '0') + hostname + ':' + port + '\n')
         handshakeState = 'initial'
     }
     

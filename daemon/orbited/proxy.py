@@ -21,27 +21,49 @@ class ProxyIncomingProtocol(Protocol):
     logger = logging.get_logger('orbited.proxy.ProxyIncomingProtocol')
 
     def connectionMade(self):
+        # TODO: add handshake timer
         self.logger.debug("connectionMade")
         self.state = 'handshake'
         self.binary = False
         # TODO rename this to outgoingProtocol
-        self.otherConn = None
-
+        self.outgoingConn = None
+        self.buffer = ""
+        
     def dataReceived(self, data):
         self.logger.debug('dataReceived: data=%r' % data)
-        if self.otherConn:
+        self.logger.debug('self.outgoingConn is', self.outgoingConn)
+        self.logger.debug('self.binary', self.binary)
+        self.buffer += data
+        if self.outgoingConn:
             # NB: otherConn is-a ProxyOutgoingProtocol
-            # TODO honour self.binary by actually decoding data into binary.
-            return self.otherConn.transport.write(data)            
+            if self.binary:
+                # NOTE: This is not *strictly* necessary because we know that
+                #       each send is framed by the HTTP POST request. No need
+                #       for the \n, except then we'd be violating the 
+                #       funtionality implied by the ITransport interface.
+                binaryBuffer = []
+                while True:
+                    i = self.buffer.find('\n')
+                    if i == -1:
+                        break
+                    self.logger.debug('found \\n')
+                    data = self.buffer[:i]
+                    self.buffer = self.buffer[i+i:]
+                    binaryBuffer.extend([ int(b) for b in data.split(',') ])
+                if binaryBuffer:
+                    data = "".join([chr(b) for b in binaryBuffer])
+                else:
+                    return
+            else:
+                self.buffer = ""
+            self.logger.debug("write (out):", data)
+            return self.outgoingConn.transport.write(data)
         if self.state == "handshake":
-            # NB: we can safely process data here in one read because
-            #     the first chunk of data from the browser will include
-            #     the full data.
-            # TODO: though, we might get busted if the client sends data
-            #       imediately, maybe we should end the data with \n?
-            #       OR maybe the router in the middle truncated data.
-            #       UNLESS we can make sure the creation happens in a
-            #       single POST.
+            i = self.buffer.find('\n')
+            if i == -1:
+                return
+            data = self.buffer[:i]
+            self.buffer = self.buffer[i+1:]
             try:
                 # XXX altough this gets saved, self.binary is not
                 #     actually used from browser to backend, so the
@@ -72,19 +94,19 @@ class ProxyIncomingProtocol(Protocol):
 
     def connectionLost(self, reason):
         self.logger.debug("connectionLost %s" % reason)
-        if self.otherConn:
-            self.otherConn.transport.loseConnection()
+        if self.outgoingConnConn:
+            self.outgoingConnConn.transport.loseConnection()
 
     # XXX the wording is confusing;  shouldn't this be called
     #     outgoingConnectionEstablished?  dito for remoteConnectionLost.
-    def remoteConnectionEstablished(self, otherConn):
+    def outgoingConnectionEstablished(self, outgoingConn):
         if self.state == 'closed':
-            return otherConn.transport.loseConnection()
-        self.otherConn = otherConn
+            return outgoingConn.transport.loseConnection()
+        self.outgoingConn = outgoingConn
         self.transport.write('1')
         self.state = 'proxy' # Not really necessary...
         
-    def remoteConnectionLost(self, otherConn, reason):
+    def outgoingConnectionLost(self, outgoingConn, reason):
         self.logger.debug("remoteConnectionLost %s" % reason)
         self.transport.loseConnection()
 
@@ -102,19 +124,19 @@ class ProxyOutgoingProtocol(Protocol):
 
     logger = logging.get_logger('orbited.proxy.ProxyOutgoingProtocol')
 
-    def __init__(self, otherConn):
+    def __init__(self, incomingConn):
         # TODO rename this to incomingProtocol
-        self.otherConn = otherConn
+        self.incomingConn = incomingConn
 
     def connectionMade(self):
-        self.otherConn.remoteConnectionEstablished(self)
+        self.incomingConn.outgoingConnectionEstablished(self)
 
     def dataReceived(self, data):
         self.logger.debug("dataReceived %r" % data)
-        self.otherConn.write(data)
+        self.incomingConn.write(data)
 
     def connectionLost(self, reason):
-        self.otherConn.remoteConnectionLost(self, reason)
+        self.incomingConn.outgoingConnectionLost(self, reason)
 
 class ProxyFactory(Factory):
 
