@@ -25,10 +25,15 @@
                     }
                 }
 
+                // set maximum amount of time that a single unit test
+                // can use.  we set this to 10 seconds.
+                var testTimeout = 10000;
+
                 doh.register("TCPSocketTests",
                     [
                         {
                             name: "Baseline",
+                            timeout: testTimeout,
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
@@ -65,6 +70,7 @@
 
                         {
                             name: "unauthorizedDestination",
+                            timeout: testTimeout,
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
@@ -96,6 +102,7 @@
 
                         {
                             name: "openCloseSocket",
+                            timeout: testTimeout,
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
@@ -106,6 +113,7 @@
 /*
                         {
                             name: "embeddedUnderlines",
+                            timeout: testTimeout,
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
