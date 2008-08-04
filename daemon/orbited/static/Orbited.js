@@ -679,7 +679,7 @@ Orbited.CometTransports.XHRStream.safari3 = 1.0
 
 Orbited.CometTransports.HTMLFile = function() {
     var self = this;
-    id = ++Orbited.singleton.HTMLFile.i;
+    var id = ++Orbited.singleton.HTMLFile.i;
     Orbited.singleton.HTMLFile.instances[id] = self;
     var htmlfile = null
     var url = null;
