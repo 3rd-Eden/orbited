@@ -62,17 +62,7 @@ Orbited.util.chooseTransport = function() {
 
 Orbited.CometSession = function() {
     var self = this;
-
-    // The readyState values
-    var states = {
-        INITIALIZED: 1,
-        OPENING: 2,
-        OPEN: 3,
-        CLOSING: 4,
-        CLOSED: 5
-    }
-
-    self.readyState = states.INITIALIZED
+    self.readyState = self.READY_STATE_INITIALIZED;
     self.onopen = function() {}
     self.onread = function() {}
     self.onclose = function() {}
@@ -94,7 +84,7 @@ Orbited.CometSession = function() {
      * establish the connection.
      */
     self.open = function(_url) {
-        self.readyState = states.OPENING;
+        self.readyState = self.READY_STATE_OPENING;
         xhr = new XMLHttpRequest();
         xhr.open('GET', _url, true);
         xhr.onreadystatechange = function() {
@@ -120,7 +110,7 @@ Orbited.CometSession = function() {
                 
                 else {
                     xhr = null;
-                    self.readyState = states.CLOSED;
+                    self.readyState = self.READY_STATE_CLOSED;
                     self.onclose(Orbited.Errors.InvalidHandshake)
                 }
             }
@@ -133,7 +123,7 @@ Orbited.CometSession = function() {
      * up for delivery as soon as the upstream xhr is ready.
      */
     self.send = function(data) {
-        if (self.readyState != states.OPEN) {
+        if (self.readyState != self.READY_STATE_OPEN) {
             throw new Error("Invalid readyState")
         }
         sendQueue.push([++packetCount, "data", data])
@@ -149,7 +139,7 @@ Orbited.CometSession = function() {
      * send a close event.
      */
     self.close = function() {
-        if (self.readyState != states.OPEN) {
+        if (self.readyState != self.READY_STATE_OPEN) {
             throw new Error("Invalid readyState")
         }
         // TODO: don't have a third element (remove the null).
@@ -157,7 +147,7 @@ Orbited.CometSession = function() {
         if (!sending) {
             doSend()
         }
-        self.readyState = states.CLOSING;
+        self.readyState = self.READY_STATE_CLOSING;
     }
 
     /* self.reset is a way to close immediately. The send queue will be discarded
@@ -166,17 +156,17 @@ Orbited.CometSession = function() {
      */
     self.reset = function() {
         var origState = self.readyState
-        self.readyState = states.CLOSED;
+        self.readyState = self.READY_STATE_CLOSED;
         switch(origState) {
-            case states.INITIALIZED:
+            case self.READY_STATE_INITIALIZED:
                 self.onclose(Orbited.Errors.UserConnectionReset);
                 break;
-            case states.OPENING:
+            case self.READY_STATE_OPENING:
                 xhr.onreadystatechange = function() {};
                 xhr.abort();
                 self.onclose();
                 break;
-            case states.OPEN:
+            case self.READY_STATE_OPEN:
                 self.sendQueue = []
                 self.sending = false;
                 if (xhr.readyState < 4) {
@@ -187,16 +177,16 @@ Orbited.CometSession = function() {
                 // TODO: send close frame
                 //       -mcarter 7-29-08
                 break;
-            case states.CLOSING:
+            case self.READY_STATE_CLOSING:
                 // TODO: Do nothing here?
                 //       we need to figure out if we've attempted to send the close
                 //       frame yet or not If not, we do something similar to case
-                //       states.OPEN. either way, we should kill the transport and
+                //       OPEN. either way, we should kill the transport and
                 //       trigger onclose
                 //       -mcarter 7-29-08                
                 break;
 
-            case states.CLOSED:
+            case self.READY_STATE_CLOSED:
                 break
         }
     }
@@ -207,7 +197,7 @@ Orbited.CometSession = function() {
         }
         switch(frame.name) {
             case 'close':
-                if (self.readyState < states.CLOSED) {
+                if (self.readyState < self.READY_STATE_CLOSED) {
                     doClose(Orbited.Statuses.ServerClosedConnection)
                 }
                 break;
@@ -215,8 +205,8 @@ Orbited.CometSession = function() {
                 self.onread(frame.args[0]);
                 break;
             case 'open':
-                if (self.readyState == states.OPENING) {
-                    self.readyState = states.OPEN;
+                if (self.readyState == self.READY_STATE_OPENING) {
+                    self.readyState = self.READY_STATE_OPEN;
                     self.onopen();
                 }
                 else {
@@ -234,7 +224,7 @@ Orbited.CometSession = function() {
     }
     var transportOnClose = function() {
         Orbited.log('transportOnClose');
-        if (self.readyState < states.CLOSED) {
+        if (self.readyState < self.READY_STATE_CLOSED) {
             doClose(Orbited.Statuses.ServerClosedConnection)
         }
     }        
@@ -302,7 +292,7 @@ Orbited.CometSession = function() {
     
     var doClose = function(code) {
         Orbited.log('doClose', code)
-        self.readyState = states.CLOSED;
+        self.readyState = self.READY_STATE_CLOSED;
         cometTransport.onReadFrame = function() {}
         if (cometTransport != null && cometTransport.readyState < 2) {
             cometTransport.close()
@@ -310,8 +300,13 @@ Orbited.CometSession = function() {
         self.onclose(code);
 
     }
+};
+Orbited.CometSession.prototype.READY_STATE_INITIALIZED  = 1;
+Orbited.CometSession.prototype.READY_STATE_OPENING      = 2;
+Orbited.CometSession.prototype.READY_STATE_OPEN         = 3;
+Orbited.CometSession.prototype.READY_STATE_CLOSING      = 4;
+Orbited.CometSession.prototype.READY_STATE_CLOSED       = 5;
 
-}
 
 Orbited.TCPSocket = function() {
     var self = this;
@@ -320,15 +315,7 @@ Orbited.TCPSocket = function() {
     if (arguments.length > 0) {
         throw new Error("TCPSocket() accepts no arguments")
     }
-    // The readyState values
-    var states = {
-        INITIALIZED: 1,
-        OPENING: 2,
-        OPEN: 3,
-        CLOSING: 4,
-        CLOSED: 5
-    }
-    self.readyState = states.INITIALIZED
+    self.readyState = self.READY_STATE_INITIALIZED;
     self.onopen = function() { }
     self.onread = function() { }
     self.onclose = function() { }
@@ -345,8 +332,8 @@ Orbited.TCPSocket = function() {
      * will only accept a byte array.
      */
     self.open = function(_hostname, _port, isBinary) {
-        if (self.readyState != states.INITIALIZED) {
-            // TODO: allow reuse from readyState == states.CLOSED?
+        if (self.readyState != self.READY_STATE_INITIALIZED) {
+            // TODO: allow reuse from readyState == self.READY_STATE_CLOSED?
             //       Re-use makes sense for xhr due to memory concerns, but
             //       probably not for tcp sockets. How often do you reconnect
             //       in the same page?
@@ -355,7 +342,7 @@ Orbited.TCPSocket = function() {
         }
         // handle isBinary undefined/null case
         binary = !!isBinary;
-        self.readyState = states.OPENING;
+        self.readyState = self.READY_STATE_OPENING;
         hostname = _hostname;
         port = _port;
         session = new Orbited.CometSession()
@@ -371,7 +358,7 @@ Orbited.TCPSocket = function() {
     }
 
     self.close = function() {
-        if (self.readyState != states.OPEN && self.readyState != states.OPENING) {
+        if (self.readyState != self.READY_STATE_OPEN && self.readyState != self.READY_STATE_OPENING) {
             throw new Error("Invalid readyState");
         }
         session.close();
@@ -415,10 +402,10 @@ Orbited.TCPSocket = function() {
 
     var sessionOnRead = function(data) {
         switch(self.readyState) {
-            case states.OPEN:
+            case self.READY_STATE_OPEN:
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
                 break;
-            case states.OPENING:
+            case self.READY_STATE_OPENING:
                 switch(handshakeState) {
                     case 'initial':
                         var result = (data[0] == '1')
@@ -430,7 +417,7 @@ Orbited.TCPSocket = function() {
                             self.onclose(parseInt(errorCode))
                         }
                         if (result) {
-                            self.readyState = states.OPEN
+                            self.readyState = self.READY_STATE_OPEN;
                             self.onopen();
                         }
                         break;
@@ -449,14 +436,18 @@ Orbited.TCPSocket = function() {
         Orbited.log('sessionOnClose');
         // If we are in the OPENING state, then the handshake code should
         // handle the close
-        if (self.readyState >= states.OPEN) {
-            self.readyState = states.CLOSED
+        if (self.readyState >= self.READY_STATE_OPEN) {
+            self.readyState = self.READY_STATE_CLOSED;
             session = null;
             self.onclose(status);
         }
     }
-}
-
+};
+Orbited.TCPSocket.prototype.READY_STATE_INITIALIZED  = 1;
+Orbited.TCPSocket.prototype.READY_STATE_OPENING      = 2;
+Orbited.TCPSocket.prototype.READY_STATE_OPEN         = 3;
+Orbited.TCPSocket.prototype.READY_STATE_CLOSING      = 4;
+Orbited.TCPSocket.prototype.READY_STATE_CLOSED       = 5;
 
 
 

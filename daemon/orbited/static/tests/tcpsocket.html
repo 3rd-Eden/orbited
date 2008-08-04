@@ -15,11 +15,13 @@
                 }
                 function tearDownSocket(t) {
                     try {
-                        if (t._socket.readyState != 5 && t._socket.readyState != 1)
+                        var socket = t._socket;
+                        var readyState = socket.readyState;
+                        if (readyState != socket.READY_STATE_CLOSED && readyState != socket.READY_STATE_INITIALIZED)
                             console.warn("going to reset a non closed socket with readyState=", t._socket.readyState);
-                        t._socket.onerror = function() {};
-                        t._socket.onclose = function() {};
-                        t._socket.reset();
+                        socket.onerror = function() {};
+                        socket.onclose = function() {};
+                        socket.reset();
                     } catch (e) {
                         console.error("unable to reset socket (further tests might be fubar because of this): ", e);
                     }
