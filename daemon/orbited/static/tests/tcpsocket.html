@@ -15,12 +15,13 @@
                 }
                 function tearDownSocket(t) {
                     try {
+                        if (t._socket.readyState != 5 && t._socket.readyState != 1)
+                            console.warn("going to reset a non closed socket with readyState=", t._socket.readyState);
                         t._socket.onerror = function() {};
                         t._socket.onclose = function() {};
-                        if (t._socket.readyState >= 2)
-                            t._socket.close();
+                        t._socket.reset();
                     } catch (e) {
-                        console.error("unable to close socket: ", e);
+                        console.error("unable to reset socket (further tests might be fubar because of this): ", e);
                     }
                 }
 
