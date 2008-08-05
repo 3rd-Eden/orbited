@@ -27,6 +27,38 @@
                     }
                 }
 
+                function runEchoTest(t, text) {
+                    var endDeferred = new doh.Deferred();
+                    var success = false;
+                    var buffer = "";
+                    var socket = t._socket;
+
+                    socket.onopen = function() {
+                        socket.send(text);
+                    };
+                    socket.onread = function(data) {
+                        buffer += data;
+                        console.info("buffer contains: ", buffer);
+                        if (buffer == text) {
+                            success = true;
+                            socket.close();
+                        }
+                    };
+                    socket.onclose = function() {
+                        if (success)
+                            endDeferred.callback(true);
+                        else
+                            endDeferred.errback(new Error("socket closed before receiving message"));
+                    };
+                    socket.onerror = function(error) {
+                        endDeferred.errback(error);
+                    };
+
+                    socket.open("localhost", 7);
+
+                    return endDeferred;
+                }
+
                 // set maximum amount of time that a single unit test
                 // can use.  we set this to 10 seconds.
                 var testTimeout = 10000;
@@ -39,34 +71,8 @@
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
-                                var endDeferred = new doh.Deferred();
-                                var success = false;
-                                var buffer = "";
-                                var socket = t._socket;
-
-                                socket.onopen = function() {
-                                    socket.send("hello, world");
-                                };
-                                socket.onread = function(data) {
-                                    buffer += data;
-                                    if (buffer == "hello, world") {
-                                        success = true;
-                                        socket.close();
-                                    }
-                                };
-                                socket.onclose = function() {
-                                    if (success)
-                                        endDeferred.callback(true);
-                                    else
-                                        endDeferred.errback(new Error("socket closed before receiving message"));
-                                };
-                                socket.onerror = function(error) {
-                                    endDeferred.errback(error);
-                                };
-
-                                socket.open("localhost", 7);
-
-                                return endDeferred;
+                                var text = "hello, world";
+                                return runEchoTest(t, text);
                             }
                         },
 
@@ -108,7 +114,6 @@
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
-                                var socket = t._socket;
                                 // NB: This in intentionally empty.
                             }
                         },
@@ -119,37 +124,23 @@
                             setUp: setUpSocket,
                             tearDown: tearDownSocket,
                             runTest: function(t) {
-                                var endDeferred = new doh.Deferred();
-                                var success = false;
-                                var buffer = "";
-                                var socket = t._socket;
-                                
                                 var text = "01_2__3___4____5_____0";
+                                return runEchoTest(t, text);
+                            }
+                        },
 
-                                socket.onopen = function() {
-                                    socket.send(text);
-                                };
-                                socket.onread = function(data) {
-                                    buffer += data;
-                                    console.info("buffer contains: ", buffer);
-                                    if (buffer == text) {
-                                        success = true;
-                                        socket.close();
-                                    }
-                                };
-                                socket.onclose = function() {
-                                    if (success)
-                                        endDeferred.callback(true);
-                                    else
-                                        endDeferred.errback(new Error("socket closed before receiving message"));
-                                };
-                                socket.onerror = function(error) {
-                                    endDeferred.errback(error);
-                                };
-
-                                socket.open("localhost", 7);
-
-                                return endDeferred;
+                        {
+                            name: "embeddedFrameDelimiters",
+                            timeout: testTimeout,
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                // currently, TCPSocket uses _A and _P
+                                // as delimiters, here we try to embedd
+                                // them to make sure the implementation
+                                // does not messes them up.
+                                var text = "0_A1_Adata_P1_Adata_P";
+                                return runEchoTest(t, text);
                             }
                         }
                     ]
