@@ -230,13 +230,26 @@ Orbited.CometSession = function() {
     }        
     var encodePackets = function(queue) {
         //TODO: optimize this.
-        var packets = []
-        
+        var output = []        
         for (var i =0; i < queue.length; ++i) {
-            var p = queue[i];
-            packets.push(p[0] + "_A" + p[1] + "_A" + p[2] + "_P")
+            var frame = queue[i];
+            for (var j =0; j < frame.length; ++j) {
+                var arg = frame[j]
+                if (arg == null) {
+                    arg = ""
+                }
+                if (j == frame.length-1) {
+                    output.push('0')
+                }
+                else {
+                    output.push('1')
+                }
+                output.push(arg.toString().length)
+                output.push(',')
+                output.push(arg.toString())
+            }
         }
-        return packets.join("")
+        return output.join("")
     }
 
     var doSend = function(retries) {

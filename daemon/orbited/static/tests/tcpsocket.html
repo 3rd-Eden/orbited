@@ -38,7 +38,7 @@
                     };
                     socket.onread = function(data) {
                         buffer += data;
-                        console.info("buffer contains: ", buffer);
+                        console.info("buffer contains: ", buffer, 'text is', text);
                         if (buffer == text) {
                             success = true;
                             socket.close();

@@ -216,11 +216,28 @@ class TCPConnectionResource(resource.Resource):
         return server.NOT_DONE_YET
         
     def parseData(self, data):
-        frames = [ 
-            # TODO test this with a frame that has "_A" inside user data.
-            [ i.replace('__', '_') for i in f.split('_A') ]
-            for f in data.split('_P') 
-        ][:-1]
+        self.logger.debug('RECV: ' + data)
+        frames = []
+        curFrame  = []
+        while data:
+            self.logger.debug([data, frames, curFrame])
+            isLast = data[0] == '0'
+            
+            l, data = data[1:].split(',', 1)
+            l = int(l)
+            arg = data[:l]
+            data = data[l:]
+            curFrame.append(arg)
+            if isLast:
+                frames.append(curFrame)
+                curFrame = []
+            
+#        frames = [ 
+#            # TODO test this with a frame that has "_A" inside user data.
+#            [ i.replace('__', '_') for i in f.split('_A') ]
+#            for f in data.split('_P') 
+#        ][:-1]
+        
         # TODO: do we really need the id? maybe we should take it out
         #       of the protocol...
         #       -mcarter 7-29-08
