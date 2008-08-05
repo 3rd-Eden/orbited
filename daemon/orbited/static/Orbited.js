@@ -469,6 +469,8 @@ Orbited.CometTransports.XHRStream = function() {
     var offset = 0;
     var heartbeatTimer = null;
     var retryTimer = null;
+    var buffer = ""
+    var currentArgs = []
     retryInterval = 50
     self.readyState = 0
     self.onReadFrame = function(frame) {}
@@ -609,7 +611,7 @@ Orbited.CometTransports.XHRStream = function() {
     var process = function() {
         var stream = xhr.responseText;
 //        Orbited.log('buffer', stream.slice(offset).length, stream.slice(offset))
-        xkcd = stream.slice(offset)
+//        xkcd = stream.slice(offset)
         while (true) {
             if (stream.length <= offset) {
                 return;
@@ -631,6 +633,36 @@ Orbited.CometTransports.XHRStream = function() {
             
             else {
 //                Orbited.log('activity', stream[offset])
+            }
+            // TODO: optimize this parsing!
+            var additionalData = stream.slice(offset)
+            offset = stream.length
+            if (additionalData.length == 0) {
+                return;
+            }
+            buffer += additionalData
+            console.log('receive', currentArgs, buffer)
+            while (true) {
+                var k = buffer.indexOf(',')
+                if (k == -1) {
+                    return
+                }
+                var isLast = (buffer[0] == '0')
+                var size = parseInt(buffer.slice(1,k))
+                if (buffer.length < (size + k+1)) {
+                    return
+                }
+                currentArgs.push(buffer.slice(k+1, k+1+size))
+                buffer = buffer.slice(k+1+size)
+                if (isLast) {
+                    receivedPacket(currentArgs)
+                    currentArgs= []
+                    // TODO: especially optimize this
+                    while (buffer[0] == ' ' || buffer[0] == 'x') {
+                        buffer = buffer.slice(1)
+                    }
+                }
+                
             }
             var nextBoundary = stream.indexOf(PACKET_DELIMITER, offset);
 //            Orbited.log('partial', stream.slice(offset, nextBoundary));
@@ -656,8 +688,8 @@ Orbited.CometTransports.XHRStream = function() {
 //        Orbited.log('heartbeat timeout... reconnect')
         reconnect();
     }
-    var receivedPacket = function(packetData) {
-        var args = packetData.split(ARG_DELIMITER)
+    var receivedPacket = function(args) {
+//        var args = packetData.split(ARG_DELIMITER)
         var testAckId = parseInt(args[0])
         if (!isNaN(testAckId)) {
             ackId = testAckId

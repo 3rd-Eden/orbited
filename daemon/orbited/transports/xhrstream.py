@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from orbited import logging
 from orbited.transports.base import CometTransport
 
+DELIM = ','
 ESCAPE = '_'
 PACKET_DELIMITER = '_P'
 ARG_DELIMITER = '_A'
@@ -25,9 +26,12 @@ class XHRStreamingTransport(CometTransport):
 
     def write(self, packets):
         self.logger.debug('write %r' % packets)
-        payload = PACKET_DELIMITER.join([ self.encode(packet) for packet in packets])
-        payload += PACKET_DELIMITER
-#        print "write:", repr(payload)
+        payload = "".join([ self.encode(packet) for packet in packets])
+        self.logger.debug('WRITE')
+        self.logger.debug('WRITE')
+        self.logger.debug('WRITE')
+        self.logger.debug('WRITE ' + payload)
+        
         self.request.write(payload)
         self.totalBytes += len(payload)
         if (self.totalBytes > MAXBYTES):
@@ -37,15 +41,20 @@ class XHRStreamingTransport(CometTransport):
         id, name, info = packet
         output = ""
         args = (id, name) + info
-        output += ARG_DELIMITER.join([ str(arg).replace(ESCAPE, ESCAPE*2) for arg in args ])
-#        if len(info) > 0:
-#            print '==== compare ===='        
-#            print info[0]
-#            print '====    to   ===='
-#            print output
+        return self.encode_args(args)
+    
+    def encode_args(self, args):
+        output = ""
+        for i, arg in enumerate(args):
+            if i == len(args) -1:
+                output += '0'
+            else:
+                output += '1'
+            data = str(arg)
+            output += str(len(data)) + ','
+            output += data
         return output
 
     def writeHeartbeat(self):
         self.logger.debug('writeHeartbeat, ' + repr(self))
         self.request.write('x')
-

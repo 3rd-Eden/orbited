@@ -267,6 +267,7 @@ class TCPConnectionResource(resource.Resource):
             self.cometTransport = None
         self.logger.debug("new transport: " + repr(transport))
         self.cometTransport = transport
+        transport.CONNECTION = self
         transport.onClose().addCallback(self.transportClosed)
         ack = transport.request.args.get('ack', [None])[0]
         if ack:
