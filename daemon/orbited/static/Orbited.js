@@ -657,20 +657,13 @@ Orbited.CometTransports.XHRStream = function() {
                 if (isLast) {
                     receivedPacket(currentArgs)
                     currentArgs= []
-                    // TODO: especially optimize this
+                    // TODO: especially optimize this!
                     while (buffer[0] == ' ' || buffer[0] == 'x') {
                         buffer = buffer.slice(1)
                     }
                 }
                 
             }
-            var nextBoundary = stream.indexOf(PACKET_DELIMITER, offset);
-//            Orbited.log('partial', stream.slice(offset, nextBoundary));
-            if (nextBoundary == -1)
-                return;
-            var packet = stream.slice(offset, nextBoundary);
-            offset = nextBoundary + PACKET_DELIMITER.length
-            receivedPacket(packet)
         }
     }
     var receivedHeartbeat = function() {
