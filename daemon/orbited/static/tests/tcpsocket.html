@@ -142,8 +142,18 @@
                                 var text = "0_A1_Adata_P1_Adata_P";
                                 return runEchoTest(t, text);
                             }
+                        },
+
+                        {
+                            name: "embeddedCommas",
+                            timeout: testTimeout,
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                var text = "01,2,,3,,,4,,,,5,,,,,0";
+                                return runEchoTest(t, text);
+                            }
                         }
-//*/
                     ]
                 );
 
