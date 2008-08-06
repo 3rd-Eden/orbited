@@ -47,6 +47,7 @@ Orbited.util.chooseTransport = function() {
     for (var name in Orbited.CometTransports) {
         var transport = Orbited.CometTransports[name];
         if (typeof(transport[Orbited.util.browser]) == "number") {
+            Orbited.log('viable transport: ', name)
             choices.push(transport)
         }
     }
@@ -57,7 +58,14 @@ Orbited.util.chooseTransport = function() {
 }
 
 
-
+var createXHR = function () {
+    try { return new XMLHttpRequest(); } catch(e) {}
+    try { return new ActiveXObject('MSXML3.XMLHTTP'); } catch(e) {}
+    try { return new ActiveXObject('MSXML2.XMLHTTP.3.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+    throw new Error('Could not find XMLHttpRequest or an alternative.');
+}
 
 
 Orbited.CometSession = function() {
@@ -85,12 +93,13 @@ Orbited.CometSession = function() {
      */
     self.open = function(_url) {
         self.readyState = self.READY_STATE_OPENING;
-        xhr = new XMLHttpRequest();
+        xhr = createXHR();
         xhr.open('GET', _url, true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
                     sessionKey = xhr.responseText;
+                    Orbited.log('session key is: ', sessionKey)
                     sessionUrl = new Orbited.URL(_url)
                     // START new URL way
 //                    sessionUrl.extendPath(sessionKey)
@@ -123,11 +132,14 @@ Orbited.CometSession = function() {
      * up for delivery as soon as the upstream xhr is ready.
      */
     self.send = function(data) {
+        Orbited.log('session.send', data)
         if (self.readyState != self.READY_STATE_OPEN) {
             throw new Error("Invalid readyState")
         }
         sendQueue.push([++packetCount, "data", data])
+        Orbited.log('sending==', sending);
         if (!sending) {
+            Orbited.log('starting send');
             doSend()
         }
     }
@@ -140,7 +152,7 @@ Orbited.CometSession = function() {
      */
     self.close = function() {
         if (self.readyState != self.READY_STATE_OPEN) {
-            throw new Error("Invalid readyState")
+            throw new Error("Invalid readyState. Currently: " + self.readyState)
         }
         // TODO: don't have a third element (remove the null).
         sendQueue.push([++packetCount, "close", null])
@@ -192,6 +204,12 @@ Orbited.CometSession = function() {
     }
 
     var transportOnReadFrame = function(frame) {
+        Orbited.log('READ FRAME');
+        Orbited.log('id ', frame.id);
+        Orbited.log('name ', frame.name);
+        if (frame.args.length > 0)
+            Orbited.log('args ', frame.args[0]);
+        Orbited.log('');
         if (!isNaN(frame.id)) {
             lastPacketId = Math.max(lastPacketId, frame.id);
         }
@@ -253,6 +271,7 @@ Orbited.CometSession = function() {
     }
 
     var doSend = function(retries) {
+        Orbited.log('in doSend');
         if (typeof(retries) == "undefined") {
             retries = 0
         }
@@ -268,8 +287,10 @@ Orbited.CometSession = function() {
             return
         }
         sending = true;
+        Orbited.log('setting sending=true');
         var numSent = sendQueue.length
         sessionUrl.setQsParameter('ack', lastPacketId)
+        xhr = createXHR();
         xhr.onreadystatechange = function() {
             Orbited.log('send readyState', xhr.readyState)
             try {
@@ -396,6 +417,7 @@ Orbited.TCPSocket = function() {
             session.send(encodeBinary(data))
         }
         else {
+            Orbited.log('SEND: ', data)
             session.send(data)
         }
        }
@@ -414,15 +436,25 @@ Orbited.TCPSocket = function() {
     }
 
     var sessionOnRead = function(data) {
+        Orbited.log('GOT: ', data)
         switch(self.readyState) {
             case self.READY_STATE_OPEN:
+                Orbited.log('READ: ', data)
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
                 break;
             case self.READY_STATE_OPENING:
                 switch(handshakeState) {
                     case 'initial':
-                        var result = (data[0] == '1')
+                        Orbited.log('initial');
+                        Orbited.log('data', data)
+                        Orbited.log('len', data.length);
+                        Orbited.log('typeof(data)', typeof(data))
+                        Orbited.log('data[0] ', data.slice(0,1))
+                        Orbited.log('type ', typeof(data.slice(0,1)))
+                        var result = (data.slice(0,1) == '1')
+                        Orbited.log('result', result)
                         if (!result) {
+                            Orbited.log('!result');
                             var errorCode = data.slice(1,4)
                             sessionOnClose = function() {}
                             session.close()
@@ -431,7 +463,9 @@ Orbited.TCPSocket = function() {
                         }
                         if (result) {
                             self.readyState = self.READY_STATE_OPEN;
+                            Orbited.log('tcpsocket.onopen..')
                             self.onopen();
+                            Orbited.log('did onopen');
                         }
                         break;
                 }
@@ -512,7 +546,7 @@ Orbited.CometTransports.XHRStream = function() {
         url = new Orbited.URL(_url)
         if (xhr == null) {
             if (url.isSameDomain(location.href)) {
-                xhr = new XMLHttpRequest();
+                xhr = createXHR();
             }
             else {
                 xhr = new XSubdomainRequest(url.domain, url.port);
@@ -720,15 +754,18 @@ Orbited.CometTransports.HTMLFile = function() {
     var id = ++Orbited.singleton.HTMLFile.i;
     Orbited.singleton.HTMLFile.instances[id] = self;
     var htmlfile = null
+    var ifr = null;
     var url = null;
-    self.onread = function(packet) { }
+    self.onReadFrame = function(frame) {}
+    self.onread = function(packet) { self.onReadFrame(packet); }
 
     self.connect = function(_url) {
         if (self.readyState == 1) {
             throw new Error("Already Connected")
         }
-        url = new URL(_url)
-        url.setQsParameter('transport', 'htmlfile')
+        url = new Orbited.URL(_url)
+        url.path += '/htmlfile'
+//        url.setQsParameter('transport', 'htmlfile')
         url.setQsParameter('frameID', id.toString())
 //        url.hash = id.toString()
         self.readyState = 1
@@ -743,14 +780,25 @@ Orbited.CometTransports.HTMLFile = function() {
     }
 
     var doOpen = function() {
+        Orbited.log('1');
         htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
+        Orbited.log('2');
         htmlfile.open();
-        htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
-        htmlfile.parentWindow.HTMLFile = HTMLFile;
+//        htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
+        htmlfile.write('<html></html>');
+        Orbited.log('3');
+        htmlfile.parentWindow.Orbited = Orbited;
         htmlfile.close();
+        Orbited.log('4');
         var iframe_div = htmlfile.createElement('div');
         htmlfile.body.appendChild(iframe_div);
-        iframe_div.innerHTML = "<iframe src=\"" + url.render() + "\"></iframe>";
+        Orbited.log('5');
+        ifr = htmlfile.createElement('iframe');
+        iframe_div.appendChild(ifr);
+        ifr.src = url.render();
+//        iframe_div.innerHTML = "<iframe src=\"" + url.render() + "\"></iframe>";
+        Orbited.log('2');
+
     }
     
     self.receive = function(id, name, args) {
@@ -760,6 +808,12 @@ Orbited.CometTransports.HTMLFile = function() {
             args: args
         }
         self.onread(packet)
+    }
+    
+    self.close = function() {
+        ifr.src = 'about:blank'
+        htmlfile = null;
+        CollectGarbage();
     }
 }
 // HTMLFile supported browsers

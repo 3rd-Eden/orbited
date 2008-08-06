@@ -370,11 +370,11 @@ class TCPConnectionResource(resource.Resource):
     def _send(self, data, packetId=""):
         self.logger.debug('_send data=%r packetId=%s' % (data, packetId))
         if isinstance(data, TCPPing):
-            self.cometTransport.sendPacket('ping', packetId)
+            self.cometTransport.sendPacket('ping', str(packetId))
         elif isinstance(data, TCPClose):
-            self.cometTransport.sendPacket('close', packetId)
+            self.cometTransport.sendPacket('close', str(packetId))
         else:
-            self.cometTransport.sendPacket('data', packetId, data)
+            self.cometTransport.sendPacket('data', str(packetId), data)
     
     def resendUnackQueue(self):
         if not self.unackQueue:
@@ -410,6 +410,7 @@ class TCPResource(resource.Resource):
         self.connections[key] = TCPConnectionResource(self, key, request.client, request.host)
         self.listeningPort.connectionMade(self.connections[key])
         self.logger.debug('created conn: ', repr(self.connections[key]))
+        request.setHeader('cache-control', 'no-cache, must-revalidate')
         return key
 
     def getChild(self, path, request):

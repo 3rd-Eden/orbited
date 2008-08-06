@@ -36,7 +36,8 @@ function encodeQS(o) {
 }
 
 window.onload = function() {
-    setTimeout(function() {
+//    alert('loaded');
+/*    setTimeout(function() {
         var form = {}
         form['transport'] = 'htmlfile'
         form['retry'] = retry
@@ -50,38 +51,49 @@ window.onload = function() {
         var newUrl = base + '?' + encodeQS(form)
         location.href=newUrl;
      }, retry);
+*/
 }
 //alert(origDomain)
-var topDomain = null;
-var parts = document.domain.split('.')
-if (parts.length == 1) {
-    try {
-        document.domain = document.domain
-        parent.HTMLFile
-        topDomain = document.domain
-    }
-    catch(e) {
-    }
+try {
+    parent.Orbited
+//    alert('same domain.');
 }
-else {
-    for (var i = 0; i < parts.length-1; ++i) {
-        document.domain = parts.slice(i).join(".")
+catch(e) {
+    alert('no parent.Orbited')
+    alert('document.domain is ' + document.domain);
+    var topDomain = null;
+    var parts = document.domain.split('.')
+    if (parts.length == 1) {
         try {
-            parent.HTMLFile
+            document.domain = document.domain
+            parent.Orbited
             topDomain = document.domain
-            break;
         }
         catch(e) {
-//            alert(e.name + ': ' + e.message)
         }
     }
+    else {
+        for (var i = 0; i < parts.length-1; ++i) {
+            document.domain = parts.slice(i).join(".")
+            try {
+                parent.Orbited
+                topDomain = document.domain
+                break;
+            }
+            catch(e) {
+    //            alert(e.name + ': ' + e.message)
+            }
+        }
+    }
+    if (topDomain == null) {
+        alert('invalid document.domain.')
+        throw new Error("Invalid document.domain for cross-frame communication")
+    }
 }
-if (topDomain == null) {
-    alert('invalid document.domain.')
-    throw new Error("Invalid document.domain for cross-frame communication")
-}
-f = parent.HTMLFile.prototype.instances[id].receive;
+//alert('worked out?');
+f = parent.Orbited.singleton.HTMLFile.instances[id].receive;
 e = function(packets) {
+//    alert('packets! ' + packets);
     for (var i =0; i < packets.length; ++i) {
         var packet = packets[i]
         var _id = packet[0]
@@ -92,4 +104,8 @@ e = function(packets) {
 
         f(packet[0], packet[1], packet[2])
     }
+}
+
+h = function() {
+    // TODO: heartbeats and timing out the connection!
 }

@@ -5,21 +5,24 @@ from orbited import logging
 from orbited.transports.base import CometTransport
 
 MAXBYTES = 1024
-
+from orbited import logging
+logger = logging.get_logger('orbited.transports.xhrstream.HTMLFileTransport')
 class HTMLFileTransport(CometTransport):
-    initial_data = format_block('''
+    initialData = format_block('''
             <html>
              <head>
-              <script src="../static/HTMLFileFrame.js"></script>
+              <script src="../../static/HTMLFileFrame.js"></script>
              </head>
              <body>
         ''')
-    initial_data += ' '*max(0, 256-len(initial_data)) + '\n'
+    initialData += ' '*max(0, 256-len(initialData)) + '\n'
     def opened(self):
+        logger.debug('opened!')
         # Force reconnect ever 30 seconds
         self.totalBytes = 0
-        self.close_timer = reactor.callLater(5, self.close_timeout)
-        self.request.write(self.initial_data)
+#        self.closeTimer = reactor.callLater(5, self.triggerCloseTimeout)
+        self.request.setHeader('cache-control', 'no-cache, must-revalidate')
+        self.request.write(self.initialData)
 
     def triggerCloseTimeout(self):
         self.close()
@@ -32,6 +35,6 @@ class HTMLFileTransport(CometTransport):
             self.close()
 
     def writeHeartbeat(self):
-        self.logger.debug('writeHeartbeat')
+        logger.debug('writeHeartbeat')
         self.request.write('<script>h();</script>');
 
