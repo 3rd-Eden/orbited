@@ -17,7 +17,7 @@ class XHRStreamingTransport(CometTransport):
         # Force reconnect ever 45 seconds
 #        self.close_timer = reactor.callLater(45, self.triggerCloseTimeout)
         self.request.setHeader('content-type', 'orbited/event-stream')
-        self.request.clientproto = "HTTP/1.0"
+#        self.request.clientproto = "HTTP/1.0"
         # Safari/Tiger may need 256 bytes
         self.request.write(' ' * 256)
 
@@ -27,14 +27,12 @@ class XHRStreamingTransport(CometTransport):
     def write(self, packets):
         self.logger.debug('write %r' % packets)
         payload = "".join([ self.encode(packet) for packet in packets])
-        self.logger.debug('WRITE')
-        self.logger.debug('WRITE')
-        self.logger.debug('WRITE')
         self.logger.debug('WRITE ' + payload)
         
         self.request.write(payload)
         self.totalBytes += len(payload)
         if (self.totalBytes > MAXBYTES):
+            self.logger.debug('over maxbytes limit')
             self.close()
 
     def encode(self, packet):

@@ -141,10 +141,10 @@ class TCPConnectionResource(resource.Resource):
     logger = logging.get_logger('orbited.cometsession.TCPConnectionResource')
 
     # Determines timeout interval after ping has been sent
-    pingTimeout = 30
+    pingTimeout = 3
     # Determines interval to wait before sending a ping
     # since the last time we heard from the client.
-    pingInterval = 30
+    pingInterval = 10
 
     def __init__(self, root, key, peer, host, **options):
         resource.Resource.__init__(self)
@@ -187,7 +187,9 @@ class TCPConnectionResource(resource.Resource):
         return None
 
     def connectionLost(self):
+        self.logger.debug('connectionLost... already triggered?', self.lostTriggered)
         if not self.lostTriggered:
+            self.logger.debug('do trigger');
             self.lostTriggered = True
             self.parentTransport.connectionLost()
     
@@ -334,6 +336,7 @@ class TCPConnectionResource(resource.Resource):
             self.cometTransport.flush()
             self.cometTransport.close()
             self.cometTransport = None
+        self.connectionLost()
         # NOTE:
         # else:
         # If we didn't have a comet transport, then we can't send a close frame

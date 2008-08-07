@@ -10,6 +10,7 @@ Orbited.settings = {}
 Orbited.settings.hostname = document.domain
 Orbited.settings.port = (location.port.length > 0) ? location.port : 80
 Orbited.settings.protocol = 'http'
+Orbited.settings.log = false;
 Orbited.singleton = {}
 
 
@@ -22,7 +23,7 @@ Orbited.Errors.UserConnectionReset = 103
 Orbited.Statuses = {}
 Orbited.Statuses.ServerClosedConnection = 201
 
-if (typeof(console) != "undefined" && typeof(console.log) != "undefined") {
+if (Orbited.settings.log && typeof(console) != "undefined" && typeof(console.log) != "undefined") {
     Orbited.log = console.log;
 }
 else {
@@ -209,10 +210,11 @@ Orbited.CometSession = function() {
         Orbited.log('name ', frame.name);
         if (frame.args.length > 0)
             Orbited.log('args ', frame.args[0]);
-        Orbited.log('');
+        Orbited.log('---');
         if (!isNaN(frame.id)) {
             lastPacketId = Math.max(lastPacketId, frame.id);
         }
+        Orbited.log(frame)
         switch(frame.name) {
             case 'close':
                 if (self.readyState < self.READY_STATE_CLOSED) {
@@ -410,6 +412,9 @@ Orbited.TCPSocket = function() {
     }
 
     self.send = function(data) {
+        if (!session) {
+            throw new Error('how did this happen');
+        }
         if (binary) {
             if (!(data instanceof Array)) {
                 throw new Error("invalid payload: binary mode is set");
@@ -504,21 +509,21 @@ Orbited.TCPSocket.prototype.READY_STATE_CLOSED       = 5;
 
 Orbited.CometTransports.XHRStream = function() {
     var self = this;
-    var HEARTBEAT_TIMEOUT = 15000;
+    var HEARTBEAT_TIMEOUT = 6000;
     // Support Browsers
 
     var ESCAPE = "_"
     var PACKET_DELIMITER = "_P"
     var ARG_DELIMITER = "_A"
     var url = null;
-    xhr = null;
+    var xhr = null;
     var ackId = null;
     var offset = 0;
     var heartbeatTimer = null;
     var retryTimer = null;
     var buffer = ""
     var currentArgs = []
-    retryInterval = 50
+    var retryInterval = 50
     self.readyState = 0
     self.onReadFrame = function(frame) {}
     self.onread = function(packet) { self.onReadFrame(packet); }
@@ -531,7 +536,7 @@ Orbited.CometTransports.XHRStream = function() {
         if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
             xhr.onreadystatechange = function() { }
             xhr.abort()
-            xhr = null;        
+            xhr = null;
         }
         self.readyState = 2
         window.clearTimeout(heartbeatTimer);
@@ -562,9 +567,15 @@ Orbited.CometTransports.XHRStream = function() {
             if (typeof(ackId) == "number") {
                 url.setQsParameter('ack', ackId)
             }
-    
+            if (typeof(xhr)== "undefined" || xhr == null) {
+                throw new Error("how did this happen?");
+            }
+            
             xhr.open('GET', url.render(), true)
             xhr.onreadystatechange = function() {
+                if (self.readyState == 2) { 
+                    return
+                }
 //                Orbited.log(xhr.readyState);
                 switch(xhr.readyState) {
                     case 2:
@@ -618,6 +629,13 @@ Orbited.CometTransports.XHRStream = function() {
 
                         switch(xhr.status) {
                             case 200:
+//                                alert('finished, call process');
+//                               if (typeof(Orbited) == "undefined") {
+//                                    alert('must have reloaded')
+//                                    break
+//                                }
+//                                alert('a');
+//                                alert('stream over ' +  typeof(console) + ' ' + typeof(Orbited) + ' ' + Orbited + ' ...');
                                 process();
                                 offset = 0;
                                 setTimeout(open, 0)
@@ -650,68 +668,62 @@ Orbited.CometTransports.XHRStream = function() {
             window.clearTimeout(heartbeatTimer);            
         }
         else {
-//            Orbited.log('open...')
+            Orbited.log('reconnect do open')
             offset = 0;
             setTimeout(open, 0)
         }
     }
+    // 12,ab011,hello world
+    var commaPos = -1;
+    var argEnd = null;
+    var frame = []
     var process = function() {
         var stream = xhr.responseText;
-//        Orbited.log('buffer', stream.slice(offset).length, stream.slice(offset))
-//        xkcd = stream.slice(offset)
-        while (true) {
-            if (stream.length <= offset) {
-                return;
-            }
-            // Any data counts as a heartbeat
-            receivedHeartbeat()
+        receivedHeartbeat()
 
-            // ignore leading whitespace, such as at the start of an xhr stream
-            while (stream[offset] == ' ') {
-                offset += 1
+        // ignore leading whitespace, such as at the start of an xhr stream
+        while (stream[offset] == ' ') {
+            offset += 1
+        }
+        // ignore leading whitespace, such as at the start of an xhr stream
+        while (stream[offset] == 'x') {
+            offset += 1
+        }
+
+        var k = 0
+        while (true) {
+            k += 1
+            if (k > 2000) {
+                throw new Error("Borked XHRStream transport");
+                return
             }
-            // If a frame starts with an 'x', then its an actual heartbeat
-            // so discard it.
-            if (stream[offset] == 'x') {
-//                Orbited.log('heartbeat')
-                offset += 1
-                continue
+            if (commaPos == -1) {
+                commaPos = stream.indexOf(',', offset)
+            }
+            if (commaPos == -1) {
+                return
+            }
+            if (argEnd == null) {
+                argSize = parseInt(stream.slice(offset+1, commaPos))
+                argEnd = commaPos +1 + argSize
             }
             
-            else {
-//                Orbited.log('activity', stream[offset])
+            if (stream.length < argEnd) {
+                return
             }
-            // TODO: optimize this parsing!
-            var additionalData = stream.slice(offset)
-            offset = stream.length
-            if (additionalData.length == 0) {
-                return;
+            var data = stream.slice(commaPos+1, argEnd)
+            frame.push(data)
+            var isLast = (stream.charAt(offset) == '0')
+            offset = argEnd;
+            argEnd = null;
+            commaPos = -1
+            if (isLast) {
+                var frameCopy = frame
+                frame = []
+                receivedPacket(frameCopy)                
             }
-            buffer += additionalData
-            console.log('receive', currentArgs, buffer)
-            while (true) {
-                var k = buffer.indexOf(',')
-                if (k == -1) {
-                    return
-                }
-                var isLast = (buffer[0] == '0')
-                var size = parseInt(buffer.slice(1,k))
-                if (buffer.length < (size + k+1)) {
-                    return
-                }
-                currentArgs.push(buffer.slice(k+1, k+1+size))
-                buffer = buffer.slice(k+1+size)
-                if (isLast) {
-                    receivedPacket(currentArgs)
-                    currentArgs= []
-                    // TODO: especially optimize this!
-                    while (buffer[0] == ' ' || buffer[0] == 'x') {
-                        buffer = buffer.slice(1)
-                    }
-                }
-                
-            }
-        }
+        } 
+
     }
     var receivedHeartbeat = function() {
         window.clearTimeout(heartbeatTimer);
@@ -734,7 +746,7 @@ Orbited.CometTransports.XHRStream = function() {
         if (!isNaN(testAckId)) {
             ackId = testAckId
         }
-        packet = {
+        var packet = {
             id: testAckId,
             name: args[1],
             args: args.slice(2)
@@ -910,14 +922,14 @@ Orbited.URL = function(_url) {
         var chunks = qs.split('&')
         for (var i = 0; i < chunks.length; ++i) {
             var cur = chunks[i]
-            pieces = cur.split('=')
+            var pieces = cur.split('=')
             result[pieces[0]] = pieces[1]
         }
         return result
     }
     var encodeQs = function(o) {
             var output = ""
-            for (key in o)
+            for (var key in o)
                 output += "&" + key + "=" + o[key]
             return output.slice(1)
         }

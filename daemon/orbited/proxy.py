@@ -94,8 +94,8 @@ class ProxyIncomingProtocol(Protocol):
 
     def connectionLost(self, reason):
         self.logger.debug("connectionLost %s" % reason)
-        if self.outgoingConnConn:
-            self.outgoingConnConn.transport.loseConnection()
+        if self.outgoingConn:
+            self.outgoingConn.transport.loseConnection()
 
     # XXX the wording is confusing;  shouldn't this be called
     #     outgoingConnectionEstablished?  dito for remoteConnectionLost.

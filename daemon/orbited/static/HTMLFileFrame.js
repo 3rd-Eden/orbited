@@ -36,22 +36,22 @@ function encodeQS(o) {
 }
 
 window.onload = function() {
-//    alert('loaded');
-/*    setTimeout(function() {
-        var form = {}
-        form['transport'] = 'htmlfile'
-        form['retry'] = retry
-        form['ack'] = lastEventId
-        form['frameID'] = id
-        var r = parseInt(origForm['reload'])
-        if (isNaN(r))
-            form['reload'] = '0'
-        else
-            form['reload'] = r+1
-        var newUrl = base + '?' + encodeQS(form)
-        location.href=newUrl;
-     }, retry);
-*/
+    // TODO: Implement some kind of fault tolerance. That is, if a stream
+    //       closes, (we get onload), this reconnect happens, but that fails.
+    //       No part of the code is left running to cause a reconnect. We
+    //       need to interface that with parent.Orbited.singleton.HTMLFile.instances[id]
+    //       somehow.
+    return
+    var form = {}
+    form['ack'] = lastEventId
+    form['frameID'] = id
+    var r = parseInt(origForm['reload'])
+    if (isNaN(r))
+        form['reload'] = '0'
+    else
+        form['reload'] = r+1
+    var newUrl = base + '?' + encodeQS(form)
+    location.href=newUrl;
 }
 //alert(origDomain)
 try {
@@ -59,6 +59,7 @@ try {
 //    alert('same domain.');
 }
 catch(e) {
+// TODO: test out cross-domain stuff... :-(
     alert('no parent.Orbited')
     alert('document.domain is ' + document.domain);
     var topDomain = null;

@@ -54,7 +54,9 @@ class CometTransport(resource.Resource):
     
 
     def close(self):
+        logger.debug('time to do a close')
         if self.closed:
+            logger.debug('already closed...')
             return
         self.closed = True
         logger.debug('close ', repr(self))
@@ -62,6 +64,7 @@ class CometTransport(resource.Resource):
         self.heartbeatTimer = None
         self.open = False
         if self.request:
+            logger.debug('calling finish')
             self.request.finish()
         self.request = None
         self.closeDeferred.callback(self)
