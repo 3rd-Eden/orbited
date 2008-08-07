@@ -4,7 +4,7 @@ from twisted.internet import reactor
 from orbited import logging
 from orbited.transports.base import CometTransport
 
-MAXBYTES = 1024
+MAXBYTES = 1048576
 from orbited import logging
 logger = logging.get_logger('orbited.transports.xhrstream.HTMLFileTransport')
 class HTMLFileTransport(CometTransport):

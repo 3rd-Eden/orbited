@@ -6,7 +6,7 @@ DELIM = ','
 ESCAPE = '_'
 PACKET_DELIMITER = '_P'
 ARG_DELIMITER = '_A'
-MAXBYTES = 1024
+MAXBYTES = 1048576
 
 class XHRStreamingTransport(CometTransport):
 
