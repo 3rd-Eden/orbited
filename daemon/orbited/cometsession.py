@@ -1,5 +1,6 @@
 import os
-import random
+import uuid
+
 from zope.interface import implements
 from twisted.internet import reactor, interfaces
 from twisted.internet.protocol import Protocol, Factory
@@ -401,7 +402,7 @@ class TCPResource(resource.Resource):
     def render(self, request):
         key = None
         while key is None or key in self.connections:
-            key = "".join([random.choice("ABCDEF1234567890") for i in range(10)])
+            key = str(uuid.uuid4()).replace('-', '')
         print request.getClientIP(), repr(request.getClientIP())
         # request.client and request.host should be address.IPv4Address classes
         self.connections[key] = TCPConnectionResource(self, key, request.client, request.host)
