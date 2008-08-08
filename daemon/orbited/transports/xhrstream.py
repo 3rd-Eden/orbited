@@ -2,11 +2,6 @@ from twisted.internet import reactor
 from orbited import logging
 from orbited.transports.base import CometTransport
 
-# TODO nuke these; they are no longer used; also nuke the tests relating to this.
-DELIM = ','
-ESCAPE = '_'
-PACKET_DELIMITER = '_P'
-ARG_DELIMITER = '_A'
 MAXBYTES = 1048576
 
 class XHRStreamingTransport(CometTransport):

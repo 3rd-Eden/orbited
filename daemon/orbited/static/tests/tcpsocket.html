@@ -119,43 +119,6 @@
                         },
 
                         {
-                            name: "embeddedUnderlines",
-                            timeout: testTimeout,
-                            setUp: setUpSocket,
-                            tearDown: tearDownSocket,
-                            runTest: function(t) {
-                                var text = "01_2__3___4____5_____0";
-                                return runEchoTest(t, text);
-                            }
-                        },
-
-                        {
-                            name: "embeddedFrameDelimiters",
-                            timeout: testTimeout,
-                            setUp: setUpSocket,
-                            tearDown: tearDownSocket,
-                            runTest: function(t) {
-                                // currently, TCPSocket uses _A and _P
-                                // as delimiters, here we try to embedd
-                                // them to make sure the implementation
-                                // does not messes them up.
-                                var text = "0_A1_Adata_P1_Adata_P";
-                                return runEchoTest(t, text);
-                            }
-                        },
-
-                        {
-                            name: "embeddedCommas",
-                            timeout: testTimeout,
-                            setUp: setUpSocket,
-                            tearDown: tearDownSocket,
-                            runTest: function(t) {
-                                var text = "01,2,,3,,,4,,,,5,,,,,0";
-                                return runEchoTest(t, text);
-                            }
-                        },
-
-                        {
                             name: "binary",
                             timeout: testTimeout,
                             setUp: setUpSocket,

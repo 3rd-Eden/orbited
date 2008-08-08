@@ -569,11 +569,6 @@ Orbited.TCPSocket.prototype.READY_STATE_CLOSED       = 5;
 Orbited.CometTransports.XHRStream = function() {
     var self = this;
     var HEARTBEAT_TIMEOUT = 6000;
-    // Support Browsers
-
-    var ESCAPE = "_"
-    var PACKET_DELIMITER = "_P"
-    var ARG_DELIMITER = "_A"
     var url = null;
     var xhr = null;
     var ackId = null;
@@ -800,7 +795,6 @@ Orbited.CometTransports.XHRStream = function() {
         reconnect();
     }
     var receivedPacket = function(args) {
-//        var args = packetData.split(ARG_DELIMITER)
         var testAckId = parseInt(args[0])
         if (!isNaN(testAckId)) {
             ackId = testAckId
