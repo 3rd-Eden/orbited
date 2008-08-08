@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from orbited import logging
 from orbited.transports.base import CometTransport
 
+# TODO nuke these; they are no longer used; also nuke the tests relating to this.
 DELIM = ','
 ESCAPE = '_'
 PACKET_DELIMITER = '_P'
@@ -17,7 +18,6 @@ class XHRStreamingTransport(CometTransport):
         # Force reconnect ever 45 seconds
 #        self.close_timer = reactor.callLater(45, self.triggerCloseTimeout)
         self.request.setHeader('content-type', 'orbited/event-stream')
-#        self.request.clientproto = "HTTP/1.0"
         # Safari/Tiger may need 256 bytes
         self.request.write(' ' * 256)
 
@@ -26,6 +26,7 @@ class XHRStreamingTransport(CometTransport):
 
     def write(self, packets):
         self.logger.debug('write %r' % packets)
+        # TODO why join the packets here?  why not do N request.write?
         payload = "".join([ self.encode(packet) for packet in packets])
         self.logger.debug('WRITE ' + payload)
         

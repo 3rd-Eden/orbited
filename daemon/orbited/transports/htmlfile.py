@@ -28,6 +28,8 @@ class HTMLFileTransport(CometTransport):
         self.close()
 
     def write(self, packets):
+        # TODO make some JS code to remove the script elements from DOM
+        #      after they are executed.
         payload = '<script>e(%s)</script>' % (json.encode(packets),)
         self.request.write(payload);
         self.totalBytes += len(payload)

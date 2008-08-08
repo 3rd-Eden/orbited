@@ -41,6 +41,75 @@ if (typeof(ActiveXObject) != "undefined") {
     Orbited.util.browser = 'opera'
 } 
 
+
+////
+// NB: Base64 code was borrowed from Dojo; we had to fix decode for not
+//     striping NULs though.
+//     See http://svn.dojotoolkit.org/src/dojox/trunk/encoding/base64.js
+(function(){
+    Orbited.base64 = {};
+
+    var p = "=";
+    var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    Orbited.base64.encode=function(/* byte[] */ba){
+        //	summary
+        //	Encode an array of bytes as a base64-encoded string
+        var s=[], l=ba.length;
+        var rm=l%3;
+        var x=l-rm;
+        for (var i=0; i<x;){
+            var t=ba[i++]<<16|ba[i++]<<8|ba[i++];
+            s.push(tab.charAt((t>>>18)&0x3f)); 
+            s.push(tab.charAt((t>>>12)&0x3f));
+            s.push(tab.charAt((t>>>6)&0x3f));
+            s.push(tab.charAt(t&0x3f));
+        }
+        //	deal with trailers, based on patch from Peter Wood.
+        switch(rm){
+            case 2:{
+	            var t=ba[i++]<<16|ba[i++]<<8;
+	            s.push(tab.charAt((t>>>18)&0x3f));
+	            s.push(tab.charAt((t>>>12)&0x3f));
+	            s.push(tab.charAt((t>>>6)&0x3f));
+	            s.push(p);
+	            break;
+            }
+            case 1:{
+	            var t=ba[i++]<<16;
+	            s.push(tab.charAt((t>>>18)&0x3f));
+	            s.push(tab.charAt((t>>>12)&0x3f));
+	            s.push(p);
+	            s.push(p);
+	            break;
+            }
+        }
+        return s.join("");	//	string
+    };
+
+    Orbited.base64.decode=function(/* string */str){
+        //	summary
+        //	Convert a base64-encoded string to an array of bytes
+        var s=str.split(""), out=[];
+        var l=s.length;
+        var tl=0;
+        while(s[--l]==p){ ++tl; }	//	strip off trailing padding
+        for (var i=0; i<l;){
+            var t=tab.indexOf(s[i++])<<18;
+            if(i<=l){ t|=tab.indexOf(s[i++])<<12 };
+            if(i<=l){ t|=tab.indexOf(s[i++])<<6 };
+            if(i<=l){ t|=tab.indexOf(s[i++]) };
+            out.push((t>>>16)&0xff);
+            out.push((t>>>8)&0xff);
+            out.push(t&0xff);
+        }
+        // strip off trailing padding
+        while(tl--){ out.pop(); }
+        return out;	//	byte[]
+    };
+})();
+
+
 Orbited.CometTransports = {}
 
 Orbited.util.chooseTransport = function() {
@@ -427,18 +496,8 @@ Orbited.TCPSocket = function() {
         }
        }
 
-    // TODO: how about base64, or at least hex encoding?
-    //       -mcarter 2-30-08        
-    var encodeBinary = function(data) {
-        return data.join(",") + '\n'
-    }
-    var decodeBinary = function(data) {
-        data = data.split(",")
-        for (var i = 0, l = data.length; i < l; ++i) {
-            data[i] = parseInt(data[i])
-        }
-        return data
-    }
+    var encodeBinary = Orbited.base64.encode;
+    var decodeBinary = Orbited.base64.decode;
 
     var sessionOnRead = function(data) {
         Orbited.log('GOT: ', data)

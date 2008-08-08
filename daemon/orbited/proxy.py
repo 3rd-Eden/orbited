@@ -1,3 +1,5 @@
+import base64
+
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientCreator
 from twisted.internet.protocol import Factory
@@ -27,47 +29,25 @@ class ProxyIncomingProtocol(Protocol):
         self.binary = False
         # TODO rename this to outgoingProtocol
         self.outgoingConn = None
-        self.buffer = ""
         
     def dataReceived(self, data):
+        # NB: this only receives whole frames;  so we will just decode
+        #     data as-is.
+        # NB: its cometsession.py:TCPConnectionResource that makes sure
+        #     we receive whole frames here.
         self.logger.debug('dataReceived: data=%r' % data)
         self.logger.debug('self.outgoingConn is', self.outgoingConn)
         self.logger.debug('self.binary', self.binary)
-        self.buffer += data
+
         if self.outgoingConn:
-            # NB: otherConn is-a ProxyOutgoingProtocol
+            # NB: outgoingConn is-a ProxyOutgoingProtocol
             if self.binary:
-                # NOTE: This is not *strictly* necessary because we know that
-                #       each send is framed by the HTTP POST request. No need
-                #       for the \n, except then we'd be violating the 
-                #       funtionality implied by the ITransport interface.
-                binaryBuffer = []
-                while True:
-                    i = self.buffer.find('\n')
-                    if i == -1:
-                        break
-                    self.logger.debug('found \\n')
-                    data = self.buffer[:i]
-                    self.buffer = self.buffer[i+i:]
-                    binaryBuffer.extend([ int(b) for b in data.split(',') ])
-                if binaryBuffer:
-                    data = "".join([chr(b) for b in binaryBuffer])
-                else:
-                    return
-            else:
-                self.buffer = ""
-            self.logger.debug("write (out):", data)
+                data = base64.b64decode(data)
+            self.logger.debug("write (out): %r" % data)
             return self.outgoingConn.transport.write(data)
         if self.state == "handshake":
-            i = self.buffer.find('\n')
-            if i == -1:
-                return
-            data = self.buffer[:i]
-            self.buffer = self.buffer[i+1:]
             try:
-                # XXX altough this gets saved, self.binary is not
-                #     actually used from browser to backend, so the
-                #     binary sockets are currently broken.
+                data = data.strip()
                 self.binary = (data[0] == '1')
                 host, port = data[1:].split(':')
                 port = int(port)
@@ -82,7 +62,7 @@ class ProxyIncomingProtocol(Protocol):
                 self.transport.write("0" + str(ERRORS['Unauthorized']))
                 self.transport.loseConnection()
                 return
-            self.logger.access('new connection from %s:%s to %s:%d' % (peer.host, peer.port, host, port))
+            self.logger.access('new %s connection from %s:%s to %s:%d' % (self.binary and 'binary' or 'text', peer.host, peer.port, host, port))
             self.state = 'connecting'
             client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
             client.connectTCP(host, port)
@@ -111,10 +91,9 @@ class ProxyIncomingProtocol(Protocol):
         self.transport.loseConnection()
 
     def write(self, data):
-        self.logger.debug("write %r" % data)
-        # TODO: how about some real encoding, like base64, or even hex?
         if self.binary:
-            data  = ",".join([ str(ord(byte)) for byte in data])
+            data = base64.b64encode(data)
+        self.logger.debug("write %r" % data)
         self.transport.write(data)
 
 class ProxyOutgoingProtocol(Protocol):

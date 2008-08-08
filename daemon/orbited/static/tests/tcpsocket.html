@@ -27,7 +27,7 @@
                     }
                 }
 
-                function runEchoTest(t, text) {
+                function runEchoTest(t, text, binary) {
                     var endDeferred = new doh.Deferred();
                     var success = false;
                     var buffer = "";
@@ -54,7 +54,7 @@
                         endDeferred.errback(error);
                     };
 
-                    socket.open("localhost", 7);
+                    socket.open("localhost", 7, binary);
 
                     return endDeferred;
                 }
@@ -152,6 +152,28 @@
                             runTest: function(t) {
                                 var text = "01,2,,3,,,4,,,,5,,,,,0";
                                 return runEchoTest(t, text);
+                            }
+                        },
+
+                        {
+                            name: "binary",
+                            timeout: testTimeout,
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                var bytes = [1, 2, 3, 4];
+                                return runEchoTest(t, bytes, true);
+                            }
+                        },
+
+                        {
+                            name: "binaryWithTrailingNul",
+                            timeout: testTimeout,
+                            setUp: setUpSocket,
+                            tearDown: tearDownSocket,
+                            runTest: function(t) {
+                                var bytes = [0, 0];
+                                return runEchoTest(t, bytes, true);
                             }
                         }
                     ]
