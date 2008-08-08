@@ -44,8 +44,10 @@ if (typeof(ActiveXObject) != "undefined") {
 
 ////
 // NB: Base64 code was borrowed from Dojo; we had to fix decode for not
-//     striping NULs though.
+//     striping NULs though.  Tom Trenka from Dojo wont fix this because
+//     he claims it helped to detect and avoid broken encoded data.
 //     See http://svn.dojotoolkit.org/src/dojox/trunk/encoding/base64.js
+//     See http://bugs.dojotoolkit.org/ticket/7400
 (function(){
     Orbited.base64 = {};
 
