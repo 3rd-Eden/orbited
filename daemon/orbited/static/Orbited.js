@@ -823,7 +823,7 @@ Orbited.CometTransports.XHRStream = function() {
         heartbeatTimer = window.setTimeout(function() { 
 //            Orbited.log('timer', testtimer, 'did it'); 
             heartbeatTimeout();
-        }, Orbited.setttings.HEARTBEAT_TIMEOUT);
+        }, Orbited.settings.HEARTBEAT_TIMEOUT);
         var testtimer = heartbeatTimer;
 
 //        Orbited.log('heartbeatTimer is now', heartbeatTimer)
