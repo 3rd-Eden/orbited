@@ -1,4 +1,31 @@
+// NOTE: to log/debug with Orbited, there are two methods:
+//          Use firebug 
+//              1) include Orbited.js (and not Log4js)
+//              2) Orbited.loggers[LOGGERNAME].enabled = true
+//              And it should do logging for that logger
+//          Use log4js
+//              1) include log4js.js BEFORE including Orbited.js
+//              2) Orbited.loggers[LOGGERNAME].setLevel(Log4js.Level.ALL)
+//              3) Orbited.loggers[LOGGERNAME].addAppender(new Log4js.ConsoleAppender())
+//              Note: Other levels and appenders can be set as well (see Log4js docs)
+//
+//       When you are making a call to the logger, prefix the line (first three
+//       Characters) with ;;; which we will strip out at build time. So if you
+//       have an if statement thats logging specific, start that line with ;;;
+//       as well. If you do a try/catch thats specific to logging, prefix all
+//       lines involved with ;;;. You'll want to put the try closing } and the
+//       catch statement on the same line, or this won't work.
+//
+//       the logging functions (info, warn, debug, error, etc.) take any number
+//       of arguments, like in firebug. If you're using firebug for the logging,
+//       you'll actually be able to inspect the objects that you log. Therefore
+//       don't do logger.debug(obj1 + " -> " + obj2); as this will convert both
+//       objects to strings and not allow you to inspect them in firebug. 
+//       Instead call logger.debug(obj1, "->" obj2); Of course, for the Log4js
+//       back-end, it will still toString the objects.
+
 (function() {
+
 
 var HANDSHAKE_TIMEOUT = 30000
 var RETRY_INTERVAL = 250
@@ -24,12 +51,6 @@ Orbited.Errors.UserConnectionReset = 103
 Orbited.Statuses = {}
 Orbited.Statuses.ServerClosedConnection = 201
 
-if (Orbited.settings.log && typeof(console) != "undefined" && typeof(console.log) != "undefined") {
-    Orbited.log = console.log;
-}
-else {
-    Orbited.log = function() { }
-}
 
 Orbited.util = {}
 
@@ -56,8 +77,8 @@ if (typeof(ActiveXObject) != "undefined") {
     var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     Orbited.base64.encode=function(/* byte[] */ba){
-        //	summary
-        //	Encode an array of bytes as a base64-encoded string
+        //  summary
+        //  Encode an array of bytes as a base64-encoded string
         var s=[], l=ba.length;
         var rm=l%3;
         var x=l-rm;
@@ -68,35 +89,35 @@ if (typeof(ActiveXObject) != "undefined") {
             s.push(tab.charAt((t>>>6)&0x3f));
             s.push(tab.charAt(t&0x3f));
         }
-        //	deal with trailers, based on patch from Peter Wood.
+        //  deal with trailers, based on patch from Peter Wood.
         switch(rm){
             case 2:{
-	            var t=ba[i++]<<16|ba[i++]<<8;
-	            s.push(tab.charAt((t>>>18)&0x3f));
-	            s.push(tab.charAt((t>>>12)&0x3f));
-	            s.push(tab.charAt((t>>>6)&0x3f));
-	            s.push(p);
-	            break;
+                var t=ba[i++]<<16|ba[i++]<<8;
+                s.push(tab.charAt((t>>>18)&0x3f));
+                s.push(tab.charAt((t>>>12)&0x3f));
+                s.push(tab.charAt((t>>>6)&0x3f));
+                s.push(p);
+                break;
             }
             case 1:{
-	            var t=ba[i++]<<16;
-	            s.push(tab.charAt((t>>>18)&0x3f));
-	            s.push(tab.charAt((t>>>12)&0x3f));
-	            s.push(p);
-	            s.push(p);
-	            break;
+                var t=ba[i++]<<16;
+                s.push(tab.charAt((t>>>18)&0x3f));
+                s.push(tab.charAt((t>>>12)&0x3f));
+                s.push(p);
+                s.push(p);
+                break;
             }
         }
-        return s.join("");	//	string
+        return s.join("");  //  string
     };
 
     Orbited.base64.decode=function(/* string */str){
-        //	summary
-        //	Convert a base64-encoded string to an array of bytes
+        //  summary
+        //  Convert a base64-encoded string to an array of bytes
         var s=str.split(""), out=[];
         var l=s.length;
         var tl=0;
-        while(s[--l]==p){ ++tl; }	//	strip off trailing padding
+        while(s[--l]==p){ ++tl; }   //  strip off trailing padding
         for (var i=0; i<l;){
             var t=tab.indexOf(s[i++])<<18;
             if(i<=l){ t|=tab.indexOf(s[i++])<<12 };
@@ -108,9 +129,159 @@ if (typeof(ActiveXObject) != "undefined") {
         }
         // strip off trailing padding
         while(tl--){ out.pop(); }
-        return out;	//	byte[]
+        return out; //  byte[]
     };
 })();
+
+
+
+
+Orbited.loggers = {}
+Orbited.Loggers = {}
+Orbited.util.loggingSystem = null;
+
+if (window.Log4js) {
+    Orbited.util.loggingSystem = 'log4js';
+}
+else if (window.console && console.log) {
+    Orbited.util.loggingSystem = 'firebug';
+}
+
+Orbited.getLogger = function(name) {
+    if (!Orbited.loggers[name]) {
+        var logger = null;
+        switch (Orbited.util.loggingSystem) {
+            case 'firebug':
+                logger = new Orbited.Loggers.FirebugLogger(name)
+                break;
+            case 'log4js':
+                logger = new Orbited.Loggers.Log4jsLogger(name)
+                break;
+
+            default:
+                logger = new Orbited.Loggers.EmptyLogger(name);
+                break;
+        }
+        Orbited.loggers[name] = logger;
+    }
+    return Orbited.loggers[name]
+}
+
+// TODO: is it confusing to have Orbited.Loggers be the various logging classes
+//       and Orbited.loggers be actual instances of logging classes?
+
+Orbited.Loggers.FirebugLogger = function(name) {
+    var self = this;
+    self.name = name;
+    self.enabled = false;
+    var padArgs = function(args) {
+        var newArgs = [ name + ":" ]
+        for (var i = 0; i < args.length; ++i) {
+            newArgs.push(args[i]);
+        }
+        return newArgs
+    }
+    self.log = function() {
+        if (!self.enabled) { return }
+        console.log.apply(this, padArgs(arguments))
+    }
+    self.debug = function() {
+        if (!self.enabled) { return }
+        console.debug.apply(this, padArgs(arguments))
+    }
+    self.info = function() {
+        if (!self.enabled) { return }
+        console.info.apply(this, padArgs(arguments))
+    }
+    self.warn = function() {
+        if (!self.enabled) { return }
+        console.warn.apply(this, padArgs(arguments))
+    }    
+    self.error = function() {
+        if (!self.enabled) { return }
+        console.error.apply(this, padArgs(arguments))
+    }
+    self.assert = function() {
+        if (!self.enabled) { return }
+        console.assert.apply(this, padArgs(arguments))
+    }
+    self.trace = function() {
+        if (!self.enabled) { return }
+        console.trace.apply(this, padArgs(arguments))
+    }
+}
+
+Orbited.Loggers.EmptyLogger = function(name) {
+    var self = this;
+    self.name = name;
+    self.log = function() {
+    }
+    self.debug = function() {
+    }
+    self.info = function() {
+    }
+    self.warn = function() {
+    }    
+    self.error = function() {
+    }
+    self.assert = function() {
+    }
+    self.trace = function() {
+    }
+}
+
+
+Orbited.Loggers.Log4jsLogger = function(name) {
+    var self = this;
+    self.name = name;
+    // NOTE: Why oh WHY doesn't Log4js accept dots in the logger names, and 
+    //       more importantly, why don't they have reasonble error messages?!
+    var log4jsName = name
+    while (log4jsName.indexOf('.') != -1) {
+        log4jsName = log4jsName.replace('.', '_')
+    }
+    var logger = Log4js.getLogger(log4jsName)
+    self.logger = logger
+    logger.setLevel(Log4js.Level.OFF)
+
+    var generateOutput = function(args) {
+        var newArgs = [ name + ":" ]
+        for (var i = 0; i < args.length; ++i) {
+            newArgs.push(args[i]);
+        }
+        return newArgs.join(" ")
+    }
+
+    self.setLevel = function(level) {
+        logger.setLevel(level)
+    }
+    self.addAppender = function(a) {
+        logger.addAppender(a);
+    }
+    self.log= function() {
+        // NOTE: log doesn't mean anything in Log4js. mapping it to info
+        logger.info(generateOutput(arguments));
+    }
+    self.debug = function() {
+        logger.debug(generateOutput(arguments));
+    }
+    self.info = function() {
+        logger.info(generateOutput(arguments));
+    }
+    self.warn = function() {
+        logger.warn(generateOutput(arguments));
+    }    
+    self.error = function() {
+        logger.error(generateOutput(arguments));
+    }
+    self.assert = function() {
+    }
+    self.trace = function() {
+    }
+
+}
+Orbited.system = Orbited.getLogger('system')
+
 
 
 Orbited.CometTransports = {}
@@ -120,7 +291,7 @@ Orbited.util.chooseTransport = function() {
     for (var name in Orbited.CometTransports) {
         var transport = Orbited.CometTransports[name];
         if (typeof(transport[Orbited.util.browser]) == "number") {
-            Orbited.log('viable transport: ', name)
+            Orbited.system.log('viable transport: ', name)
             choices.push(transport)
         }
     }
@@ -130,38 +301,7 @@ Orbited.util.chooseTransport = function() {
     return choices[0]
 }
 
-Orbited.loggers = {}
 
-var FakeLogger = function(name) {
-    var self = this;
-    self.debug = function() { }
-    self.info = function() { }
-    self.warn = function() { }
-    self.error = function() { }
-    self.trace = function() { }
-    self.setLevel = function() { 
-        throw new Error("Log4js not found");
-    }
-    self.addAppender = function() {
-        throw new Error("Log4js not found");
-    }
-}
-
-Orbited.util.getLogger = function(name) {
-    if (typeof(Log4js) != "undefined") {
-        if (typeof(Orbited.loggers[name]) == "undefined") {        
-            Orbited.loggers[name] = Log4js.getLogger(name)
-            Orbited.loggers[name].setLevel(Log4js.Level.OFF)
-            Orbited.loggers[name].addAppender(new Log4js.BrowserConsoleAppender())
-        }
-        return Orbited.loggers[name]
-    }
-    else {
-        return FakeLogger(name);
-    }
-}
-
-Orbited.system = Orbited.util.getLogger('Orbited.system')
 
 var createXHR = function () {
     try { return new XMLHttpRequest(); } catch(e) {}
@@ -206,7 +346,7 @@ Orbited.CometSession = function() {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
                     sessionKey = xhr.responseText;
-                    Orbited.log('session key is: ', sessionKey)
+;;;                 self.logger.debug('session key is: ', sessionKey)
                     sessionUrl = new Orbited.URL(_url)
                     // START new URL way
 //                    sessionUrl.extendPath(sessionKey)
@@ -239,14 +379,14 @@ Orbited.CometSession = function() {
      * up for delivery as soon as the upstream xhr is ready.
      */
     self.send = function(data) {
-        Orbited.log('session.send', data)
+;;;     self.logger.debug('session.send', data)
         if (self.readyState != self.READY_STATE_OPEN) {
             throw new Error("Invalid readyState")
         }
         sendQueue.push([++packetCount, "data", data])
-        Orbited.log('sending==', sending);
+;;;     self.logger.debug('sending==', sending);
         if (!sending) {
-            Orbited.log('starting send');
+;;;         self.logger.debug('starting send');
             doSend()
         }
     }
@@ -311,16 +451,16 @@ Orbited.CometSession = function() {
     }
 
     var transportOnReadFrame = function(frame) {
-        Orbited.log('READ FRAME');
-        Orbited.log('id ', frame.id);
-        Orbited.log('name ', frame.name);
-        if (frame.args.length > 0)
-            Orbited.log('args ', frame.args[0]);
-        Orbited.log('---');
+;;;     self.logger.debug('READ FRAME');
+;;;     self.logger.debug('id ', frame.id);
+;;;     self.logger.debug('name ', frame.name);
+;;;     if (frame.args.length > 0)
+;;;         self.logger.debug('args ', frame.args[0]);
+;;;     self.logger.debug('---');
         if (!isNaN(frame.id)) {
             lastPacketId = Math.max(lastPacketId, frame.id);
         }
-        Orbited.log(frame)
+;;;     self.logger.debug(frame)
         switch(frame.name) {
             case 'close':
                 if (self.readyState < self.READY_STATE_CLOSED) {
@@ -349,7 +489,7 @@ Orbited.CometSession = function() {
         }
     }
     var transportOnClose = function() {
-        Orbited.log('transportOnClose');
+;;;     self.logger.debug('transportOnClose');
         if (self.readyState < self.READY_STATE_CLOSED) {
             doClose(Orbited.Statuses.ServerClosedConnection)
         }
@@ -379,7 +519,7 @@ Orbited.CometSession = function() {
     }
 
     var doSend = function(retries) {
-        Orbited.log('in doSend');
+;;;     self.logger.debug('in doSend');
         if (typeof(retries) == "undefined") {
             retries = 0
         }
@@ -395,18 +535,17 @@ Orbited.CometSession = function() {
             return
         }
         sending = true;
-        Orbited.log('setting sending=true');
+;;;     self.logger.debug('setting sending=true');
         var numSent = sendQueue.length
         sessionUrl.setQsParameter('ack', lastPacketId)
         xhr = createXHR();
         xhr.onreadystatechange = function() {
-            Orbited.log('send readyState', xhr.readyState)
-            try {
-                Orbited.log('status', xhr.status);
-            }
-            catch(e) {
-                Orbited.log('no status');
-            }
+;;;         self.logger.debug('send readyState', xhr.readyState)
+;;;         try {
+;;;             self.logger.debug('status', xhr.status);
+;;;         } catch(e) {
+;;;             self.logger.debug('no status');
+;;;         }
             switch(xhr.readyState) {
                 
                 case 4:
@@ -426,14 +565,14 @@ Orbited.CometSession = function() {
             }
         }
         var tdata = encodePackets(sendQueue)
-        Orbited.log('post', retries, tdata);
+;;;     self.logger.debug('post', retries, tdata);
         xhr.open('POST', sessionUrl.render(), true)
         xhr.send(tdata)
 
     }
     
     var doClose = function(code) {
-        Orbited.log('doClose', code)
+;;;     self.logger.debug('doClose', code)
         self.readyState = self.READY_STATE_CLOSED;
         cometTransport.onReadFrame = function() {}
         if (cometTransport != null) {
@@ -445,6 +584,7 @@ Orbited.CometSession = function() {
 
     }
 };
+Orbited.CometSession.prototype.logger = Orbited.getLogger("Orbited.CometSession");
 Orbited.CometSession.prototype.READY_STATE_INITIALIZED  = 1;
 Orbited.CometSession.prototype.READY_STATE_OPENING      = 2;
 Orbited.CometSession.prototype.READY_STATE_OPEN         = 3;
@@ -530,7 +670,7 @@ Orbited.TCPSocket = function() {
             session.send(encodeBinary(data))
         }
         else {
-            Orbited.log('SEND: ', data)
+;;;         self.logger.debug('SEND: ', data)
             session.send(data)
         }
        }
@@ -539,25 +679,24 @@ Orbited.TCPSocket = function() {
     var decodeBinary = Orbited.base64.decode;
 
     var sessionOnRead = function(data) {
-        Orbited.log('GOT: ', data)
         switch(self.readyState) {
             case self.READY_STATE_OPEN:
-                Orbited.log('READ: ', data)
+;;;             self.logger.debug('READ: ', data)
                 binary ? self.onread(decodeBinary(data)) : self.onread(data)
                 break;
             case self.READY_STATE_OPENING:
                 switch(handshakeState) {
                     case 'initial':
-                        Orbited.log('initial');
-                        Orbited.log('data', data)
-                        Orbited.log('len', data.length);
-                        Orbited.log('typeof(data)', typeof(data))
-                        Orbited.log('data[0] ', data.slice(0,1))
-                        Orbited.log('type ', typeof(data.slice(0,1)))
+;;;                     self.logger.debug('initial');
+;;;                     self.logger.debug('data', data)
+;;;                     self.logger.debug('len', data.length);
+;;;                     self.logger.debug('typeof(data)', typeof(data))
+;;;                     self.logger.debug('data[0] ', data.slice(0,1))
+;;;                     self.logger.debug('type ', typeof(data.slice(0,1)))
                         var result = (data.slice(0,1) == '1')
-                        Orbited.log('result', result)
+;;;                     self.logger.debug('result', result)
                         if (!result) {
-                            Orbited.log('!result');
+;;;                         self.logger.debug('!result');
                             var errorCode = data.slice(1,4)
                             sessionOnClose = function() {}
                             session.close()
@@ -566,9 +705,9 @@ Orbited.TCPSocket = function() {
                         }
                         if (result) {
                             self.readyState = self.READY_STATE_OPEN;
-                            Orbited.log('tcpsocket.onopen..')
+;;;                         self.logger.debug('tcpsocket.onopen..')
                             self.onopen();
-                            Orbited.log('did onopen');
+;;;                         self.logger.debug('did onopen');
                         }
                         break;
                 }
@@ -583,7 +722,7 @@ Orbited.TCPSocket = function() {
     }
     
     var sessionOnClose = function(status) {
-        Orbited.log('sessionOnClose');
+;;;     self.logger.debug('sessionOnClose');
         // If we are in the OPENING state, then the handshake code should
         // handle the close
         if (self.readyState >= self.READY_STATE_OPEN) {
@@ -593,6 +732,7 @@ Orbited.TCPSocket = function() {
         }
     }
 };
+Orbited.TCPSocket.prototype.logger = Orbited.getLogger("Orbited.TCPSocket");
 Orbited.TCPSocket.prototype.READY_STATE_INITIALIZED  = 1;
 Orbited.TCPSocket.prototype.READY_STATE_OPENING      = 2;
 Orbited.TCPSocket.prototype.READY_STATE_OPEN         = 3;
@@ -668,7 +808,7 @@ Orbited.CometTransports.XHRStream = function() {
                 if (self.readyState == 2) { 
                     return
                 }
-//                Orbited.log(xhr.readyState);
+;;;             self.logger.debug(xhr.readyState);
                 switch(xhr.readyState) {
                     case 2:
                         // If we can't get the status, then we didn't actually
@@ -712,7 +852,7 @@ Orbited.CometTransports.XHRStream = function() {
                             // reconnect, double the interval.
                             // TODO cap the max value. 
                             retryInterval *= 2;
-//                            Orbited.log('retryInterval', retryInterval)
+//                            self.logger.debug('retryInterval', retryInterval)
                             window.clearTimeout(heartbeatTimer);
                             window.setTimeout(reconnect, retryInterval)
                             return;
@@ -747,19 +887,19 @@ Orbited.CometTransports.XHRStream = function() {
     }
 
     var reconnect = function() {
-//        Orbited.log('reconnect...')
+//        self.logger.debug('reconnect...')
         if (xhr.readyState < 4 && xhr.readyState > 0) {
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4) {
                     reconnect();
                 }
             }
-//            Orbited.log('do abort..')
+//            self.logger.debug('do abort..')
             xhr.abort();
             window.clearTimeout(heartbeatTimer);            
         }
         else {
-            Orbited.log('reconnect do open')
+;;;         self.logger.debug('reconnect do open')
             offset = 0;
             setTimeout(open, 0)
         }
@@ -818,17 +958,17 @@ Orbited.CometTransports.XHRStream = function() {
     }
     var receivedHeartbeat = function() {
         window.clearTimeout(heartbeatTimer);
-//        Orbited.log('clearing heartbeatTimer', heartbeatTimer)
+//        self.logger.debug('clearing heartbeatTimer', heartbeatTimer)
         heartbeatTimer = window.setTimeout(function() { 
-//            Orbited.log('timer', testtimer, 'did it'); 
+//            self.logger.debug('timer', testtimer, 'did it'); 
             heartbeatTimeout();
         }, Orbited.settings.HEARTBEAT_TIMEOUT);
         var testtimer = heartbeatTimer;
 
-//        Orbited.log('heartbeatTimer is now', heartbeatTimer)
+//        self.logger.debug('heartbeatTimer is now', heartbeatTimer)
     }
     var heartbeatTimeout = function() {
-//        Orbited.log('heartbeat timeout... reconnect')
+//        self.logger.debug('heartbeat timeout... reconnect')
         reconnect();
     }
     var receivedPacket = function(args) {
@@ -844,6 +984,7 @@ Orbited.CometTransports.XHRStream = function() {
         self.onread(packet)
     }
 }
+Orbited.CometTransports.XHRStream.prototype.logger = Orbited.getLogger("Orbited.CometTransports.XHRStream");
 // XHRStream supported browsers
 Orbited.CometTransports.XHRStream.firefox = 1.0
 Orbited.CometTransports.XHRStream.firefox2 = 1.0
@@ -907,21 +1048,21 @@ Orbited.CometTransports.HTMLFile = function() {
     }
     
     var reconnect = function() {
-//        alert('doing reconnect... ' + restartTimeout);
+;;;     self.logger.debug('doing reconnect... ' + restartTimeout);
         restartTimeout*=2;
         ifr.src = restartUrl;
         var restartTimer = window.setTimeout(reconnect, restartTimeout)        
     }
 
     self.streamStarted = function() {
-//        alert('stream started..');
+;;;     self.logger.debug('stream started..');
         window.clearTimeout(restartTimer);
         restartTimer = null;
         restartTimeout = baseRestartTimeout;
     }
     
     self.streamClosed = function() {
-//        alert('stream closed!');
+;;;     self.logger.debug('stream closed!');
         window.clearTimeout(restartTimer);
         self.close()
     }
@@ -947,6 +1088,7 @@ Orbited.CometTransports.HTMLFile = function() {
     }
 
 }
+Orbited.CometTransports.HTMLFile.prototype.logger = Orbited.getLogger("Orbited.CometTransports.HTMLFile");
 // HTMLFile supported browsers
 Orbited.CometTransports.HTMLFile.ie = 1.0;
 Orbited.singleton.HTMLFile = {
@@ -1054,6 +1196,8 @@ Orbited.CometTransports.SSE = function() {
         self.onReadFrame(packet)
     }
 }
+Orbited.CometTransports.SSE.prototype.logger = Orbited.getLogger("Orbited.CometTransports.SSE");
+
 Orbited.CometTransports.SSE.opera = 1.0;
 Orbited.CometTransports.SSE.opera8 = 1.0;
 Orbited.CometTransports.SSE.opera9 = 1.0;
@@ -1142,6 +1286,7 @@ Orbited.URL = function(_url) {
     }
 
     var decodeQs = function(qs) {
+    //    alert('a')
         if (qs.indexOf('=') == -1) return {}
         var result = {}
         var chunks = qs.split('&')

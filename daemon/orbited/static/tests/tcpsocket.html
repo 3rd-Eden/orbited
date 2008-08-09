@@ -3,15 +3,11 @@
     <head>
         <title>TCPSocket unit tests</title>
         <script type="text/javascript" src="/static/tests/lib/doh/doh.js" djConfig="isDebug:true"></script>
-        <script src="/static/log4js.js"></script>
         <script src="/static/Orbited.js"></script>
-        <script type="text/javascript"> 
-            Orbited.system.setLevel(Log4js.Level.ALL)
-            Orbited.system.debug('hey');
-            Orbited.system.warn('woot');
-            Orbited.system.trace('hey');
-        </script>
         <script type="text/javascript">
+            testlog = Orbited.getLogger('tests')
+            testlog.enabled = true;
+
             dojo.require("doh.runner");
 
             TCPSocket = Orbited.TCPSocket;
@@ -25,12 +21,12 @@
                         var socket = t._socket;
                         var readyState = socket.readyState;
                         if (readyState != socket.READY_STATE_CLOSED && readyState != socket.READY_STATE_INITIALIZED)
-                            console.warn("going to reset a non closed socket with readyState=", t._socket.readyState);
+                            testlog.warn("going to reset a non closed socket with readyState=", t._socket.readyState);
                         socket.onerror = function() {};
                         socket.onclose = function() {};
                         socket.reset();
                     } catch (e) {
-                        console.error("unable to reset socket (further tests might be fubar because of this): ", e);
+                        testlog.error("unable to reset socket (further tests might be fubar because of this): ", e);
                     }
                 }
 
@@ -45,7 +41,7 @@
                     };
                     socket.onread = function(data) {
                         buffer += data;
-                        console.info("buffer contains: ", buffer, 'text is', text);
+                        testlog.info("buffer contains: ", buffer, 'text is', text);
                         if (buffer == text) {
                             success = true;
                             socket.close();
