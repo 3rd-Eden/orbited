@@ -3,7 +3,14 @@
     <head>
         <title>TCPSocket unit tests</title>
         <script type="text/javascript" src="/static/tests/lib/doh/doh.js" djConfig="isDebug:true"></script>
+        <script src="/static/log4js.js"></script>
         <script src="/static/Orbited.js"></script>
+        <script type="text/javascript"> 
+            Orbited.system.setLevel(Log4js.Level.ALL)
+            Orbited.system.debug('hey');
+            Orbited.system.warn('woot');
+            Orbited.system.trace('hey');
+        </script>
         <script type="text/javascript">
             dojo.require("doh.runner");
 

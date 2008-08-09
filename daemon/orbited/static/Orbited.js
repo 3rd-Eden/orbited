@@ -11,6 +11,7 @@ Orbited.settings.hostname = document.domain
 Orbited.settings.port = (location.port.length > 0) ? location.port : 80
 Orbited.settings.protocol = 'http'
 Orbited.settings.log = false;
+Orbited.settings.HEARTBEAT_TIMEOUT = 10000
 Orbited.singleton = {}
 
 
@@ -129,6 +130,38 @@ Orbited.util.chooseTransport = function() {
     return choices[0]
 }
 
+Orbited.loggers = {}
+
+var FakeLogger = function(name) {
+    var self = this;
+    self.debug = function() { }
+    self.info = function() { }
+    self.warn = function() { }
+    self.error = function() { }
+    self.trace = function() { }
+    self.setLevel = function() { 
+        throw new Error("Log4js not found");
+    }
+    self.addAppender = function() {
+        throw new Error("Log4js not found");
+    }
+}
+
+Orbited.util.getLogger = function(name) {
+    if (typeof(Log4js) != "undefined") {
+        if (typeof(Orbited.loggers[name]) == "undefined") {        
+            Orbited.loggers[name] = Log4js.getLogger(name)
+            Orbited.loggers[name].setLevel(Log4js.Level.OFF)
+            Orbited.loggers[name].addAppender(new Log4js.BrowserConsoleAppender())
+        }
+        return Orbited.loggers[name]
+    }
+    else {
+        return FakeLogger(name);
+    }
+}
+
+Orbited.system = Orbited.util.getLogger('Orbited.system')
 
 var createXHR = function () {
     try { return new XMLHttpRequest(); } catch(e) {}
@@ -138,6 +171,8 @@ var createXHR = function () {
     try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
     throw new Error('Could not find XMLHttpRequest or an alternative.');
 }
+
+
 
 
 Orbited.CometSession = function() {
@@ -401,7 +436,9 @@ Orbited.CometSession = function() {
         Orbited.log('doClose', code)
         self.readyState = self.READY_STATE_CLOSED;
         cometTransport.onReadFrame = function() {}
-        if (cometTransport != null && cometTransport.readyState < 2) {
+        if (cometTransport != null) {
+            // TODO: is this line necessary?
+            cometTransport.onclose = function() { }
             cometTransport.close()
         }
         self.onclose(code);
@@ -570,7 +607,7 @@ Orbited.TCPSocket.prototype.READY_STATE_CLOSED       = 5;
 
 Orbited.CometTransports.XHRStream = function() {
     var self = this;
-    var HEARTBEAT_TIMEOUT = 6000;
+    var HEARTBEAT_TIMEOUT = 10000;
     var url = null;
     var xhr = null;
     var ackId = null;
@@ -586,8 +623,8 @@ Orbited.CometTransports.XHRStream = function() {
     self.onclose = function() { }
 
     self.close = function() {
-        if (self.readyState != 1) {
-            throw new Error("Invalid readyState to close XHRStream")
+        if (self.readyState == 2) {
+            return
         }
         if (xhr != null && (xhr.readyState > 1 || xhr.readyState < 4)) {
             xhr.onreadystatechange = function() { }
@@ -635,7 +672,6 @@ Orbited.CometTransports.XHRStream = function() {
 //                Orbited.log(xhr.readyState);
                 switch(xhr.readyState) {
                     case 2:
-//                        heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);                    
                         // If we can't get the status, then we didn't actually
                         // get a valid xhr response -- we got a network error
                         try {
@@ -646,7 +682,7 @@ Orbited.CometTransports.XHRStream = function() {
                         }
                         // If we got a 200, then we're in business
                         if (status == 200) {
-                            heartbeatTimer = window.setTimeout(heartbeatTimeout, HEARTBEAT_TIMEOUT);
+                            heartbeatTimer = window.setTimeout(heartbeatTimeout, Orbited.settings.HEARTBEAT_TIMEOUT);
                             var testtimer = heartbeatTimer;
                         }
                         // Otherwise, case 4 should handle the reconnect,
@@ -787,7 +823,7 @@ Orbited.CometTransports.XHRStream = function() {
         heartbeatTimer = window.setTimeout(function() { 
 //            Orbited.log('timer', testtimer, 'did it'); 
             heartbeatTimeout();
-        }, HEARTBEAT_TIMEOUT);
+        }, Orbited.setttings.HEARTBEAT_TIMEOUT);
         var testtimer = heartbeatTimer;
 
 //        Orbited.log('heartbeatTimer is now', heartbeatTimer)
@@ -823,20 +859,23 @@ Orbited.CometTransports.HTMLFile = function() {
     var htmlfile = null
     var ifr = null;
     var url = null;
+    var restartUrl = null;
+    var restartTimer = null;
+    // TODO: move constant to Orbited.settings
+    var baseRestartTimeout = 2000;
+    var restartTimeout = baseRestartTimeout;
     self.onReadFrame = function(frame) {}
     self.onread = function(packet) { self.onReadFrame(packet); }
-
+    self.onclose = function() { }
     self.connect = function(_url) {
         if (self.readyState == 1) {
             throw new Error("Already Connected")
         }
         url = new Orbited.URL(_url)
         url.path += '/htmlfile'
-//        url.setQsParameter('transport', 'htmlfile')
         url.setQsParameter('frameID', id.toString())
-//        url.hash = id.toString()
         self.readyState = 1
-        doOpen()
+        doOpen(url.render())
     }
 
     var doOpenIfr = function() {
@@ -846,28 +885,48 @@ Orbited.CometTransports.HTMLFile = function() {
         document.body.appendChild(ifr)
     }
 
-    var doOpen = function() {
-        Orbited.log('1');
+    var doOpen = function(_url) {
         htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
-        Orbited.log('2');
         htmlfile.open();
 //        htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
         htmlfile.write('<html></html>');
-        Orbited.log('3');
         htmlfile.parentWindow.Orbited = Orbited;
         htmlfile.close();
-        Orbited.log('4');
         var iframe_div = htmlfile.createElement('div');
         htmlfile.body.appendChild(iframe_div);
-        Orbited.log('5');
         ifr = htmlfile.createElement('iframe');
         iframe_div.appendChild(ifr);
-        ifr.src = url.render();
-//        iframe_div.innerHTML = "<iframe src=\"" + url.render() + "\"></iframe>";
-        Orbited.log('2');
-
+        ifr.src = _url;
+        restartUrl = _url;
+        restartTimer = window.setTimeout(reconnect, restartTimeout)
     }
     
+    // TODO: expose this in another way besides the public api
+    self.restartingStream = function(_url) {
+        restartUrl = _url;
+        restartTimer = window.setTimeout(reconnect, restartTimeout)
+    }
+    
+    var reconnect = function() {
+//        alert('doing reconnect... ' + restartTimeout);
+        restartTimeout*=2;
+        ifr.src = restartUrl;
+        var restartTimer = window.setTimeout(reconnect, restartTimeout)        
+    }
+
+    self.streamStarted = function() {
+//        alert('stream started..');
+        window.clearTimeout(restartTimer);
+        restartTimer = null;
+        restartTimeout = baseRestartTimeout;
+    }
+    
+    self.streamClosed = function() {
+//        alert('stream closed!');
+        window.clearTimeout(restartTimer);
+        self.close()
+    }
+
     self.receive = function(id, name, args) {
         packet = {
             id: id,
@@ -878,10 +937,16 @@ Orbited.CometTransports.HTMLFile = function() {
     }
     
     self.close = function() {
+        if (self.readyState == 2) {
+            return
+        }
+        self.readyState = 2
         ifr.src = 'about:blank'
         htmlfile = null;
         CollectGarbage();
+        self.onclose();
     }
+
 }
 // HTMLFile supported browsers
 Orbited.CometTransports.HTMLFile.ie = 1.0;

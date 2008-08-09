@@ -142,10 +142,10 @@ class TCPConnectionResource(resource.Resource):
     logger = logging.get_logger('orbited.cometsession.TCPConnectionResource')
 
     # Determines timeout interval after ping has been sent
-    pingTimeout = 3
+    pingTimeout = 10
     # Determines interval to wait before sending a ping
     # since the last time we heard from the client.
-    pingInterval = 10
+    pingInterval = 20
 
     def __init__(self, root, key, peer, host, **options):
         resource.Resource.__init__(self)
@@ -415,7 +415,9 @@ class TCPResource(resource.Resource):
         if path == 'static':
             return self.static_files
         if path not in self.connections:
-            return error.NoResource("No such child resource.")
+            if 'htmlfile' in request.path:
+                return transports.htmlfile.CloseResource();
+            return error.NoResource("<script>alert('whoops');</script>")
         return self.connections[path]
          
     def removeConn(self, conn):

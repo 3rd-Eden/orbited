@@ -3,8 +3,10 @@ from orbited import json
 from twisted.internet import reactor
 from orbited import logging
 from orbited.transports.base import CometTransport
-
+from twisted.web import resource
 MAXBYTES = 1048576
+#MAXBYTES = 64 # for testing
+
 from orbited import logging
 logger = logging.get_logger('orbited.transports.xhrstream.HTMLFileTransport')
 class HTMLFileTransport(CometTransport):
@@ -40,3 +42,20 @@ class HTMLFileTransport(CometTransport):
         logger.debug('writeHeartbeat')
         self.request.write('<script>h();</script>');
 
+
+
+class CloseResource(resource.Resource):
+  
+    def getChild(self, path, request):
+        return self
+    
+    def render(self, request):      
+        return format_block('''
+            <html>
+             <head>
+              <script src="../../static/HTMLFileClose.js"></script>
+             </head>
+             <body>
+             </body>
+            </html> 
+        ''')
