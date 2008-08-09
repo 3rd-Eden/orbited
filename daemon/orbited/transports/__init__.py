@@ -1,10 +1,10 @@
 import xhrstream
 import htmlfile
-#import sse
+import sse
 map = {
     'xhrstream': xhrstream.XHRStreamingTransport,
     'htmlfile': htmlfile.HTMLFileTransport,
-#    'sse': sse.SSETransport
+    'sse': sse.SSETransport
 }
 def create(transport_name, conn):
 #    transport_name = request.args.get('transport', ['xhrstream'])[0]    

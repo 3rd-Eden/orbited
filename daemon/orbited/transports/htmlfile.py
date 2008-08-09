@@ -8,7 +8,7 @@ MAXBYTES = 1048576
 #MAXBYTES = 64 # for testing
 
 from orbited import logging
-logger = logging.get_logger('orbited.transports.xhrstream.HTMLFileTransport')
+logger = logging.get_logger('orbited.transports.htmlfile.HTMLFileTransport')
 class HTMLFileTransport(CometTransport):
     initialData = format_block('''
             <html>

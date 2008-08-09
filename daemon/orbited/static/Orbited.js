@@ -11,7 +11,7 @@ Orbited.settings.hostname = document.domain
 Orbited.settings.port = (location.port.length > 0) ? location.port : 80
 Orbited.settings.protocol = 'http'
 Orbited.settings.log = false;
-Orbited.settings.HEARTBEAT_TIMEOUT = 10000
+Orbited.settings.HEARTBEAT_TIMEOUT = 6000
 Orbited.singleton = {}
 
 
@@ -607,7 +607,6 @@ Orbited.TCPSocket.prototype.READY_STATE_CLOSED       = 5;
 
 Orbited.CometTransports.XHRStream = function() {
     var self = this;
-    var HEARTBEAT_TIMEOUT = 10000;
     var url = null;
     var xhr = null;
     var ackId = null;
@@ -955,6 +954,113 @@ Orbited.singleton.HTMLFile = {
     instances: {}
 }
 
+
+
+
+Orbited.CometTransports.SSE = function() {
+    var self = this;
+
+    self.onReadFrame = function(frame) {}
+    self.onclose = function() { }
+    self.readyState = 0;
+    var heartbeatTimer = null;
+    var source = null
+    var url = null;
+    var lastEventId = -1;
+
+    self.close = function() {
+        if (self.readyState == 2) {
+            return;
+        }
+        // TODO: can someone test this and get back to me? (No opera at the moment)
+        //     : -mcarter 7-26-08
+        self.readyState = 2
+        doClose();
+        self.onclose();
+    }
+
+    self.connect = function(_url) {
+        if (self.readyState == 1) {
+            throw new Error("Already Connected")
+        }
+        url = new Orbited.URL(_url)
+        url.path += '/sse'
+        self.readyState = 1
+        doOpen();
+    }
+    doClose = function() {
+        source.removeEventSource(source.getAttribute('src'))
+        source.setAttribute('src',"")
+        if (opera.version() < 9.5) {
+            document.body.removeChild(source)
+        }
+        source = null;
+    }
+    doOpen = function() {
+/*
+        if (typeof(lastEventId) == "number") {
+            url.setQsParameter('ack', lastEventId)
+        }
+*/
+        source = document.createElement("event-source");
+        source.setAttribute('src', url.render());
+        // NOTE: without this check opera 9.5 would make two connections.
+        if (opera.version() < 9.5) {
+            document.body.appendChild(source);
+        }
+        source.addEventListener('payload', receivePayload, false);
+
+//        source.addEventListener('heartbeat', receiveHeartbeat, false);
+        // start up the heartbeat timer...
+//        receiveHeartbeat();
+    }
+
+    var receivePayload = function(event) {
+        var data = eval(event.data);
+        if (typeof(data) != 'undefined') {
+            for (var i = 0; i < data.length; ++i) {
+                var packet = data[i]
+                receive(packet[0], packet[1], packet[2]);
+            }
+        }
+    
+    }
+/*    var receiveHeartbeat = function() {
+        window.clearTimeout(heartbeatTimer);
+        heartbeatTimer = window.setTimeout(reconnect, Orbited.settings.HEARTBEAT_TIMEOUT)
+    }
+*/
+    var receive = function(id, name, args) {
+        var tempId = parseInt(id);
+        if (!isNaN(tempId)) {
+            // NOTE: The old application/x-dom-event-stream transport doesn't
+            //       allow us to put in the lastEventId on reconnect, so we are
+            //       bound to get double copies of some of the events. Therefore
+            //       we are going to throw out the duplicates. Its not clear to
+            //       me that this is a perfect solution.
+            //       -mcarter 8-9-08
+            if (tempId <= lastEventId) {
+                return
+            }
+            lastEventId = tempId;
+        }
+        // NOTE: we are dispatching null-id packets. Is this correct?
+        //       -mcarter 9-8-08
+        packet = {
+            id: id,
+            name: name,
+            args: args
+        }
+        self.onReadFrame(packet)
+    }
+}
+Orbited.CometTransports.SSE.opera = 1.0;
+Orbited.CometTransports.SSE.opera8 = 1.0;
+Orbited.CometTransports.SSE.opera9 = 1.0;
+Orbited.CometTransports.SSE.opera9_5 = 0.8;
+
+
+
 /* This is an old implementation of the URL class. Jacob is cleaning it up
  * mcarter, 7-30-08
  */
@@ -1036,7 +1142,6 @@ Orbited.URL = function(_url) {
     }
 
     var decodeQs = function(qs) {
-    //    alert('a')
         if (qs.indexOf('=') == -1) return {}
         var result = {}
         var chunks = qs.split('&')

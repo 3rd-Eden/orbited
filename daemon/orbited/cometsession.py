@@ -361,7 +361,7 @@ class TCPConnectionResource(resource.Resource):
         else:
             self.packetId += 1
             self._send(data, self.packetId)
-            self.unackQueue.append(data)
+            self.unackQueue.append((data, self.packetId))
             if flush:
                 self.cometTransport.flush()
                 
@@ -377,10 +377,10 @@ class TCPConnectionResource(resource.Resource):
     def resendUnackQueue(self):
         if not self.unackQueue:
             return
-        for data in self.unackQueue:
-            self._send(data)
+        for (data, packetId) in self.unackQueue:
+            self._send(data, packetId)
         ackId = self.lastAckId + len(self.unackQueue)
-        self.cometTransport.sendPacket('id', ackId)
+#        self.cometTransport.sendPacket('id', ackId)
         
 class TCPPing(object):
     pass
