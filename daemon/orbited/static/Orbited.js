@@ -361,7 +361,10 @@ var createXHR = function () {
 }
 
 
-
+Orbited.legacy = {}
+//Orbited.web.connect = function() {
+//
+//}
 
 Orbited.CometSession = function() {
     var self = this;
@@ -448,7 +451,7 @@ Orbited.CometSession = function() {
         if (self.readyState != self.READY_STATE_OPEN) {
             throw new Error("Invalid readyState")
         }
-        data = Orbited.base64.encode(data)
+        var data = Orbited.base64.encode(data)
         sendQueue.push([++packetCount, "data", data])
 ;;;     self.logger.debug('sending==', sending);
         if (!sending) {
@@ -539,7 +542,7 @@ Orbited.CometSession = function() {
                 break;
             case 'data':
 ;;;             self.logger.debug('base64 decoding ' + frame.data.length + ' bytes of data')
-                data = Orbited.base64.decode(frame.data)
+                var data = Orbited.base64.decode(frame.data)
 ;;;             self.logger.debug('decode complete');
                 self.onread(data);
                 break;
@@ -1771,6 +1774,7 @@ Orbited.CometTransports.HTMLFile = function() {
         if (self.readyState == 1) {
             throw new Error("Already Connected")
         }
+        self.logger.debug('self.connect', _url)
         url = new Orbited.URL(_url)
         url.path += '/htmlfile'
         url.setQsParameter('frameID', id.toString())
@@ -1786,6 +1790,7 @@ Orbited.CometTransports.HTMLFile = function() {
     }
 
     var doOpen = function(_url) {
+;;;     self.logger.debug('doOpen', _url)
         htmlfile = new ActiveXObject('htmlfile'); // magical microsoft object
         htmlfile.open();
 //        htmlfile.write('<html><script>' + 'document.domain="' + document.domain + '";' + '</script></html>');
@@ -2173,10 +2178,6 @@ Orbited.utf8.encode = function(text) {
     return ret.join("");
 }
 
-
-})();
-
-
 if (!this.JSON) {
 
 // Create a JSON object only if one does not already exist. We create the
@@ -2495,3 +2496,6 @@ replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
         };
     }();
 }
+Orbited.JSON = JSON;
+
+})();
