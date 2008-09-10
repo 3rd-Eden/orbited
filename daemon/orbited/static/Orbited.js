@@ -1,3 +1,4 @@
+
 // NOTE: to log/debug with Orbited, there are two methods:
 //          Use firebug 
 //              1) include Orbited.js (and not Log4js)
@@ -591,7 +592,13 @@ Orbited.CometSession = function() {
     var transportOnClose = function() {
 ;;;     self.logger.debug('transportOnClose');
         if (self.readyState < self.READY_STATE_CLOSED) {
-            doClose(Orbited.Statuses.ServerClosedConnection)
+            try {
+                doClose(Orbited.Statuses.ServerClosedConnection)
+            }
+            catch(e) {
+//              Fix for navigation-close
+                return
+            }
         }
     }        
     var encodePackets = function(queue) {
@@ -1161,7 +1168,14 @@ Orbited.CometTransports.XHRStream = function() {
                         }
                         // If we got a 200, then we're in business
                         if (status == 200) {
-                            heartbeatTimer = window.setTimeout(heartbeatTimeout, Orbited.settings.HEARTBEAT_TIMEOUT);
+                            try {
+                                heartbeatTimer = window.setTimeout(heartbeatTimeout, Orbited.settings.HEARTBEAT_TIMEOUT);
+                            }
+                            catch(e) {
+//                               Happens after navigation
+                                 self.close()
+                                 return
+                            }
                             var testtimer = heartbeatTimer;
                         }
                         // Otherwise, case 4 should handle the reconnect,
@@ -1243,7 +1257,7 @@ Orbited.CometTransports.XHRStream = function() {
             }
 //            self.logger.debug('do abort..')
             xhr.abort();
-            window.clearTimeout(heartbeatTimer);            
+            window.clearTimeout(heartbeatTimer);
         }
         else {
 ;;;         self.logger.debug('reconnect do open')
@@ -1306,10 +1320,16 @@ Orbited.CometTransports.XHRStream = function() {
     var receivedHeartbeat = function() {
         window.clearTimeout(heartbeatTimer);
 ;;;     self.logger.debug('clearing heartbeatTimer', heartbeatTimer)
-        heartbeatTimer = window.setTimeout(function() { 
+        try {
+            heartbeatTimer = window.setTimeout(function() { 
 ;;;         self.logger.debug('timer', testtimer, 'did it'); 
-            heartbeatTimeout();
-        }, Orbited.settings.HEARTBEAT_TIMEOUT);
+                heartbeatTimeout();
+            }, Orbited.settings.HEARTBEAT_TIMEOUT);
+        }
+        catch(e) {
+            
+            return
+        }
         var testtimer = heartbeatTimer;
 
 ;;;     self.logger.debug('heartbeatTimer is now', heartbeatTimer)
