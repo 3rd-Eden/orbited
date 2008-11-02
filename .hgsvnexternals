@@ -1,5 +1,4 @@
 [daemon/orbited/static]
- demos http://js.io/svn/js.io/trunk/demos
- protocols http://js.io/svn/js.io/trunk/protocols
+ js.io http://js.io/svn/js.io/trunk/js.io
 [daemon/orbited/static/tests]
  protocols http://js.io/svn/js.io/trunk/tests/protocols
