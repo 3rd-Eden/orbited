@@ -20,6 +20,8 @@ try:
         version = '0.7.11',
         author = 'Michael Carter',
         author_email = 'CarterMichael@gmail.com',
+        maintainer = 'Matthew Desmarais',
+        maintainer_email = 'matthew.desmarais@gmail.com',
         url = 'http://www.orbited.org',
         download_url = 'http://www.orbited.org/download',
         license = 'MIT License',
