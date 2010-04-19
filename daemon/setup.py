@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
 import os
 
+import sys
+import orbited
+VERSION = orbited.__version__
+
 static_types = [
     '*.js', 
     '*.html',
@@ -17,13 +21,12 @@ static_types = [
 try:
     setup(
         name = 'orbited',
-        version = '0.7.11',
+        version = VERSION,
         author = 'Michael Carter',
         author_email = 'CarterMichael@gmail.com',
         maintainer = 'Matthew Desmarais',
         maintainer_email = 'matthew.desmarais@gmail.com',
         url = 'http://www.orbited.org',
-        download_url = 'http://www.orbited.org/download',
         license = 'MIT License',
         description = 'A browser(javascript)->tcp bridge; Comet is used to emulate TCP connections in the browser; Allows you to connect a web browser directly to an IRC or XMPP server, for instance.',
         long_description = '',
@@ -32,7 +35,8 @@ try:
                 static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
             ]) },
         zip_safe = False,
-        install_requires = [ "morbid >= 0.8.7.3" ],
+        install_requires = ['morbid >= 0.8.7.3',
+                            'coverage == 3.3.1'],
         entry_points = '''
             [console_scripts]
             orbited = orbited.start:main
