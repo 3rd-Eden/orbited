@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+""" A simple script to automate releasing orbited
+"""
 from optparse import OptionParser
 import os
 import subprocess
@@ -7,15 +9,15 @@ import sys
 from hgutils import HgUtil
 
 PYTHON = sys.executable
-SETUP_PY = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        'daemon', 'setup.py')
+DAEMON_DIR = \
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), 'daemon')
                                         
-def shell(command, working_directory=None):
-    cwd = working_directory or os.getcwd()
-    print cwd, command
-    returncode = subprocess.call(command, shell=True, cwd=cwd)
+def setup_py(command, args):
+    cwd = DAEMON_DIR
+    command = [PYTHON, 'setup.py', command] + args
+    returncode = subprocess.call(" ".join(command), shell=True, cwd=cwd)
     return returncode
-
+    
 class SetupCfg(object):
     """ A context manager that will restore the local repository when it exits
     
@@ -29,6 +31,9 @@ class SetupCfg(object):
     def __init__(self, configuration_options):
         self._options = configuration_options
         self._hg = HgUtil('.')
+        # if setup.cfg doesn't exist, we may create one. hg revert
+        # won't delete the file so we need to know if we'll have to
+        # later.
         self._setup_cfg_exists = os.path.exists('daemon/setup.cfg')
 
     def __enter__(self):
@@ -45,11 +50,12 @@ class SetupCfg(object):
     
     @staticmethod
     def _set_option(app, opt, value):
-        setopt = ' '.join([PYTHON, SETUP_PY, 'setopt',
-                           '--command', app,
-                           '--option', opt,
-                           '--set-value', value])
-        return shell(setopt)
+        print app, opt, value
+        # use the setup.py setopt command to modify setup.cfg.
+        args = ['--command', app,
+                '--option', opt,
+                '--set-value', value]
+        return setup_py('setopt', args)
         
 class ReleaseManager(object):
     
@@ -57,34 +63,36 @@ class ReleaseManager(object):
         self._path = repository_path
         self._hg = HgUtil(self._path)
     
-    def make_release(self, type, upload=True):
-        command = [PYTHON, 'setup.py', type]
+    def make_release(self, type, upload=False):
+        args = []
         if upload:
-            command.append('upload')
-        script_dir = os.path.abspath(os.path.dirname(__file__))
-        daemon_dir = os.path.join(script_dir, 'daemon')
-        command_string = " ".join(command)
-        shell(command_string, working_directory=daemon_dir)
+            args.append('upload')
+        setup_py(type, args)
     
-    def snapshot(self, type='sdist'):
+    def snapshot(self, type='sdist', upload=False):
         repo = HgUtil('.')
         revision = repo.revision
         dev_tag = '-dev-%(revision)s' % dict(revision=revision)
         with SetupCfg([('egg_info', 'tag_build', dev_tag)]):
-            self.make_release(type)
+            self.make_release(type, upload)
 
 def make_parser():
     parser = OptionParser()
+    parser.add_option('-u', '--upload', dest="upload",
+                      default=False, action="store_true",
+                      help="upload the package to the pypi")
     return parser
 
 def main(argv):
     parser = make_parser()
     (options, args) = parser.parse_args(argv)
-    script = args.pop(0)
-    release_type = args[0]
-    
+    script = args.pop(0) # throw this away
+    if args:
+        release_type = args[0]
+    else:
+        release_type = 'sdist'
     releaser = ReleaseManager('.')
-    releaser.snapshot(release_type)
+    releaser.snapshot(release_type, options.upload)
 
 if (__name__=='__main__'):
     main(sys.argv)
