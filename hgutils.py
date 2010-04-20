@@ -1,4 +1,5 @@
-from mercurial import commands
+import subprocess
+
 from mercurial import hg
 from mercurial import ui
 
@@ -13,10 +14,6 @@ class HgUtil(object):
         return str(self._repo[None].parents()[0])
     
     def revert(self, *files):
-        # commands.revert seems to expect a date in the opts when it is called
-        # we'll give it a none for that, but just so that we don't get a type
-        # error
-        opts = dict(date=None)
-        if not files:
-            opts['all'] = True
-        commands.revert(self._ui, self._repo, *files, **opts)
+        command = \
+            'hg revert --no-backup %s' % " ".join(files)
+        subprocess.call(command, shell=True)
