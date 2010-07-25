@@ -1,6 +1,7 @@
+import base64
+import logging
 import os
 import uuid
-import base64
 
 from zope.interface import implements
 from twisted.internet import reactor, interfaces
@@ -9,7 +10,6 @@ from twisted.internet.error import CannotListenError
 from twisted.web import server, resource, static, error
 from twisted.internet import reactor, defer
 
-from orbited import logging
 from orbited import transports
 
 def setup_site(port):
@@ -36,7 +36,7 @@ class Port(object):
     """
     implements(interfaces.IListeningPort)
 
-    logger = logging.get_logger('orbited.cometsession.Port')
+    logger = logging.getLogger('orbited.cometsession.Port')
 
     def __init__(self, port=None, factory=None, backlog=50, interface='', reactor=None, resource=None, childName=None):
         self.port = port
@@ -162,7 +162,7 @@ class FakeTCPTransport(object):
 class TCPConnectionResource(resource.Resource):
     pingTimeout = 30
     pingInterval = 30
-    logger = logging.get_logger('orbited.cometsession.TCPConnectionResource')
+    logger = logging.getLogger('orbited.cometsession.TCPConnectionResource')
 
     def __init__(self, root, key, peer, host, hostHeader, **options):
         resource.Resource.__init__(self)
@@ -425,7 +425,7 @@ class TCPOption(object):
         
 class TCPResource(resource.Resource):
     
-    logger = logging.get_logger('orbited.cometsession.TCPResource')
+    logger = logging.getLogger('orbited.cometsession.TCPResource')
   
   
     def __init__(self, listeningPort):

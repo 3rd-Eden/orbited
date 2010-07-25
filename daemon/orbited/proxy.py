@@ -1,10 +1,11 @@
+import logging
+
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientCreator
 from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
 
 from orbited import config
-from orbited import logging
 
 ERRORS = {
     'InvalidHandshake': 102,
@@ -22,7 +23,7 @@ class ProxyIncomingProtocol(Protocol):
     the data to a backend server.
     """
 
-    logger = logging.get_logger('orbited.proxy.ProxyIncomingProtocol')
+    logger = logging.getLogger('orbited.proxy.ProxyIncomingProtocol')
 
     def connectionMade(self):
         # TODO: add handshake timer
@@ -115,7 +116,7 @@ class ProxyOutgoingProtocol(Protocol):
     Handles the protocol between orbited and backend server.
     """
 
-    logger = logging.get_logger('orbited.proxy.ProxyOutgoingProtocol')
+    logger = logging.getLogger('orbited.proxy.ProxyOutgoingProtocol')
 
     def __init__(self, incomingConn):
         # TODO rename this to incomingProtocol
