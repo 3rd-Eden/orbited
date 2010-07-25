@@ -1,5 +1,6 @@
 ~$
 \.pyc$
+\.log$
 ^bin/
 ^include/
 ^lib/
