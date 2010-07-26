@@ -1,13 +1,14 @@
+import logging
+import logging.config
+
 import os
 import sys
 import urlparse
 
 from orbited import __version__ as version
 from orbited import config
-from orbited import logging
 
-# NB: this is set after we load the configuration at "main".
-logger = None
+logger = logging.getLogger(__name__)
 
 def _import(name):
     module_import = name.rsplit('.', 1)[0]
@@ -110,12 +111,8 @@ def main():
         # file and from command line arguments.
         config.setup(options=options)
 
-    logging.setup(config.map)
-
-    # we can now safely get loggers.
-    global logger; logger = logging.get_logger('orbited.start')
-
-
+    logging.config.fileConfig(options.config)
+    
     # NB: we need to install the reactor before using twisted.
     reactor_name = config.map['[global]'].get('reactor')
     if reactor_name:
