@@ -1,7 +1,10 @@
-from orbited import logging
+import logging
+
 from twisted.web import server, resource
 from twisted.internet import defer, reactor
-logger = logging.get_logger('orbited.transports.base.CometTransport')
+
+logger = logging.getLogger('orbited.transports.base.CometTransport')
+
 class CometTransport(resource.Resource):
     HEARTBEAT_INTERVAL = 5
 
