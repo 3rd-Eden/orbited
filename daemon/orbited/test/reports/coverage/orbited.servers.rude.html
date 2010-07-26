@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>orbited.servers.rude</title>
+</head>
+<body>
+orbited.servers.rude
+<style>
+.coverage pre {float: left; margin: 0px 1em; border: none;
+               padding: 0px; }
+.num pre { margin: 0px }
+.nocov, .nocov pre {background-color: #faa}
+.cov, .cov pre {background-color: #cfc}
+div.coverage div { clear: both; height: 1.1em}
+</style>
+<div class="stats">
+Covered: 4 lines<br/>
+Missed: 2 lines<br/>
+Skipped 2 lines<br/>
+Percent: 66 %<br/>
+
+</div>
+<div class="coverage">
+<div class="cov"><span class="num"><pre>1</pre></span><pre>from twisted.internet import protocol, reactor</pre></div>
+<div class="skip"><span class="num"><pre>2</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>3</pre></span><pre>class Rude(protocol.Protocol):</pre></div>
+<div class="cov"><span class="num"><pre>4</pre></span><pre>    def __init__(self):</pre></div>
+<div class="nocov"><span class="num"><pre>5</pre></span><pre>        reactor.callLater(0.0001, self.hang_up)</pre></div>
+<div class="skip"><span class="num"><pre>6</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>7</pre></span><pre>    def hang_up(self):</pre></div>
+<div class="nocov"><span class="num"><pre>8</pre></span><pre>        self.transport.loseConnection()</pre></div>
+</div>
+</body>
+</html>

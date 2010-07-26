@@ -1,0 +1,228 @@
+<html>
+<head>
+<title>orbited.logging</title>
+</head>
+<body>
+orbited.logging
+<style>
+.coverage pre {float: left; margin: 0px 1em; border: none;
+               padding: 0px; }
+.num pre { margin: 0px }
+.nocov, .nocov pre {background-color: #faa}
+.cov, .cov pre {background-color: #cfc}
+div.coverage div { clear: both; height: 1.1em}
+</style>
+<div class="stats">
+Covered: 33 lines<br/>
+Missed: 121 lines<br/>
+Skipped 49 lines<br/>
+Percent: 21 %<br/>
+
+</div>
+<div class="coverage">
+<div class="cov"><span class="num"><pre>  1</pre></span><pre>from datetime import datetime</pre></div>
+<div class="cov"><span class="num"><pre>  2</pre></span><pre>import sys</pre></div>
+<div class="cov"><span class="num"><pre>  3</pre></span><pre>import traceback</pre></div>
+<div class="skip"><span class="num"><pre>  4</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>  5</pre></span><pre>LOGTYPES = [ 'debug', 'access', 'warn', 'error', 'info' ]</pre></div>
+<div class="skip"><span class="num"><pre>  6</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>  7</pre></span><pre>_manager = None</pre></div>
+<div class="skip"><span class="num"><pre>  8</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>  9</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 10</pre></span><pre>def get_logger(name):</pre></div>
+<div class="cov"><span class="num"><pre> 11</pre></span><pre>    return _manager.get_logger(name)</pre></div>
+<div class="skip"><span class="num"><pre> 12</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 13</pre></span><pre>def setup(configmap):</pre></div>
+<div class="nocov"><span class="num"><pre> 14</pre></span><pre>    defaults = {}</pre></div>
+<div class="nocov"><span class="num"><pre> 15</pre></span><pre>    for logtype in LOGTYPES:</pre></div>
+<div class="nocov"><span class="num"><pre> 16</pre></span><pre>        defaults[logtype] = []        </pre></div>
+<div class="nocov"><span class="num"><pre> 17</pre></span><pre>        a = configmap['[logging]']</pre></div>
+<div class="nocov"><span class="num"><pre> 18</pre></span><pre>        b =a[logtype]</pre></div>
+<div class="nocov"><span class="num"><pre> 19</pre></span><pre>        outputs = b.split(',')</pre></div>
+<div class="nocov"><span class="num"><pre> 20</pre></span><pre>        for loc in outputs:</pre></div>
+<div class="nocov"><span class="num"><pre> 21</pre></span><pre>            loc = loc.strip()</pre></div>
+<div class="nocov"><span class="num"><pre> 22</pre></span><pre>            if not loc:</pre></div>
+<div class="nocov"><span class="num"><pre> 23</pre></span><pre>                continue</pre></div>
+<div class="nocov"><span class="num"><pre> 24</pre></span><pre>            if loc == 'enabled.default':</pre></div>
+<div class="nocov"><span class="num"><pre> 25</pre></span><pre>                continue</pre></div>
+<div class="nocov"><span class="num"><pre> 26</pre></span><pre>            if loc in ('SCREEN', 'STDOUT'):</pre></div>
+<div class="skip"><span class="num"><pre> 27</pre></span><pre>                # NB: &quot;SCREEN&quot; is for backward compatability with 0.5-</pre></div>
+<div class="nocov"><span class="num"><pre> 28</pre></span><pre>                defaults[logtype].append(ScreenLog())</pre></div>
+<div class="nocov"><span class="num"><pre> 29</pre></span><pre>            elif loc == 'STDERR':</pre></div>
+<div class="nocov"><span class="num"><pre> 30</pre></span><pre>                defaults[logtype].append(ScreenLog(sys.stderr))</pre></div>
+<div class="nocov"><span class="num"><pre> 31</pre></span><pre>            else:</pre></div>
+<div class="nocov"><span class="num"><pre> 32</pre></span><pre>                defaults[logtype].append(FileLog(loc))</pre></div>
+<div class="nocov"><span class="num"><pre> 33</pre></span><pre>            defaults[logtype][-1].open()</pre></div>
+<div class="nocov"><span class="num"><pre> 34</pre></span><pre>    enabled = configmap['[logging]']['enabled.default'].split(',')</pre></div>
+<div class="nocov"><span class="num"><pre> 35</pre></span><pre>    overrides = {}</pre></div>
+<div class="nocov"><span class="num"><pre> 36</pre></span><pre>    for key, value in configmap['[loggers]'].items():</pre></div>
+<div class="nocov"><span class="num"><pre> 37</pre></span><pre>        overrides[key] = value.split(',')</pre></div>
+<div class="nocov"><span class="num"><pre> 38</pre></span><pre>    global _manager</pre></div>
+<div class="nocov"><span class="num"><pre> 39</pre></span><pre>    _manager = LoggerManager(enabled, defaults, overrides)</pre></div>
+<div class="skip"><span class="num"><pre> 40</pre></span><pre> </pre></div>
+<div class="skip"><span class="num"><pre> 41</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 42</pre></span><pre>class LoggerManager(object):</pre></div>
+<div class="skip"><span class="num"><pre> 43</pre></span><pre> </pre></div>
+<div class="cov"><span class="num"><pre> 44</pre></span><pre>    def __init__(self, enabled, defaults={}, overrides = {}):</pre></div>
+<div class="nocov"><span class="num"><pre> 45</pre></span><pre>        self.enabled = enabled</pre></div>
+<div class="nocov"><span class="num"><pre> 46</pre></span><pre>        self.defaults = defaults</pre></div>
+<div class="nocov"><span class="num"><pre> 47</pre></span><pre>        self.overrides = overrides</pre></div>
+<div class="nocov"><span class="num"><pre> 48</pre></span><pre>        self.loggers = {}</pre></div>
+<div class="skip"><span class="num"><pre> 49</pre></span><pre>        </pre></div>
+<div class="cov"><span class="num"><pre> 50</pre></span><pre>    def create_logger(self, name):</pre></div>
+<div class="nocov"><span class="num"><pre> 51</pre></span><pre>        defaults = {}</pre></div>
+<div class="nocov"><span class="num"><pre> 52</pre></span><pre>        if name in self.overrides:</pre></div>
+<div class="nocov"><span class="num"><pre> 53</pre></span><pre>            for key in self.overrides[name]:</pre></div>
+<div class="nocov"><span class="num"><pre> 54</pre></span><pre>                defaults[key] = self.defaults[key]</pre></div>
+<div class="nocov"><span class="num"><pre> 55</pre></span><pre>        else:</pre></div>
+<div class="nocov"><span class="num"><pre> 56</pre></span><pre>            for key in self.enabled:</pre></div>
+<div class="nocov"><span class="num"><pre> 57</pre></span><pre>                defaults[key] = self.defaults[key]</pre></div>
+<div class="nocov"><span class="num"><pre> 58</pre></span><pre>        return Logger(name, self.enabled, defaults)</pre></div>
+<div class="skip"><span class="num"><pre> 59</pre></span><pre>        </pre></div>
+<div class="cov"><span class="num"><pre> 60</pre></span><pre>    def get_logger(self, name):</pre></div>
+<div class="nocov"><span class="num"><pre> 61</pre></span><pre>        if name not in self.loggers:</pre></div>
+<div class="nocov"><span class="num"><pre> 62</pre></span><pre>            self.loggers[name] = self.create_logger(name)</pre></div>
+<div class="nocov"><span class="num"><pre> 63</pre></span><pre>        return self.loggers[name]</pre></div>
+<div class="skip"><span class="num"><pre> 64</pre></span><pre>        </pre></div>
+<div class="cov"><span class="num"><pre> 65</pre></span><pre>    def add_logger(self, name, logger):</pre></div>
+<div class="nocov"><span class="num"><pre> 66</pre></span><pre>        self.loggers[name] = logger</pre></div>
+<div class="skip"><span class="num"><pre> 67</pre></span><pre> </pre></div>
+<div class="skip"><span class="num"><pre> 68</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 69</pre></span><pre>class Logger(object):</pre></div>
+<div class="skip"><span class="num"><pre> 70</pre></span><pre>  </pre></div>
+<div class="cov"><span class="num"><pre> 71</pre></span><pre>    def __init__(self, name, enabled, defaults):</pre></div>
+<div class="nocov"><span class="num"><pre> 72</pre></span><pre>        self.defaults = defaults</pre></div>
+<div class="nocov"><span class="num"><pre> 73</pre></span><pre>        self.name = name</pre></div>
+<div class="nocov"><span class="num"><pre> 74</pre></span><pre>        for key in LOGTYPES:</pre></div>
+<div class="nocov"><span class="num"><pre> 75</pre></span><pre>            if key not in defaults:</pre></div>
+<div class="nocov"><span class="num"><pre> 76</pre></span><pre>                setattr(self, key, self._empty)</pre></div>
+<div class="skip"><span class="num"><pre> 77</pre></span><pre> </pre></div>
+<div class="cov"><span class="num"><pre> 78</pre></span><pre>    def _empty(self, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre> 79</pre></span><pre>        return</pre></div>
+<div class="skip"><span class="num"><pre> 80</pre></span><pre> </pre></div>
+<div class="cov"><span class="num"><pre> 81</pre></span><pre>    def debug(self, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre> 82</pre></span><pre>        date = &quot;[]&quot;</pre></div>
+<div class="nocov"><span class="num"><pre> 83</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre> 84</pre></span><pre>        date = now.strftime(&quot;%m/%d/%y %H:%M:%S:&quot;) + str(now.microsecond)[:3]</pre></div>
+<div class="nocov"><span class="num"><pre> 85</pre></span><pre>        output = date + ' ' + 'DEBUG  ' + self.name + &quot;\t&quot; + &quot;&quot;.join([str(i) for i in args]) + '\n'</pre></div>
+<div class="skip"><span class="num"><pre> 86</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre> 87</pre></span><pre>        if kwargs.get('tb', False):</pre></div>
+<div class="nocov"><span class="num"><pre> 88</pre></span><pre>            exception, instance, tb = traceback.sys.exc_info()</pre></div>
+<div class="nocov"><span class="num"><pre> 89</pre></span><pre>            output += &quot;&quot;.join(traceback.format_tb(tb))</pre></div>
+<div class="nocov"><span class="num"><pre> 90</pre></span><pre>        if kwargs.get('stack', False):</pre></div>
+<div class="nocov"><span class="num"><pre> 91</pre></span><pre>            output += &quot;&quot;.join(traceback.format_stack()[:-1])</pre></div>
+<div class="skip"><span class="num"><pre> 92</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre> 93</pre></span><pre>        for logger in self.defaults['debug']:</pre></div>
+<div class="nocov"><span class="num"><pre> 94</pre></span><pre>            logger.log(output)</pre></div>
+<div class="skip"><span class="num"><pre> 95</pre></span><pre> </pre></div>
+<div class="cov"><span class="num"><pre> 96</pre></span><pre>    def access(self, item, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre> 97</pre></span><pre>        date = &quot;[]&quot;</pre></div>
+<div class="nocov"><span class="num"><pre> 98</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre> 99</pre></span><pre>        date = now.strftime(&quot;%m/%d/%y %H:%M:%S:&quot;) + str(now.microsecond)[:3]</pre></div>
+<div class="nocov"><span class="num"><pre>100</pre></span><pre>        output = date + ' ' + 'ACCESS ' + item + &quot;\t&quot; + &quot;&quot;.join([str(i) for i in args]) + '\n'</pre></div>
+<div class="skip"><span class="num"><pre>101</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>102</pre></span><pre>        if kwargs.get('tb', False):</pre></div>
+<div class="nocov"><span class="num"><pre>103</pre></span><pre>            exception, instance, tb = traceback.sys.exc_info()</pre></div>
+<div class="nocov"><span class="num"><pre>104</pre></span><pre>            output += &quot;&quot;.join(traceback.format_tb(tb))</pre></div>
+<div class="nocov"><span class="num"><pre>105</pre></span><pre>        if kwargs.get('stack', False):</pre></div>
+<div class="nocov"><span class="num"><pre>106</pre></span><pre>            output += &quot;&quot;.join(traceback.format_stack()[:-1])</pre></div>
+<div class="skip"><span class="num"><pre>107</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>108</pre></span><pre>        for logger in self.defaults['access']:</pre></div>
+<div class="nocov"><span class="num"><pre>109</pre></span><pre>            logger.log(output)</pre></div>
+<div class="skip"><span class="num"><pre>110</pre></span><pre>      </pre></div>
+<div class="cov"><span class="num"><pre>111</pre></span><pre>    def warn(self, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre>112</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre>113</pre></span><pre>        date = &quot;[]&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>114</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre>115</pre></span><pre>        date = now.strftime(&quot;%m/%d/%y %H:%M:%S:&quot;) + str(now.microsecond)[:3]</pre></div>
+<div class="nocov"><span class="num"><pre>116</pre></span><pre>        output = date + ' ' + 'WARN   ' + self.name + &quot;\t&quot; + &quot;&quot;.join([str(i) for i in args]) + '\n'</pre></div>
+<div class="skip"><span class="num"><pre>117</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>118</pre></span><pre>        if kwargs.get('tb', False):</pre></div>
+<div class="nocov"><span class="num"><pre>119</pre></span><pre>            exception, instance, tb = traceback.sys.exc_info()</pre></div>
+<div class="nocov"><span class="num"><pre>120</pre></span><pre>            output += &quot;&quot;.join(traceback.format_tb(tb))</pre></div>
+<div class="nocov"><span class="num"><pre>121</pre></span><pre>        if kwargs.get('stack', False):</pre></div>
+<div class="nocov"><span class="num"><pre>122</pre></span><pre>            output += &quot;&quot;.join(traceback.format_stack()[:-1])</pre></div>
+<div class="skip"><span class="num"><pre>123</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>124</pre></span><pre>        for logger in self.defaults['warn']:</pre></div>
+<div class="nocov"><span class="num"><pre>125</pre></span><pre>            logger.log(output)</pre></div>
+<div class="skip"><span class="num"><pre>126</pre></span><pre>      </pre></div>
+<div class="cov"><span class="num"><pre>127</pre></span><pre>    def info(self, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre>128</pre></span><pre>        date = &quot;[]&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>129</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre>130</pre></span><pre>        date = now.strftime(&quot;%m/%d/%y %H:%M:%S:&quot;) + str(now.microsecond)[:3]</pre></div>
+<div class="nocov"><span class="num"><pre>131</pre></span><pre>        output = date + ' ' + 'INFO   ' + self.name + &quot;\t&quot; + &quot;&quot;.join([str(i) for i in args]) + '\n'</pre></div>
+<div class="skip"><span class="num"><pre>132</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>133</pre></span><pre>        if kwargs.get('tb', False):</pre></div>
+<div class="nocov"><span class="num"><pre>134</pre></span><pre>            exception, instance, tb = traceback.sys.exc_info()</pre></div>
+<div class="nocov"><span class="num"><pre>135</pre></span><pre>            output += &quot;&quot;.join(traceback.format_tb(tb))</pre></div>
+<div class="nocov"><span class="num"><pre>136</pre></span><pre>        if kwargs.get('stack', False):</pre></div>
+<div class="nocov"><span class="num"><pre>137</pre></span><pre>            output += &quot;&quot;.join(traceback.format_stack()[:-1])</pre></div>
+<div class="skip"><span class="num"><pre>138</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>139</pre></span><pre>        for logger in self.defaults['info']:</pre></div>
+<div class="nocov"><span class="num"><pre>140</pre></span><pre>            logger.log(output)</pre></div>
+<div class="skip"><span class="num"><pre>141</pre></span><pre> </pre></div>
+<div class="cov"><span class="num"><pre>142</pre></span><pre>    def error(self, *args, **kwargs):</pre></div>
+<div class="nocov"><span class="num"><pre>143</pre></span><pre>        date = &quot;[]&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>144</pre></span><pre>        now = datetime.now()</pre></div>
+<div class="nocov"><span class="num"><pre>145</pre></span><pre>        date = now.strftime(&quot;%m/%d/%y %H:%M:%S:&quot;) + str(now.microsecond)[:3]</pre></div>
+<div class="nocov"><span class="num"><pre>146</pre></span><pre>        output = date + ' ' + 'ERROR  ' + self.name + &quot;\t&quot; + &quot;&quot;.join([str(i) for i in args]) + '\n'</pre></div>
+<div class="skip"><span class="num"><pre>147</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>148</pre></span><pre>        if kwargs.get('tb', False):</pre></div>
+<div class="nocov"><span class="num"><pre>149</pre></span><pre>            exception, instance, tb = traceback.sys.exc_info()</pre></div>
+<div class="nocov"><span class="num"><pre>150</pre></span><pre>            output += &quot;&quot;.join(traceback.format_tb(tb))</pre></div>
+<div class="nocov"><span class="num"><pre>151</pre></span><pre>            self.debug(output)</pre></div>
+<div class="nocov"><span class="num"><pre>152</pre></span><pre>        if kwargs.get('stack', False):</pre></div>
+<div class="nocov"><span class="num"><pre>153</pre></span><pre>            output += &quot;&quot;.join(traceback.format_stack()[:-1])</pre></div>
+<div class="skip"><span class="num"><pre>154</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>155</pre></span><pre>        for logger in self.defaults['error']:</pre></div>
+<div class="nocov"><span class="num"><pre>156</pre></span><pre>            logger.log(output)</pre></div>
+<div class="skip"><span class="num"><pre>157</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>158</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>159</pre></span><pre>class ScreenLog(object):</pre></div>
+<div class="skip"><span class="num"><pre>160</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>161</pre></span><pre>    def __init__(self, file=sys.stdout):</pre></div>
+<div class="nocov"><span class="num"><pre>162</pre></span><pre>        self.enabled = True</pre></div>
+<div class="nocov"><span class="num"><pre>163</pre></span><pre>        self.file = file</pre></div>
+<div class="skip"><span class="num"><pre>164</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>165</pre></span><pre>    def log(self, data):</pre></div>
+<div class="nocov"><span class="num"><pre>166</pre></span><pre>        if not self.enabled:</pre></div>
+<div class="nocov"><span class="num"><pre>167</pre></span><pre>            return</pre></div>
+<div class="skip"><span class="num"><pre>168</pre></span><pre>        # Something weird was happening with the daemonization stuff</pre></div>
+<div class="skip"><span class="num"><pre>169</pre></span><pre>        # that made this just break.</pre></div>
+<div class="nocov"><span class="num"><pre>170</pre></span><pre>        try:</pre></div>
+<div class="nocov"><span class="num"><pre>171</pre></span><pre>            self.file.write(data)</pre></div>
+<div class="nocov"><span class="num"><pre>172</pre></span><pre>        except:</pre></div>
+<div class="nocov"><span class="num"><pre>173</pre></span><pre>            self.enabled = False</pre></div>
+<div class="skip"><span class="num"><pre>174</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>175</pre></span><pre>    def open(self):</pre></div>
+<div class="nocov"><span class="num"><pre>176</pre></span><pre>        pass</pre></div>
+<div class="skip"><span class="num"><pre>177</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>178</pre></span><pre>    def flush(self):</pre></div>
+<div class="nocov"><span class="num"><pre>179</pre></span><pre>        pass</pre></div>
+<div class="skip"><span class="num"><pre>180</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>181</pre></span><pre>    def close(self):</pre></div>
+<div class="nocov"><span class="num"><pre>182</pre></span><pre>        pass</pre></div>
+<div class="skip"><span class="num"><pre>183</pre></span><pre>    </pre></div>
+<div class="skip"><span class="num"><pre>184</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre>185</pre></span><pre>class FileLog(object):</pre></div>
+<div class="skip"><span class="num"><pre>186</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>187</pre></span><pre>    def __init__(self, filename):</pre></div>
+<div class="nocov"><span class="num"><pre>188</pre></span><pre>        self.filename = filename</pre></div>
+<div class="nocov"><span class="num"><pre>189</pre></span><pre>        self.f = None</pre></div>
+<div class="skip"><span class="num"><pre>190</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre>191</pre></span><pre>    def log(self, data):</pre></div>
+<div class="nocov"><span class="num"><pre>192</pre></span><pre>        self.f.write(data)</pre></div>
+<div class="skip"><span class="num"><pre>193</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>194</pre></span><pre>    def open(self):</pre></div>
+<div class="nocov"><span class="num"><pre>195</pre></span><pre>        self.f = open(self.filename, 'a')</pre></div>
+<div class="skip"><span class="num"><pre>196</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre>197</pre></span><pre>    def flush(self):</pre></div>
+<div class="nocov"><span class="num"><pre>198</pre></span><pre>        self.f.flush()</pre></div>
+<div class="skip"><span class="num"><pre>199</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre>200</pre></span><pre>    def close(self):</pre></div>
+<div class="nocov"><span class="num"><pre>201</pre></span><pre>        self.f.close()</pre></div>
+<div class="skip"><span class="num"><pre>202</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>203</pre></span><pre></pre></div>
+</div>
+</body>
+</html>

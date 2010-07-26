@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>orbited.servers.monitor</title>
+</head>
+<body>
+orbited.servers.monitor
+<style>
+.coverage pre {float: left; margin: 0px 1em; border: none;
+               padding: 0px; }
+.num pre { margin: 0px }
+.nocov, .nocov pre {background-color: #faa}
+.cov, .cov pre {background-color: #cfc}
+div.coverage div { clear: both; height: 1.1em}
+</style>
+<div class="stats">
+Covered: 14 lines<br/>
+Missed: 43 lines<br/>
+Skipped 9 lines<br/>
+Percent: 24 %<br/>
+
+</div>
+<div class="coverage">
+<div class="cov"><span class="num"><pre> 1</pre></span><pre>from twisted.internet import protocol, reactor</pre></div>
+<div class="cov"><span class="num"><pre> 2</pre></span><pre>from orbited.config import map as config</pre></div>
+<div class="cov"><span class="num"><pre> 3</pre></span><pre>from orbited import json</pre></div>
+<div class="cov"><span class="num"><pre> 4</pre></span><pre>import os, platform</pre></div>
+<div class="skip"><span class="num"><pre> 5</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 6</pre></span><pre>class Monitor(protocol.Protocol):</pre></div>
+<div class="cov"><span class="num"><pre> 7</pre></span><pre>    def __init__(self):</pre></div>
+<div class="nocov"><span class="num"><pre> 8</pre></span><pre>        self.pid = os.getpid()</pre></div>
+<div class="nocov"><span class="num"><pre> 9</pre></span><pre>        fd = os.popen(&quot;ps -p %s -o user&quot;%self.pid)</pre></div>
+<div class="nocov"><span class="num"><pre>10</pre></span><pre>        self.user = fd.readlines()[1].strip()</pre></div>
+<div class="nocov"><span class="num"><pre>11</pre></span><pre>        self.cpu = None</pre></div>
+<div class="nocov"><span class="num"><pre>12</pre></span><pre>        self.mem = None</pre></div>
+<div class="nocov"><span class="num"><pre>13</pre></span><pre>        self.connections = None</pre></div>
+<div class="nocov"><span class="num"><pre>14</pre></span><pre>        self.timer = reactor.callLater(0, self.sendInitial)</pre></div>
+<div class="skip"><span class="num"><pre>15</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>16</pre></span><pre>    def getConnections(self):</pre></div>
+<div class="nocov"><span class="num"><pre>17</pre></span><pre>        return config['globalVars']['connections']</pre></div>
+<div class="skip"><span class="num"><pre>18</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>19</pre></span><pre>    def connectionLost(self, reason):</pre></div>
+<div class="nocov"><span class="num"><pre>20</pre></span><pre>        self.timer.cancel()</pre></div>
+<div class="nocov"><span class="num"><pre>21</pre></span><pre>        self.timer = None</pre></div>
+<div class="skip"><span class="num"><pre>22</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>23</pre></span><pre>    def send(self, data):</pre></div>
+<div class="nocov"><span class="num"><pre>24</pre></span><pre>        self.transport.write(json.encode(data)+'~')</pre></div>
+<div class="skip"><span class="num"><pre>25</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>26</pre></span><pre>    def init(self, data):</pre></div>
+<div class="nocov"><span class="num"><pre>27</pre></span><pre>        self.send(['INIT', data])</pre></div>
+<div class="skip"><span class="num"><pre>28</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>29</pre></span><pre>    def update(self, data):</pre></div>
+<div class="nocov"><span class="num"><pre>30</pre></span><pre>        self.send(['UPDATE', data])</pre></div>
+<div class="skip"><span class="num"><pre>31</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>32</pre></span><pre>    def sendInitial(self):</pre></div>
+<div class="nocov"><span class="num"><pre>33</pre></span><pre>        if platform.system() == 'Windows':</pre></div>
+<div class="nocov"><span class="num"><pre>34</pre></span><pre>            self.init(['connections'])</pre></div>
+<div class="nocov"><span class="num"><pre>35</pre></span><pre>            self.timer = reactor.callLater(1, self.reportWindows)</pre></div>
+<div class="nocov"><span class="num"><pre>36</pre></span><pre>        else:</pre></div>
+<div class="nocov"><span class="num"><pre>37</pre></span><pre>            self.init(['user','pid','cpu','mem','connections'])</pre></div>
+<div class="nocov"><span class="num"><pre>38</pre></span><pre>            self.update({'user':self.user,'pid':self.pid})</pre></div>
+<div class="nocov"><span class="num"><pre>39</pre></span><pre>            self.timer = reactor.callLater(1, self.report)</pre></div>
+<div class="skip"><span class="num"><pre>40</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>41</pre></span><pre>    def reportWindows(self):</pre></div>
+<div class="nocov"><span class="num"><pre>42</pre></span><pre>        connections = self.getConnections()</pre></div>
+<div class="nocov"><span class="num"><pre>43</pre></span><pre>        if connections != self.connections:</pre></div>
+<div class="nocov"><span class="num"><pre>44</pre></span><pre>            self.connections = connections</pre></div>
+<div class="nocov"><span class="num"><pre>45</pre></span><pre>            self.update({'connections':connections})</pre></div>
+<div class="nocov"><span class="num"><pre>46</pre></span><pre>        self.timer = reactor.callLater(1, self.reportWindows)</pre></div>
+<div class="skip"><span class="num"><pre>47</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>48</pre></span><pre>    def report(self):</pre></div>
+<div class="nocov"><span class="num"><pre>49</pre></span><pre>        fd = os.popen(&quot;ps -p %s -o %%cpu,%%mem&quot;%os.getpid())</pre></div>
+<div class="nocov"><span class="num"><pre>50</pre></span><pre>        row = fd.readlines()[1].strip()</pre></div>
+<div class="nocov"><span class="num"><pre>51</pre></span><pre>        fd.close()</pre></div>
+<div class="nocov"><span class="num"><pre>52</pre></span><pre>        cpu, mem = [word for word in row.split(' ') if word]</pre></div>
+<div class="nocov"><span class="num"><pre>53</pre></span><pre>        connections = self.getConnections()</pre></div>
+<div class="nocov"><span class="num"><pre>54</pre></span><pre>        data = {}</pre></div>
+<div class="nocov"><span class="num"><pre>55</pre></span><pre>        if cpu != self.cpu:</pre></div>
+<div class="nocov"><span class="num"><pre>56</pre></span><pre>            data['cpu'] = cpu</pre></div>
+<div class="nocov"><span class="num"><pre>57</pre></span><pre>            self.cpu = cpu</pre></div>
+<div class="nocov"><span class="num"><pre>58</pre></span><pre>        if mem != self.mem:</pre></div>
+<div class="nocov"><span class="num"><pre>59</pre></span><pre>            data['mem'] = mem</pre></div>
+<div class="nocov"><span class="num"><pre>60</pre></span><pre>            self.mem = mem</pre></div>
+<div class="nocov"><span class="num"><pre>61</pre></span><pre>        if connections != self.connections:</pre></div>
+<div class="nocov"><span class="num"><pre>62</pre></span><pre>            data['connections'] = connections</pre></div>
+<div class="nocov"><span class="num"><pre>63</pre></span><pre>            self.connections = connections</pre></div>
+<div class="nocov"><span class="num"><pre>64</pre></span><pre>        if data:</pre></div>
+<div class="nocov"><span class="num"><pre>65</pre></span><pre>            self.update(data)</pre></div>
+<div class="nocov"><span class="num"><pre>66</pre></span><pre>        self.timer = reactor.callLater(1, self.report)</pre></div>
+</div>
+</body>
+</html>

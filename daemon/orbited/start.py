@@ -1,6 +1,7 @@
 import os
 import sys
 import urlparse
+
 from orbited import __version__ as version
 from orbited import config
 from orbited import logging
@@ -189,6 +190,32 @@ def main():
     else:
         reactor.run()
 
+class URLParseResult(object):
+    """ An object that allows access to urlparse results by index or name.
+        
+        This provides compatibility with python < 2.5 since the record fields
+        were added then.
+        
+        The tuple structure is like:
+        (scheme, netloc, path, params, query, fragment)
+    """
+    parts = ('scheme', 'netloc', 'path', 'params', 'query', 'fragment')
+    
+    def __init__(self, result_tuple):
+        self._tuple = result_tuple
+        for index, part in self.parts:
+            setattr(self.__class__, part, 
+                    property(lambda self: self[index]))
+    
+    def __getitem__(self, index):
+        return self._tuple[index]
+    
+def _parse_url(url):
+    """ Parse `url' and return the result as a URLParseResult object.
+    """
+    result = urlparse.urlparse(url)
+    return URLParseResult(result)
+    
 def start_listening(site, config, logger):
     from twisted.internet import reactor
     from twisted.internet import protocol as protocol_module
@@ -204,7 +231,7 @@ def start_listening(site, config, logger):
             stompConfig = ""
             if " " in addr:
                 addr, stompConfig = addr.split(" ",1)
-        url = urlparse.urlparse(addr)
+        url = _parse_url(addr)
         hostname = url.hostname or ''
         if url.scheme == 'stomp':
             logger.info('Listening stomp@%s' % url.port)
