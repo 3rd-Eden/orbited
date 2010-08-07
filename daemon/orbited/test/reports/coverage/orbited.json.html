@@ -1,46 +1,0 @@
-<html>
-<head>
-<title>orbited.json</title>
-</head>
-<body>
-orbited.json
-<style>
-.coverage pre {float: left; margin: 0px 1em; border: none;
-               padding: 0px; }
-.num pre { margin: 0px }
-.nocov, .nocov pre {background-color: #faa}
-.cov, .cov pre {background-color: #cfc}
-div.coverage div { clear: both; height: 1.1em}
-</style>
-<div class="stats">
-Covered: 10 lines<br/>
-Missed: 9 lines<br/>
-Skipped 2 lines<br/>
-Percent: 52 %<br/>
-
-</div>
-<div class="coverage">
-<div class="cov"><span class="num"><pre> 1</pre></span><pre>&quot;&quot;&quot;</pre></div>
-<div class="cov"><span class="num"><pre> 2</pre></span><pre>Select a JSON library from any of several known libraries.</pre></div>
-<div class="cov"><span class="num"><pre> 3</pre></span><pre>&quot;&quot;&quot;</pre></div>
-<div class="skip"><span class="num"><pre> 4</pre></span><pre></pre></div>
-<div class="cov"><span class="num"><pre> 5</pre></span><pre>try:</pre></div>
-<div class="cov"><span class="num"><pre> 6</pre></span><pre>    import cjson</pre></div>
-<div class="nocov"><span class="num"><pre> 7</pre></span><pre>    encode = cjson.encode</pre></div>
-<div class="nocov"><span class="num"><pre> 8</pre></span><pre>    decode = cjson.decode</pre></div>
-<div class="cov"><span class="num"><pre> 9</pre></span><pre>except ImportError:</pre></div>
-<div class="cov"><span class="num"><pre>10</pre></span><pre>    try:</pre></div>
-<div class="cov"><span class="num"><pre>11</pre></span><pre>        import simplejson</pre></div>
-<div class="cov"><span class="num"><pre>12</pre></span><pre>        encode = simplejson.dumps</pre></div>
-<div class="cov"><span class="num"><pre>13</pre></span><pre>        decode = simplejson.loads</pre></div>
-<div class="nocov"><span class="num"><pre>14</pre></span><pre>    except ImportError:</pre></div>
-<div class="nocov"><span class="num"><pre>15</pre></span><pre>        try:</pre></div>
-<div class="nocov"><span class="num"><pre>16</pre></span><pre>            import demjson</pre></div>
-<div class="nocov"><span class="num"><pre>17</pre></span><pre>            encode = demjson.encode</pre></div>
-<div class="nocov"><span class="num"><pre>18</pre></span><pre>            decode = demjson.decode</pre></div>
-<div class="nocov"><span class="num"><pre>19</pre></span><pre>        except ImportError:</pre></div>
-<div class="nocov"><span class="num"><pre>20</pre></span><pre>            raise ImportError, &quot;could not load one of: cjson, simplejson, demjson&quot;</pre></div>
-<div class="skip"><span class="num"><pre>21</pre></span><pre>        </pre></div>
-</div>
-</body>
-</html>

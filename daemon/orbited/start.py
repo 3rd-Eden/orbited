@@ -198,11 +198,15 @@ class URLParseResult(object):
     """
     parts = ('scheme', 'netloc', 'path', 'params', 'query', 'fragment')
     
+    @staticmethod
+    def _make_field_getter(self, index):
+        return lambda self: self[index]
+    
     def __init__(self, result_tuple):
         self._tuple = result_tuple
-        for index, part in self.parts:
+        for index, part in enumerate(self.parts):
             setattr(self.__class__, part, 
-                    property(lambda self: self[index]))
+                    property(self._make_field_getter(self, index)))
     
     def __getitem__(self, index):
         return self._tuple[index]
