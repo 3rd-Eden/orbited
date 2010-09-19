@@ -208,7 +208,7 @@ class TCPConnectionResource(resource.Resource):
         return None
 
     def connectionLost(self):
-        self.logger.debug('connectionLost... already triggered?', self.lostTriggered)
+        self.logger.debug('connectionLost... already triggered? %r', self.lostTriggered)
         if not self.lostTriggered:
             self.logger.debug('do trigger');
             self.lostTriggered = True
@@ -442,7 +442,7 @@ class TCPResource(resource.Resource):
         hostHeader = request.received_headers.get('host', '')
         self.connections[key] = TCPConnectionResource(self, key, request.client, request.host, hostHeader)
         self.listeningPort.connectionMade(self.connections[key])
-        self.logger.debug('created conn: ', repr(self.connections[key]))
+        self.logger.debug('created conn: %s', repr(self.connections[key]))
         request.setHeader('cache-control', 'no-cache, must-revalidate')
         return key
 
