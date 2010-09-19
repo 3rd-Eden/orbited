@@ -29,7 +29,7 @@ class CometTransport(resource.Resource):
 
     def doHeartbeat(self):
         if self.closed:
-            logger.debug("don't send hearbeat -- we should be closed", )
+            logger.debug("don't send hearbeat -- we should be closed")
             raise Exception("show tb...")
         else:
             self.writeHeartbeat()
@@ -66,7 +66,7 @@ class CometTransport(resource.Resource):
             logger.debug('close called - already closed')
             return
         self.closed = True
-        logger.debug('close ', repr(self))
+        logger.debug('close %r', repr(self))
         self.heartbeatTimer.cancel()
         self.heartbeatTimer = None
         self.open = False

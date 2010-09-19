@@ -8,8 +8,6 @@ import urlparse
 from orbited import __version__ as version
 from orbited import config
 
-logger = logging.getLogger(__name__)
-
 def _import(name):
     module_import = name.rsplit('.', 1)[0]
     return reduce(getattr, name.split('.')[1:], __import__(module_import))
@@ -112,6 +110,8 @@ def main():
         config.setup(options=options)
 
     logging.config.fileConfig(options.config)
+    global logger
+    logger = logging.getLogger(__name__)
     
     # NB: we need to install the reactor before using twisted.
     reactor_name = config.map['[global]'].get('reactor')
@@ -207,10 +207,28 @@ class URLParseResult(object):
         for index, part in enumerate(self.parts):
             setattr(self.__class__, part, 
                     property(self._make_field_getter(self, index)))
+        
     
     def __getitem__(self, index):
         return self._tuple[index]
     
+    def _split_netloc(self):
+        if ':' in self.netloc:
+            host, port = self.netloc.split(':')
+            port = int(port)
+        else:
+            host = self.netloc
+            port = 80
+        return host, port
+    
+    @property
+    def hostname(self):
+        return self._split_netloc()[0]
+
+    @property
+    def port(self):
+        return self._split_netloc()[1]
+
 def _parse_url(url):
     """ Parse `url' and return the result as a URLParseResult object.
     """
@@ -228,11 +246,14 @@ def start_listening(site, config, logger):
         urlparse.uses_netloc.append(protocol)
 
     for addr in config['[listen]']:
+        logger.debug(addr)
         if addr.startswith("stomp"):
             stompConfig = ""
             if " " in addr:
                 addr, stompConfig = addr.split(" ",1)
         url = _parse_url(addr)
+        logger.debug('hostname: %r', url.hostname)
+        logger.debug('port: %r', url.port)
         hostname = url.hostname or ''
         if url.scheme == 'stomp':
             logger.info('Listening stomp@%s' % url.port)

@@ -41,7 +41,7 @@ class ProxyIncomingProtocol(Protocol):
         # NB: its cometsession.py:TCPConnectionResource that makes sure
         #     we receive whole frames here.
         self.logger.debug('dataReceived: data=%r' % data)
-        self.logger.debug('self.outgoingConn is', self.outgoingConn)
+        self.logger.debug('self.outgoingConn is %r', self.outgoingConn)
 
         if self.outgoingConn:
             # NB: outgoingConn is-a ProxyOutgoingProtocol
@@ -54,7 +54,7 @@ class ProxyIncomingProtocol(Protocol):
                 port = int(port)
                 self.completedHandshake = True
             except:
-                self.logger.error("failed to connect on handshake", tb=True)
+                self.logger.error("failed to connect on handshake")
                 self.transport.write("0" + str(ERRORS['InvalidHandshake']))
                 self.transport.loseConnection()
                 return
@@ -73,7 +73,7 @@ class ProxyIncomingProtocol(Protocol):
                 self.transport.write("0" + str(ERRORS['Unauthorized']))
                 self.transport.loseConnection()
                 return
-            self.logger.access('new connection from %s:%s to %s:%d' % (self.fromHost, self.fromPort, self.toHost, self.toPort))
+            self.logger.info('new connection from %s:%s to %s:%d' % (self.fromHost, self.fromPort, self.toHost, self.toPort))
             self.state = 'connecting'
             client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
             client.connectTCP(host, port).addErrback(self.errorConnection) 
@@ -93,7 +93,7 @@ class ProxyIncomingProtocol(Protocol):
         if self.outgoingConn:
             self.outgoingConn.transport.loseConnection()
         if self.completedHandshake:
-            self.logger.access('connection closed from %s:%s to %s:%s'%(self.fromHost, self.fromPort, self.toHost, self.toPort))
+            self.logger.info('connection closed from %s:%s to %s:%s'%(self.fromHost, self.fromPort, self.toHost, self.toPort))
 
     def outgoingConnectionEstablished(self, outgoingConn):
         if self.state == 'closed':
