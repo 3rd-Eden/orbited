@@ -1,8 +1,8 @@
-jsio('import Class');
-jsio('import jsio.logging');
+jsio('from base import Class');
+jsio('import logging');
 jsio('from net.protocols.mspp import MSPPStream, MSPPProtocol');
 
-exports.logging = jsio.logging;
+exports.logging = logging;
 
 // autodetect host + port!!!
 exports.settings = { 'host': 'localhost', 'port': 8000, 'path': '/csp'};

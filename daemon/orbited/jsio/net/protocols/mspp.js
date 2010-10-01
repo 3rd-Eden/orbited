@@ -1,7 +1,7 @@
 jsio('import net');
 jsio('from net.protocols.buffered import BufferedProtocol');
 jsio('import std.utf8 as utf8');
-
+jsio('from base import logging');
 /*
 works like this:
 OPEN
@@ -24,8 +24,8 @@ length_after_colon:id,2datadatadata
 */
 
 var loggers = {};
-loggers.stream = logging.getLogger('MSPPStream');
-loggers.protocol = logging.getLogger('MSPPProtocol');
+loggers.stream = logging.get('MSPPStream');
+loggers.protocol = logging.get('MSPPProtocol');
 
 var frames = {
 	'OPEN':  0,
