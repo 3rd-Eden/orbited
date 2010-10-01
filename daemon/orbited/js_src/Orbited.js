@@ -1,6 +1,6 @@
 jsio('import Class');
 jsio('import jsio.logging');
-jsio('from jsio.protocols.mspp import MSPPStream, MSPPProtocol');
+jsio('from net.protocols.mspp import MSPPStream, MSPPProtocol');
 
 exports.logging = jsio.logging;
 
