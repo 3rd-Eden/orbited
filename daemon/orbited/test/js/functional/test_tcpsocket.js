@@ -1,4 +1,5 @@
-EchoTest = function (socket, text, binary) {
+
+var EchoTest = function (queue, socket, text, binary) {
     var success = false;
     var buffer = "";
     
@@ -6,20 +7,24 @@ EchoTest = function (socket, text, binary) {
         socket.send(text);
     };
     
-    socket.onread = function(data) {
-        buffer += data;
-        testlog.info("buffer contains: ", buffer, 'text is', text);
-        if (buffer == text) {
-            success = true;
-            socket.close();
-        }
-    };
+    queue.defer("Wait for onread to be fired", function (pool) {
+	
+	socket.onread = pool.add(function(data) {
+            buffer += data;
+	    if (buffer == text) {
+                success = true;
+                socket.close();
+            }
+        });	
+    });
     
-    socket.onclose = function() {
-        if (!success) {
-            throw new Error("socket closed before receiving message");	    
-	}
-    };
+    queue.defer("The socket shouldn't be closed until the message is read", function (pool) {
+        socket.onclose = pool.add(function() {
+            if (!success) {
+                throw new Error("socket closed before receiving message");	    
+	    }
+        });
+    });
     
     socket.onerror = function(error) {
 	throw error;
@@ -29,7 +34,7 @@ EchoTest = function (socket, text, binary) {
     
 };
 
-TCPSocketTest = TestCase('TCPSocketTest');
+var TCPSocketTest = AsyncTestCase('TCPSocketTest');
 
 TCPSocketTest.prototype.setUp = function () {
     this.socket = new Orbited.TCPSocket();    
@@ -47,4 +52,11 @@ TCPSocketTest.prototype.tearDown = function () {
     }
 };
 
-TCPSocketTest.
+TCPSocketTest.prototype.testSimpleEcho = function(queue) {
+    assertNotNull(queue.defer);
+    EchoTest(queue, this.socket, "fleegle", false);
+};
+
+TCPSocketTest.prototype.testFailure = function(queue) {
+    assertNull(queue, typeof queue);
+};
