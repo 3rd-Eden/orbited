@@ -67,7 +67,7 @@ class Port(object):
         else:
             raise CannotListenError("Already listening...")
 
-    def stopListening():
+    def stopListening(self):
         self.logger.debug('stopListening')
         if self.wrapped_port:
             self.listening = False
@@ -94,7 +94,7 @@ class Port(object):
         transportProtocol.parentTransport = transport
         protocol.makeConnection(transport)
         
-    def getHost():
+    def getHost(self):
         if self.wrapped_port:
             return self.wrapped_port.getHost()
         elif self.resource:
