@@ -18,7 +18,7 @@ class CometTransport(resource.Resource):
         self.packets = []
         self.request = request
         self.opened()
-#        self.request.notifiyFinish().addCallback(self.finished)
+        self.request.notifiyFinish().addBoth(self.finished)
         self.resetHeartbeat()
         self.closeDeferred = defer.Deferred()
         self.conn.transportOpened(self)
@@ -51,8 +51,12 @@ class CometTransport(resource.Resource):
             self.heartbeatTimer.cancel()
             self.resetHeartbeat()
 
-    # i don't think this is ever called...
     def finished(self, arg):
+        """ Callback and Errback for self.request.notifyFinish.
+            
+            Commonly called because the connection is lost before the response
+            is sent. 
+        """
         logger.debug('finished: %s'%(arg,))
         self.request = None
         self.close()
