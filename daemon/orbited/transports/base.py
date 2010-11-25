@@ -18,7 +18,7 @@ class CometTransport(resource.Resource):
         self.packets = []
         self.request = request
         self.opened()
-        self.request.notifiyFinish().addBoth(self.finished)
+        self.request.notifyFinish().addBoth(self.finished)
         self.resetHeartbeat()
         self.closeDeferred = defer.Deferred()
         self.conn.transportOpened(self)
