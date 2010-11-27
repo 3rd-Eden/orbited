@@ -1,109 +1,91 @@
+import os
+import re
+import signal
 import sys
+import time
 
-TESTING_HOSTS = ['www.orbited', 'sub.www.orbited', 'xp.orbited']
-LOCALHOST = '127.0.0.1'
+from orbited.test.resources.selenium import selenium
 
-class HostsFile(object):
-    HOSTS = '/etc/hosts'
+class TestingResource(object):
     
-    def __init__(self):
-        self._entries = {}
+    def __init__(self, name_pattern):
+        self.name_pattern = name_pattern
+        self._path = None
     
-    def _with_file(self, body, *args, **kwargs):
-        f = file(*args, **kwargs)
-        result = body(f)
-        f.close()
-        return result
+    def _get_resources_dir(self):
+        functional_test_dir = os.path.abspath(os.path.dirname(__file__))
+        orbited_test_dir = os.path.normpath(os.path.join(functional_test_dir,
+                                                          '..'))
+        resources_dir = os.path.join(orbited_test_dir, 'resources')
+        return resources_dir
     
-    def load(self):
-        return self._with_file(self._readlines, self.HOSTS, 'r')
+    def _select_resource(self):
+        resources_dir = self._get_resources_dir()
+        resources = os.listdir(resources_dir)
+        candidates = [name for name in resources 
+                      if re.match(self.name_pattern, name)]
+        assert candidates, \
+            "could not find resource matching %s in %s; found:\n%s" % \
+            (self.name_pattern, resources_dir, '\n'.join(candidates))
+        return os.path.join(resources_dir, max(candidates))
     
-    def _readlines(self, f):
-        for line in f.readlines():
-            self._readline(line)
-    
-    def _readline(self, line):
-        comment = None
-        if '#' in line:
-            line, comment = line.split('#')
-        parts = line.split()
-        if comment is not None:
-            parts[-1] += ' #' + comment
-        self._entries[parts[0]] = parts[1:]
-    
-    def store(self):
-        contents = str(self)
-        def writelines(f):
-                print >>f, contents
-        return with_file(writelines, HOSTS, 'r')
-    
-    def add(self, entry, alias):
-        self._entries.setdefault(entry, []).insert(0, alias)
-    
-    def remove(self, entry, alias):
-        if entry in self._entries:
-            self._entries[entry].remove(alias)
-            if not self._entries[entry]:
-                del self._entries[entry]
-    
-    def __str__(self):
-        return '\n'.join(['\t'.join([key, ' '.join(value)])
-                          for key, value in self._entries.items()])
+    @property
+    def path(self):
+        if self._path is None:
+            self._path = self._select_resource()
+        return self._path
 
-class OrbitedDaemon(object):
-    
-    def __init__(self):
-        pass
+class InProcessServer(object):
     
     def start(self):
-        pass
+        command, args = self.command.split(' ', 1)
+        print "running command [%s] with args [%r]" % (command, args)
+        self.pid = os.spawnvp(os.P_NOWAIT, command, args)
+        time.sleep(2)
     
     def stop(self):
-        pass
+        os.kill(self.pid, signal.SIGINT)
 
-class SeleniumRCServer(object):
-    
-    def __init__(self):
-        pass
-    
-    def start(self):
-        pass
-    
-    def stop(self):
-        pass
+class OrbitedServer(InProcessServer):
+    config_file = TestingResource(r'orbited-debug.cfg')
+    command = "orbited -c %s" % config_file.path
 
-def main(argv):
-    hosts = HostsFile()
-    hosts.load()
-    print str(hosts)
-    for host in TESTING_HOSTS:
-        hosts.add(LOCALHOST, host)
-    print str(hosts)
-    for host in TESTING_HOSTS:
-        hosts.remove(LOCALHOST, host)
-    print str(hosts)
-    
+class SeleniumRCServer(InProcessServer):
+    server_jar = TestingResource(r'selenium-server-standalone-\S+.jar')
+    command = "java -jar %s" % server_jar.path
 
-if (__name__=='__main__'):
-    main(sys.argv)
-
-orbited = OrbitedDaemon()
+orbited = OrbitedServer()
 selenium_rc = SeleniumRCServer()
 
-def setup():
-    hosts = HostsFile()
-    hosts.load()
-    for host in TESTING_HOSTS:
-        hosts.add(LOCALHOST, host)
-    hosts.store()
-    orbited.start()
-    selenium_rc.start()
+# def setup():
+#     orbited.start()
+#     selenium_rc.start()
     
-def teardown():
-    selenium_rc.stop()
-    orbited.stop()
-    hosts = HostsFile()
-    hosts.load()
-    for host in TESTING_HOSTS:
-        hosts.remove(LOCALHOST, host)
-    hosts.store()
+# def teardown():
+#     selenium_rc.stop()
+#     orbited.stop()
+
+class TCPSocketTestCase(object):
+    
+    def test_tcp_socket(self):
+        BROWSERS = ["*firefox",
+                    ]
+        
+        for browser in BROWSERS:
+            yield self._tcp_socket_test, browser
+    
+    def _tcp_socket_test(self, browser):
+        sel = selenium('localhost', 4444, browser, "http://%s:8000/" % self.domain)
+        sel.start()
+        
+        sel.open("/static/tests/")
+        sel.click("link=%s" % self.label)
+        sel.wait_for_page_to_load("30000")
+        time.sleep(0.5)
+        assert sel.is_text_present("TEST SUMMARY")
+        time.sleep(0.5)
+        assert sel.is_text_present("5 tests in 1 groups")
+        assert sel.is_text_present("0 errors")
+        assert sel.is_text_present("0 failures")
+        
+        sel.stop()
