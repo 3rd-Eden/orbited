@@ -105,6 +105,8 @@ class ProxyIncomingProtocol(Protocol):
     def outgoingConnectionLost(self, outgoingConn, reason):
         self.logger.debug("remoteConnectionLost %s" % reason)
         self.transport.loseConnection()
+        # forget about the outgoing protocol so that it can get cleaned up
+        self.outgoingConn = None
 
     def write(self, data):
 #        data = base64.b64encode(data)
