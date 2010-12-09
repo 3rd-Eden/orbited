@@ -473,13 +473,9 @@ class TCPResource(resource.Resource):
         return self.connections[path]
          
     def removeConn(self, conn):
-        self.logger.debug("before removeConn: %s",
-                          len(objgraph.by_type(TCPConnectionResource)))
         if conn.key in self.connections:
             del self.connections[conn.key]
-        self.logger.debug("after removeConn: %s",
-                          len(objgraph.by_type(TCPConnectionResource)))
-
+    
     def connectionMade(self, conn):
         self.listeningPort.connectionMade(conn)
         
