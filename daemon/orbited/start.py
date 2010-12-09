@@ -88,7 +88,22 @@ def main():
         default=False,
         help="run Orbited on port 8000 and MorbidQ on port 61613"
     )
-
+    parser.add_option(
+        "-m",
+        "--manhole",
+        dest="manhole_port",
+        action="store",
+        default=None,
+        help="start a twisted.manhole telnet server on this port"
+    )
+    parser.add_option(
+        "--manhole-password",
+        dest="manhole_password",
+        action="store",
+        default="secret",
+        help="use the argument as the password for the manhole server account 'admin'"
+    )
+    
     (options, args) = parser.parse_args()
 
     if args:
@@ -177,6 +192,18 @@ def main():
             logger.error('Aborting; You must define a user (and optionally a group) in the configuration file.')
             sys.exit(1)
 
+    if options.manhole_port:
+        from twisted.manhole import telnet
+        def createShellServer():
+            manhole_port = int(options.manhole_port)
+            factory = telnet.ShellFactory()
+            port = reactor.listenTCP(manhole_port, factory)
+            factory.username = 'admin'
+            factory.password = options.manhole_password
+            print "Manhole listening on port %s", manhole_port
+            return port
+        reactor.callWhenRunning(createShellServer)
+    
     if options.profile:
         import hotshot
         prof = hotshot.Profile("orbited.profile")

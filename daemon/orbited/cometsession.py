@@ -1,3 +1,7 @@
+""" Defines a Port that can be used as a proper Twisted transport
+
+"""
+
 import base64
 import logging
 import os
@@ -12,6 +16,10 @@ from twisted.internet import reactor, defer
 
 from orbited import transports
 
+DEBUG = True
+if DEBUG:
+    import objgraph
+    
 def setup_site(port):
     root = resource.Resource()
     static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
@@ -49,6 +57,10 @@ class Port(object):
         self.listening = False
                 
     def startListening(self):
+        """ Called when the reactor starts; starts the Port listening.
+
+            
+        """
         self.logger.debug('startingListening')
         if not self.listening:
             self.listening = True
@@ -160,6 +172,8 @@ class FakeTCPTransport(object):
     
     
 class TCPConnectionResource(resource.Resource):
+    """ Implements the comet session handling logic.
+    """
     pingTimeout = 30
     pingInterval = 30
     logger = logging.getLogger('orbited.cometsession.TCPConnectionResource')
@@ -369,6 +383,7 @@ class TCPConnectionResource(resource.Resource):
 
     def ack(self, ackId):
         self.logger.debug('ack ackId=%s'%(ackId,))
+        self.logger.debug('before ack unackQueue=%r'%self.unackQueue)
         ackId = min(ackId, self.packetId)
         if ackId <= self.lastAckId:
             return
@@ -377,6 +392,7 @@ class TCPConnectionResource(resource.Resource):
             if isinstance(data, TCPClose):
                 # Really close
                 self.close("close acked", True)
+        self.logger.debug('after ack unackQueue=%r'%self.unackQueue)
         self.lastAckId = ackId
 
     def sendMsgQueue(self):
@@ -457,14 +473,23 @@ class TCPResource(resource.Resource):
         return self.connections[path]
          
     def removeConn(self, conn):
+        self.logger.debug("before removeConn: %s",
+                          len(objgraph.by_type(TCPConnectionResource)))
         if conn.key in self.connections:
             del self.connections[conn.key]
+        self.logger.debug("after removeConn: %s",
+                          len(objgraph.by_type(TCPConnectionResource)))
 
     def connectionMade(self, conn):
         self.listeningPort.connectionMade(conn)
         
         
 if __name__ == "__main__":
+    # Let's illustrate the benefit of using the Port. Here we're using an
+    # implementation of the normal twisted protocol with the comet session
+    # Port. It looks the same way that we would use any protocol with
+    # a TCP port, but the transport is a comet connection and not the
+    # usual TCP connection.
     class EchoProtocol(Protocol):
         
         def dataReceived(self, data):
