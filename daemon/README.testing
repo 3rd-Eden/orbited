@@ -1,0 +1,6 @@
+For these tests to work, the /etc/hosts file on the machine running the tests
+must alias the following domains to 127.0.0.1:
+
+* www.orbited 
+* sub.www.orbited 
+* xp.orbited
