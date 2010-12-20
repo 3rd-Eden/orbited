@@ -1,0 +1,5 @@
+* 0.7.11 (since 0.7.10)
+  - Fixed a memory leak in the ProxyIncomingProtocol. Lots of thanks to Neil Skrypuch for helping locate the problem and test the fix.
+  - Cleaned up the search for an adequate json library
+  - Added some simple Selenium tests; see README.testing for details
+  - Added NEWS
