@@ -1,8 +1,9 @@
 java -jar orbited/test/resources/selenium-server-standalone-2.0a4.jar &> selenium.log &
 SELENIUM_PID=$!
+sleep 3
 orbited -c orbited/test/resources/orbited-debug.cfg &> orbited.log &
 ORBITED_PID=$!
-sleep 3
+sleep 2
 nosetests
 ps -p $ORBITED_PID --no-header | awk '{ print $1 }' | xargs kill
 ps -p $SELENIUM_PID --no-header | awk '{ print $1 }' | xargs kill
