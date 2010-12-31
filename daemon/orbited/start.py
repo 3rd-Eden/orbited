@@ -89,6 +89,21 @@ def main():
         default=False,
         help="run Orbited on port 8000 and MorbidQ on port 61613"
     )
+    parser.add_option( 
+        "-d", 
+        "--daemon", 
+        dest="daemon", 
+        action="store_true", 
+        default=False, 
+        help="run Orbited as a daemon (requires the python-daemon package)"
+        )
+    parser.add_option(
+        "--pid-file",
+        dest="pidfile",
+        default="/var/run/orbited/orbited.pid",
+        help=("use PIDFILE as the orbited daemon pid file",
+              "; defaults to '/var/run/orbited/orbited.pid'"),
+        )
     
     MemoryUtil.add_options_to_parser(parser)
     
@@ -101,20 +116,32 @@ def main():
     if options.version:
         print "Orbited version: %s" % (version,)
         sys.exit(0)
-
+    
+    logging.config.fileConfig(options.config)
+    global logger
+    logger = logging.getLogger(__name__)
+    
     if options.quickstart:
         config.map['[listen]'].append('http://:8000')
         config.map['[listen]'].append('stomp://:61613')
         config.map['[access]'][('localhost',61613)] = ['*']
-        print "Quickstarting Orbited"
+        logger.info("Quickstarting Orbited")
     else:
         # load configuration from configuration
         # file and from command line arguments.
         config.setup(options=options)
 
-    logging.config.fileConfig(options.config)
-    global logger
-    logger = logging.getLogger(__name__)
+    if options.daemon:
+        try:
+            from daemon import DaemonContext
+            from daemon.pidfile import PIDLockFile
+            pidlock = PIDLockFile(options.pidfile)
+            daemon = DaemonContext(pidfile=pidlock)
+            logger.debug('daemonizing with pid file %r', options.pidfile)
+            daemon.open()
+            logger.debug('daemonized!')
+        except Exception, exc:
+            logger.debug(exc)
     
     # NB: we need to install the reactor before using twisted.
     reactor_name = config.map['[global]'].get('reactor')

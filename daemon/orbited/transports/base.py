@@ -3,19 +3,12 @@ import logging
 from twisted.web import server, resource
 from twisted.internet import defer, reactor
 
-DEBUG = True
-if DEBUG:
-    import objgraph
-    
 logger = logging.getLogger('orbited.transports.base.CometTransport')
 
 class CometTransport(resource.Resource):
     HEARTBEAT_INTERVAL = 5
 
     def __init__(self, conn):
-        logger.debug('new transport: %s [%s]',
-                     self.__class__,
-                     len(objgraph.by_type(self.__class__)))
         self.conn = conn
         self.open = False
         self.closed = False
