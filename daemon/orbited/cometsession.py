@@ -16,10 +16,6 @@ from twisted.internet import reactor, defer
 
 from orbited import transports
 
-DEBUG = True
-if DEBUG:
-    import objgraph
-    
 def setup_site(port):
     root = resource.Resource()
     static_files = static.File(os.path.join(os.path.dirname(__file__), 'static'))
