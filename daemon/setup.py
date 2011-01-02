@@ -31,9 +31,7 @@ try:
         description = 'A browser(javascript)->tcp bridge; Comet is used to emulate TCP connections in the browser; Allows you to connect a web browser directly to an IRC or XMPP server, for instance.',
         long_description = '',
         packages = find_packages(),
-        package_data = {'': reduce(list.__add__, [ '.svn' not in d and [ os.path.join(d[len('orbited')+1:], e) for e in
-                static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
-            ]) },
+        include_package_data=True,
         zip_safe = False,
         install_requires = ['morbid >= 0.8.7.3',
                             'twisted==10.1'],
