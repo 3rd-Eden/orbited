@@ -1,0 +1,5 @@
+recursive-include orbited *
+include MANIFEST.inc
+include NEWS
+include README.testing
+global-exclude .DS_Store *.hgignore *.hgtags *.pyc
