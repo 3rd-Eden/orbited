@@ -303,12 +303,15 @@ def start_listening(site, config, logger):
             from twisted.internet import ssl
             crt = config['[ssl]']['crt']
             key = config['[ssl]']['key']
+            chain = config['[ssl]'].get('chain')
             try:
                 ssl_context = ssl.DefaultOpenSSLContextFactory(key, crt)
+                if chain:
+                    ssl_context._context.use_certificate_chain_file(chain)
             except ImportError:
                 raise
-            except:
-                logger.error("Error opening key or crt file: %s, %s" % (key, crt))
+            except Exception, e:
+                logger.error("Error opening key, crt or chain file: %s, %s, %s, %s" % (key, crt, chain, e))
                 sys.exit(1)
             logger.info('Listening https@%s (%s, %s)' % (url.port, key, crt))
             reactor.listenSSL(url.port, site, ssl_context, interface=hostname)
