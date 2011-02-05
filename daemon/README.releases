@@ -1,0 +1,18 @@
+Orbited Release Procedure
+=========================
+
+Beta releases
+-------------
+
+1. Modify orbited._version to use the new version. Orbited beta versions should look like {major}.{minor}.{dot}beta{beta number}. An example is 0.7.11beta3.
+2. Create the new tarball with `python setup.py sdist`.
+3. Upload the new tarball to the current release download page (currently https://bitbucket.org/desmaj/orbited/downloads).
+4. Modify the pypi page for the most recent release to point to the latest beta download. The important part here is that a link to the desired download is included in the long description text with the form: http://bitbucket.org/desmaj/orbited/downloads/orbited-0.7.11beta3.tar.gz#egg=0.7.11beta3. The url fragent should be 'egg={beta version}'. This is how easy_install will determine where to download the beta and which version it is, allowing `easy_install orbited==0.7.11beta3` to Do The Right Thing.
+
+Stable releases
+---------------
+
+1. Modify orbited._version to use the new version. Orbited stable versions should look like {major}.{minor}.{dot}. An example is 0.7.10.
+2. Create the new tarball and upload it to pypi with `python setup.py sdist upload`.
+3. Upload the new tarball to the current release download page (currently https://bitbucket.org/desmaj/orbited/downloads).
+4. Uploading the release tarball to pypi will create a new pypi release page. Double-check the new release to be sure everything looks right. It should be the same as the previous stable release page with the exception of the version number.
