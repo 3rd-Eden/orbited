@@ -5,6 +5,7 @@ Prerequisites
 -------------
 * Java must be installed
 * Firefox must be installed
+* The standalone Selenium server jar - this should be available at http://selenium.googlecode.com/files/selenium-server-standalone-2.0a4.jar.
 
 /etc/hosts
 ----------
@@ -23,7 +24,7 @@ You will need three terminal sessions to run the tests. The following invocation
 Terminal 1 - (selenium)
 +++++++++++++++++++++++
 
-java -jar orbited/test/resources/selenium-server-standalone-2.0a4.jar 
+java -jar /path/to/selenium-server-standalone-2.0a4.jar 
 
 Terminal 2 - (orbited)
 ++++++++++++++++++++++
