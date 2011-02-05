@@ -117,11 +117,11 @@ def main():
         print "Orbited version: %s" % (version,)
         sys.exit(0)
     
-    logging.config.fileConfig(options.config)
     global logger
-    logger = logging.getLogger(__name__)
     
     if options.quickstart:
+        logging.basicConfig()
+        logger = logging.getLogger(__name__)
         config.map['[listen]'].append('http://:8000')
         config.map['[listen]'].append('stomp://:61613')
         config.map['[access]'][('localhost',61613)] = ['*']
@@ -130,7 +130,10 @@ def main():
         # load configuration from configuration
         # file and from command line arguments.
         config.setup(options=options)
-
+        logging.config.fileConfig(options.config)
+        logger = logging.getLogger(__name__)
+        logger.info("Starting Orbited with config file %s" % options.config)
+    
     if options.daemon:
         try:
             from daemon import DaemonContext
