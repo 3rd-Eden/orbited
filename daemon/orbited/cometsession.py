@@ -8,6 +8,7 @@ import os
 import uuid
 
 from zope.interface import implements
+from twisted.internet import base
 from twisted.internet import reactor, interfaces
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet.error import CannotListenError
@@ -24,7 +25,7 @@ def setup_site(port):
     root.putChild('tcp', TCPResource(port))
     return site
 
-class Port(object):    
+class Port(base.BasePort):    
     """ A cometsession.Port object can be used in two different ways.
     # Method 1
     reactor.listenWith(cometsession.Port, 9999, SomeFactory())
@@ -43,6 +44,7 @@ class Port(object):
     logger = logging.getLogger('orbited.cometsession.Port')
 
     def __init__(self, port=None, factory=None, backlog=50, interface='', reactor=None, resource=None, childName=None):
+        super(Port, self).__init__(reactor=reactor)
         self.port = port
         self.factory = factory
         self.backlog = backlog
@@ -63,7 +65,7 @@ class Port(object):
             if self.port:
                 self.logger.debug('creating new site and resource')
                 self.wrapped_factory = setup_site(self)
-                self.wrapped_port = reactor.listenTCP(
+                self.wrapped_port = self.reactor.listenTCP(
                     self.port, 
                     self.wrapped_factory,
                     self.backlog, 
@@ -83,7 +85,7 @@ class Port(object):
         elif self.resource:
             pass
             # TODO: self.resource.removeChild(self.childName) ?
-
+        
     def connectionMade(self, transportProtocol):
         """
             proto is the tcp-emulation protocol
@@ -464,7 +466,7 @@ class TCPResource(resource.Resource):
         if path not in self.connections:
             if 'htmlfile' in request.path:
                 return transports.htmlfile.CloseResource();
-            return error.NoResource("<script>alert('whoops');</script>")
+            return resource.NoResource("<script>alert('whoops');</script>")
 #        print 'returning self.connections[%s]' % (path,)
         return self.connections[path]
          
