@@ -23,7 +23,13 @@ def _setup_protocols(root):
         if config.map['[global]'].get('%s.enabled' % config_key) == '1':
             port_class = _import(port_class_import)
             factory_class = _import(factory_class_import)
-            reactor.listenWith(port_class, factory=factory_class(), resource=root, childName=child_path)
+            
+            # reactor.listenWith(port_class, factory=factory_class(), resource=root, childName=child_path)
+            # reactor.listenWith is deprecated since Twisted 10.1. All it really does is call the port_type
+            # constructor, passing itself as a 'reactor' keyword argument. So that's what we'll do here.
+            port = port_class(factory=factory_class(), reactor=reactor, resource=root, childName=child_path)
+            port.startListening()
+            
             logger.info('%s protocol active' % config_key)
 
 def _setup_static(root, config):
